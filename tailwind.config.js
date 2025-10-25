@@ -4,7 +4,18 @@ module.exports = {
   content: ["./App.tsx", "./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        // 👇 This makes Manrope the default for "font-sans"
+        sans: ["Manrope_400Regular"],
+        extralight: ["Manrope_200ExtraLight"],
+        light: ["Manrope_300Light"],
+        medium: ["Manrope_500Medium"],
+        semibold: ["Manrope_600SemiBold"],
+        bold: ["Manrope_700Bold"],
+        extrabold: ["Manrope_800ExtraBold"],
+      },
+    },
   },
   plugins: [],
-}
+};
