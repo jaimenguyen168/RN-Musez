@@ -44,7 +44,7 @@ const DiscoveryHeader = ({
             Discover museums in
           </Text>
           <View className="flex-row items-center">
-            <Text className="text-xl font-semibold line-clamp-1 tracking-wide">
+            <Text className="text-2xl font-semibold line-clamp-1 tracking-wide">
               {place}
             </Text>
           </View>

@@ -1,4 +1,5 @@
 import { Museum } from "@/types";
+import { snakeToCamel } from "@/utils";
 
 export async function GET(request: Request) {
   try {
@@ -46,7 +47,8 @@ async function fetchNearbyMuseums(
 
     if (data.status === "OK") {
       console.log(`Found ${data.results.length} museums`);
-      return data.results as Museum[];
+
+      return snakeToCamel<Museum[]>(data.results);
     } else {
       console.log("Error fetching museums:", data.status);
       throw new Error(`Google Places API error: ${data.status}`);

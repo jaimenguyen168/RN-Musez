@@ -10,7 +10,8 @@ import {
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
 import * as SplashScreen from "expo-splash-screen";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 SplashScreen.setOptions({
   duration: 1000,
@@ -18,6 +19,14 @@ SplashScreen.setOptions({
 });
 
 SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 export default function SetupLayout() {
   let [fontsLoaded] = useFonts({
@@ -38,5 +47,9 @@ export default function SetupLayout() {
 
   if (!fontsLoaded) return null;
 
-  return <Slot />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </QueryClientProvider>
+  );
 }
