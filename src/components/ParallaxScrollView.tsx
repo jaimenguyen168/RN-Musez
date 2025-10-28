@@ -7,6 +7,8 @@ import {
   ViewStyle,
 } from "react-native";
 import React, { useRef } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -25,6 +27,9 @@ interface ParallaxScrollViewProps {
   // New props for individual controls in animated header
   leftControl?: React.ReactNode;
   rightControl?: React.ReactNode;
+  // Blur props
+  blurIntensity?: number;
+  blurType?: "light" | "dark" | "regular";
 }
 
 const { width } = Dimensions.get("window");
@@ -47,6 +52,9 @@ const ParallaxScrollView = ({
   // New props for individual controls
   leftControl,
   rightControl,
+  // Blur props
+  blurIntensity = 20,
+  blurType = "light",
 }: ParallaxScrollViewProps) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -112,23 +120,6 @@ const ParallaxScrollView = ({
     ...titleStyle,
   };
 
-  const defaultHeaderContainerStyle: ViewStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 100,
-    backgroundColor,
-    zIndex: 1000,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    paddingBottom: 4,
-    paddingHorizontal: 20,
-    ...headerContainerStyle,
-  };
-
   return (
     <View className="flex-1" style={{ backgroundColor }}>
       {showStatusBar && (
@@ -138,63 +129,59 @@ const ParallaxScrollView = ({
         />
       )}
 
-      {/* Animated Top Title Bar */}
+      {/* Animated Top Title Bar with Blur */}
       <Animated.View
         style={{
-          ...defaultHeaderContainerStyle,
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 100,
+          zIndex: 1000,
           opacity: animatedHeaderOpacity,
         }}
       >
-        {/* Header content with controls and title */}
-        <View
+        <BlurView
+          tint={blurType}
           style={{
-            flexDirection: "row",
+            flex: 1,
+            justifyContent: "flex-end",
             alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
+            paddingBottom: 8,
+            paddingHorizontal: 20,
+            ...headerContainerStyle,
           }}
         >
-          {/* Left side - Back button */}
-          <Animated.View style={{ opacity: animatedControlsOpacity }}>
-            {leftControl ? (
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {leftControl}
-              </View>
-            ) : (
-              <View style={{ width: 40 }} />
-            )}
-          </Animated.View>
+          {/* Header content with controls and title */}
+          <View className="flex-row items-center justify-between w-full">
+            {/* Left side - Back button */}
+            <Animated.View style={{ opacity: animatedControlsOpacity }}>
+              {leftControl ? (
+                <View className="items-center justify-center">
+                  {leftControl}
+                </View>
+              ) : (
+                <View className="w-12" />
+              )}
+            </Animated.View>
 
-          {/* Center title */}
-          <Animated.Text style={defaultTitleStyle}>
-            {animatedTitle}
-          </Animated.Text>
+            {/* Center title */}
+            <Animated.Text style={defaultTitleStyle}>
+              {animatedTitle}
+            </Animated.Text>
 
-          {/* Right side - Favorite button */}
-          <Animated.View style={{ opacity: animatedControlsOpacity }}>
-            {rightControl ? (
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {rightControl}
-              </View>
-            ) : (
-              <View style={{ width: 40 }} />
-            )}
-          </Animated.View>
-        </View>
+            {/* Right side - Favorite button */}
+            <Animated.View style={{ opacity: animatedControlsOpacity }}>
+              {rightControl ? (
+                <View className="items-center justify-center">
+                  {rightControl}
+                </View>
+              ) : (
+                <View className="w-12" />
+              )}
+            </Animated.View>
+          </View>
+        </BlurView>
       </Animated.View>
 
       <View className="flex-1 bg-white">
@@ -228,8 +215,18 @@ const ParallaxScrollView = ({
               />
             )}
 
-            {/* Gradient overlay */}
-            <View className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+            {/* Enhanced Gradient overlay for better text readability */}
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
+              locations={[0, 0.6, 1]}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 128,
+              }}
+            />
           </Animated.View>
 
           {/* Header Controls */}
@@ -244,16 +241,28 @@ const ParallaxScrollView = ({
             </Animated.View>
           )}
 
-          {/* Header Title */}
+          {/* Header Title with enhanced background gradient */}
           {headerTitle && (
             <Animated.View
-              className="absolute left-0 right-0 z-10 px-6"
+              className="absolute left-0 right-0 z-10"
               style={{
                 bottom: 30,
                 opacity: titleOpacity,
               }}
             >
-              {headerTitle}
+              {/* Additional gradient specifically for title area */}
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.4)"]}
+                locations={[0, 1]}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+              />
+              <View className="px-6 relative">{headerTitle}</View>
             </Animated.View>
           )}
         </Animated.View>

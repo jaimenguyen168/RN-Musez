@@ -1,0 +1,90 @@
+import React from "react";
+import { View, Text, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+
+interface Review {
+  authorName: string;
+  rating: number;
+  text: string;
+  relativeTimeDescription: string;
+}
+
+interface ReviewsProps {
+  reviews: Review[];
+  maxReviews?: number;
+  showTitle?: boolean;
+  title?: string;
+  iconColor?: string;
+  cardWidth?: number;
+}
+
+const Reviews = ({
+  reviews,
+  maxReviews = 5,
+  showTitle = true,
+  title = "Recent Reviews",
+  iconColor = "#6366F1",
+  cardWidth = 320,
+}: ReviewsProps) => {
+  if (!reviews || reviews.length === 0) {
+    return null;
+  }
+
+  const displayReviews = reviews.slice(0, maxReviews);
+
+  return (
+    <View className="p-6">
+      {showTitle && (
+        <View className="flex-row items-center mb-4">
+          <Ionicons name="chatbubbles" size={20} color={iconColor} />
+          <Text className="text-lg font-semibold ml-2 text-gray-900">
+            {title}
+          </Text>
+        </View>
+      )}
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {displayReviews.map((review, index) => (
+          <View
+            key={index}
+            className="bg-gray-100 p-5 rounded-2xl mr-4"
+            style={{
+              width: cardWidth,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-3">
+              <Text
+                className="text-base font-semibold flex-1 text-gray-900"
+                numberOfLines={1}
+              >
+                {review.authorName}
+              </Text>
+              <View className="flex-row items-center ml-2 bg-amber-50 px-2 py-1 rounded-full">
+                <Ionicons name="star" size={14} color="#F59E0B" />
+                <Text className="text-sm font-medium text-amber-700 ml-1">
+                  {review.rating}
+                </Text>
+              </View>
+            </View>
+            <Text
+              className="text-sm leading-6 text-gray-700 mb-3"
+              numberOfLines={4}
+            >
+              {review.text}
+            </Text>
+            <Text className="text-xs text-gray-500 font-medium">
+              {review.relativeTimeDescription}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+export default Reviews;

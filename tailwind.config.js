@@ -5,6 +5,9 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      colors: {
+        secondary: "#E1E1D1",
+      },
       fontFamily: {
         // 👇 This makes Manrope the default for "font-sans"
         sans: ["Manrope_400Regular"],

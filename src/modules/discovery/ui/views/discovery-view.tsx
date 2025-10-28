@@ -104,6 +104,8 @@ const DiscoveryView = () => {
       title="Musez"
       headerComponent={headerComponent}
       scrollThreshold={80}
+      blurIntensity={80}
+      blurType="light"
     >
       {renderMainContent()}
     </AnimatedHeaderWrapper>

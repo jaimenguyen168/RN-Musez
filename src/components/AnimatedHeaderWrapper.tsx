@@ -8,6 +8,7 @@ import {
   TextStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { useHeader } from "@/hooks/useHeader";
 
 interface AnimatedHeaderWrapperProps {
@@ -20,6 +21,9 @@ interface AnimatedHeaderWrapperProps {
   headerContainerStyle?: ViewStyle;
   showStatusBar?: boolean;
   statusBarStyle?: "default" | "light-content" | "dark-content";
+  // Blur props
+  blurIntensity?: number;
+  blurType?: "light" | "dark" | "regular";
 }
 
 const AnimatedHeaderWrapper = ({
@@ -32,6 +36,9 @@ const AnimatedHeaderWrapper = ({
   headerContainerStyle,
   showStatusBar = true,
   statusBarStyle = "dark-content",
+  // Blur props
+  blurIntensity = 20,
+  blurType = "light",
 }: AnimatedHeaderWrapperProps) => {
   const { headerOpacity, titleOpacity, headerTranslateY, onScroll } = useHeader(
     { scrollThreshold },
@@ -45,21 +52,6 @@ const AnimatedHeaderWrapper = ({
     ...titleStyle,
   };
 
-  const defaultHeaderContainerStyle: ViewStyle = {
-    position: "absolute",
-    top: 48,
-    left: 0,
-    right: 0,
-    height: 60,
-    backgroundColor,
-    zIndex: 1000,
-    justifyContent: "center",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    ...headerContainerStyle,
-  };
-
   const renderContent = () => <View className="flex-1">{children}</View>;
 
   return (
@@ -71,14 +63,31 @@ const AnimatedHeaderWrapper = ({
         />
       )}
 
-      {/* Fixed Top Title Bar */}
+      {/* Animated Top Title Bar with Blur */}
       <Animated.View
         style={{
-          ...defaultHeaderContainerStyle,
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 100,
+          zIndex: 1000,
           opacity: titleOpacity,
         }}
       >
-        <Animated.Text style={defaultTitleStyle}>{title}</Animated.Text>
+        <BlurView
+          intensity={blurIntensity}
+          tint={blurType}
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            alignItems: "center",
+            paddingBottom: 8,
+            ...headerContainerStyle,
+          }}
+        >
+          <Animated.Text style={defaultTitleStyle}>{title}</Animated.Text>
+        </BlurView>
       </Animated.View>
 
       <FlatList
