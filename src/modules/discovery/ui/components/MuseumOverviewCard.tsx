@@ -68,7 +68,7 @@ const MuseumOverviewCard = ({
         </View>
 
         <View className="p-4">
-          <Text className="text-2xl font-bold text-gray-900 mb-1">
+          <Text className="text-xl font-bold text-gray-900 mb-1 line-clamp-2">
             {museum.name}
           </Text>
           <Text className="text-base text-gray-500 mb-3">
