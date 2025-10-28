@@ -1,84 +1,69 @@
 import { ActivityIndicator, Alert, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { useEffect, useState } from "react";
-import * as Location from "expo-location";
-import { Museum } from "@/types";
+import { useEffect } from "react";
+import { useLocationManager } from "@/hooks/useLocationManager";
+import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 
 const DiscoveryMapView = () => {
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null,
-  );
-  const [museums, setMuseums] = useState<Museum[]>([]);
-  const [loading, setLoading] = useState(false);
+  const {
+    location,
+    coords,
+    isLoading: isLocationLoading,
+    error: locationError,
+    getCurrentLocation,
+  } = useLocationManager(true);
 
-  const getCurrentLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Error", "Location permission denied");
-        return null;
+  // Prepare params for the museum query
+  const museumsParams = coords
+    ? {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       }
+    : null;
 
-      const location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-      return location;
-    } catch (error) {
-      console.error("Error getting location:", error);
-      Alert.alert("Error", "Failed to get current location");
-      return null;
-    }
-  };
-
-  const fetchMuseums = async (latitude: number, longitude: number) => {
-    try {
-      const response = await fetch(
-        `/api/museums?lat=${latitude}&lng=${longitude}`,
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        setMuseums(data.data);
-      } else {
-        Alert.alert("Error", data.error || "Failed to fetch museums");
-      }
-    } catch (error) {
-      console.error("Error fetching museums:", error);
-      Alert.alert("Error", "Failed to fetch museums");
-    }
-  };
-
-  const loadLocationAndMuseums = async () => {
-    setLoading(true);
-
-    try {
-      const currentLocation = await getCurrentLocation();
-
-      if (currentLocation?.coords) {
-        await fetchMuseums(
-          currentLocation.coords.latitude,
-          currentLocation.coords.longitude,
-        );
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: museums = [],
+    isLoading: museumsLoading,
+    error: museumsError,
+    refetch: refetchMuseums,
+  } = useMuseumsQuery(museumsParams, {
+    retry: 2,
+    retryDelay: 1000,
+  });
 
   useEffect(() => {
-    loadLocationAndMuseums();
-  }, []);
+    if (museumsError) {
+      Alert.alert("Error", museumsError.message);
+    }
+  }, [museumsError]);
+
+  useEffect(() => {
+    if (locationError) {
+      Alert.alert("Location Error", "Unable to get your location");
+    }
+  }, [locationError]);
+
+  const loading = isLocationLoading || museumsLoading;
 
   return (
     <View className="flex-1 items-center justify-center">
       <MapView
         initialRegion={{
-          latitude: location?.coords.latitude || 39.9526,
-          longitude: location?.coords.longitude || -75.1652,
+          latitude: coords?.latitude || 39.9526,
+          longitude: coords?.longitude || -75.1652,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
+        region={
+          coords
+            ? {
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }
+            : undefined
+        }
         showsUserLocation={true}
         style={{
           width: "100%",
@@ -87,7 +72,7 @@ const DiscoveryMapView = () => {
       >
         {museums.map((museum, index) => (
           <Marker
-            key={museum.place_id || index}
+            key={museum.placeId || index}
             coordinate={{
               latitude: museum.geometry.location.lat,
               longitude: museum.geometry.location.lng,
