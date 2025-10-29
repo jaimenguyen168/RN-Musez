@@ -28,7 +28,7 @@ const OpeningHours = ({
         </View>
       )}
 
-      <View className="bg-gray-50 rounded-xl p-2">
+      <View className="bg-gray-50 rounded-xl pb-4 px-6">
         {weekdayText.map((day, index) => {
           const [dayName, ...timeParts] = day.split(": ");
           const timeText = timeParts.join(": ");

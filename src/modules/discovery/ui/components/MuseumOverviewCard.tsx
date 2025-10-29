@@ -41,13 +41,13 @@ const MuseumOverviewCard = ({
     return (
       <Pressable
         onPress={onCardPress}
-        className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
+        className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4 mx-4 flex-1 border border-gray-100"
       >
         <View className="relative">
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
-              className="w-full h-56"
+              className="w-full h-48"
               resizeMode="cover"
             />
           ) : (

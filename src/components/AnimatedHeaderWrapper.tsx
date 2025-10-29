@@ -55,7 +55,7 @@ const AnimatedHeaderWrapper = ({
   const renderContent = () => <View className="flex-1">{children}</View>;
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
+    <View className={`flex-1 pt-14 ${backgroundColor}`}>
       {showStatusBar && (
         <StatusBar
           barStyle={statusBarStyle}
@@ -110,7 +110,7 @@ const AnimatedHeaderWrapper = ({
           ) : undefined
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

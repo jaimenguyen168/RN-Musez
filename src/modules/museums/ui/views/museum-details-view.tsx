@@ -174,7 +174,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
           )}
 
         {/* Main Content Card */}
-        <View className="mx-4 gap-0 bg-white rounded-3xl shadow-lg overflow-hidden">
+        <View className="mx-4 gap-0 bg-[#EAF4FF] rounded-3xl shadow-lg overflow-hidden">
           {/* Museum Title & Rating Section */}
           <View className="p-6">
             <Text className="text-2xl font-bold text-gray-900 mb-2">

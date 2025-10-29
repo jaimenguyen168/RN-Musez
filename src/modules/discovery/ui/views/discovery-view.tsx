@@ -76,7 +76,7 @@ const DiscoveryView = () => {
     }
 
     return (
-      <View className="flex-1 mt-4">
+      <View className="flex-1 py-4">
         <MuseumRowList
           title="Nearby"
           museums={museums}
@@ -106,6 +106,7 @@ const DiscoveryView = () => {
       scrollThreshold={80}
       blurIntensity={80}
       blurType="light"
+      backgroundColor="bg-secondary"
     >
       {renderMainContent()}
     </AnimatedHeaderWrapper>

@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        secondary: "#E1E1D1",
+        secondary: "#FFFFFF",
       },
       fontFamily: {
         // 👇 This makes Manrope the default for "font-sans"
