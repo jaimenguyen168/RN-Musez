@@ -11,7 +11,7 @@ export const getSavedMuseumIds = query({
       .collect();
 
     return savedMuseums.map((saved) => ({
-      placeId: saved.museumId,
+      museumId: saved.museumId,
       visitStatus: saved.visitStatus,
       personalNotes: saved.personalNotes,
     }));

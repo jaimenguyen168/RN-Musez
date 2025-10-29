@@ -1,29 +1,45 @@
 import { View, Text, Image, Pressable, TouchableOpacity } from "react-native";
-import React from "react";
+import React, { useMemo } from "react";
 import { Museum } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
+import { getPhotoUrl } from "@/utils";
+import { useLocationManager } from "@/hooks/useLocationManager";
+import { calculateAndFormatDistance, DistanceUnit } from "@/utils/distance";
 
 interface MuseumOverviewCardProps {
   museum: Museum;
   variant?: "compact" | "detailed";
   onCardPress?: () => void;
-  distanceInMeters?: number;
 }
 
 const MuseumOverviewCard = ({
   museum,
   variant = "compact",
   onCardPress,
-  distanceInMeters,
 }: MuseumOverviewCardProps) => {
+  const { coords } = useLocationManager(false);
+
   const isSaved = useQuery(api.function.museums.isMuseumSaved, {
     userId: "1234",
     museumId: museum.placeId,
   });
 
   const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
+
+  const formattedDistance = useMemo(() => {
+    if (!coords || !museum.geometry?.location) return null;
+
+    const museumCoords = {
+      latitude: museum.geometry.location.lat,
+      longitude: museum.geometry.location.lng,
+    };
+
+    const distanceUnit: DistanceUnit = "imperial";
+
+    return calculateAndFormatDistance(coords, museumCoords, distanceUnit);
+  }, [coords, museum.geometry?.location]);
 
   const onFavoritePress = async () => {
     await toggleSavedMuseum({
@@ -32,22 +48,10 @@ const MuseumOverviewCard = ({
     });
   };
 
-  const getPhotoUrl = () => {
-    if (museum.photos && museum.photos.length > 0) {
-      const photoReference = museum.photos[0].photoReference;
-      return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoReference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-    }
-    return null;
-  };
+  const photoUrl = getPhotoUrl(museum);
 
-  const formatDistance = (meters: number) => {
-    if (meters < 1000) {
-      return `${Math.round(meters)}m away`;
-    }
-    return `${(meters / 1000).toFixed(1)}km away`;
-  };
-
-  const photoUrl = getPhotoUrl();
+  const isOpen =
+    museum.openingHours?.openNow ?? museum.currentOpeningHours?.openNow;
 
   if (variant === "compact") {
     return (
@@ -84,7 +88,7 @@ const MuseumOverviewCard = ({
             {museum.name}
           </Text>
           <Text className="text-base text-gray-500 mb-3">
-            {museum.vicinity}
+            {museum.vicinity || museum.formattedAddress}
           </Text>
 
           <View className="flex-row items-center">
@@ -92,22 +96,25 @@ const MuseumOverviewCard = ({
             <Text className="text-base font-semibold text-gray-900 ml-1 mr-3">
               {museum.rating ? museum.rating.toFixed(1) : "N/A"}
             </Text>
-            {distanceInMeters !== undefined && (
-              <Text className="text-base text-gray-600">
-                {formatDistance(distanceInMeters)}
-              </Text>
+            {formattedDistance && (
+              <View className="flex-row items-center gap-1">
+                <MaterialIcons name="directions" size={20} color="#6B7280" />
+                <Text className="text-base text-gray-600">
+                  {formattedDistance}
+                </Text>
+              </View>
             )}
           </View>
 
-          {museum.openingHours && museum.openingHours.openNow !== undefined && (
+          {isOpen !== undefined && (
             <View className="mt-3 flex-row items-center">
               <View
-                className={`w-2 h-2 rounded-full mr-2 ${museum.openingHours.openNow ? "bg-green-500" : "bg-red-500"}`}
+                className={`w-2 h-2 rounded-full mr-2 ${isOpen ? "bg-green-500" : "bg-red-500"}`}
               />
               <Text
-                className={`text-sm font-medium ${museum.openingHours.openNow ? "text-green-600" : "text-red-600"}`}
+                className={`text-sm font-medium ${isOpen ? "text-green-600" : "text-red-600"}`}
               >
-                {museum.openingHours.openNow ? "Open now" : "Closed"}
+                {isOpen ? "Open now" : "Closed"}
               </Text>
             </View>
           )}
@@ -145,7 +152,7 @@ const MuseumOverviewCard = ({
             {museum.name}
           </Text>
           <Text className="text-sm text-gray-500 mb-2" numberOfLines={1}>
-            {museum.vicinity}
+            {museum.vicinity || museum.formattedAddress}
           </Text>
 
           <View className="flex-row items-center mb-2">
@@ -159,24 +166,24 @@ const MuseumOverviewCard = ({
             </Text>
           </View>
 
-          {distanceInMeters !== undefined && (
+          {formattedDistance && (
             <View className="flex-row items-center mb-2">
               <Ionicons name="location-outline" size={16} color="#6B7280" />
               <Text className="text-sm text-gray-600 ml-1">
-                {formatDistance(distanceInMeters)}
+                {formattedDistance}
               </Text>
             </View>
           )}
 
-          {museum.openingHours && museum.openingHours.openNow !== undefined && (
+          {isOpen !== undefined && (
             <View className="flex-row items-center">
               <View
-                className={`w-2 h-2 rounded-full mr-2 ${museum.openingHours.openNow ? "bg-green-500" : "bg-red-500"}`}
+                className={`w-2 h-2 rounded-full mr-2 ${isOpen ? "bg-green-500" : "bg-red-500"}`}
               />
               <Text
-                className={`text-xs font-medium ${museum.openingHours.openNow ? "text-green-600" : "text-red-600"}`}
+                className={`text-xs font-medium ${isOpen ? "text-green-600" : "text-red-600"}`}
               >
-                {museum.openingHours.openNow ? "Open now" : "Closed"}
+                {isOpen ? "Open now" : "Closed"}
               </Text>
             </View>
           )}

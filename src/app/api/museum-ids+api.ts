@@ -1,4 +1,4 @@
-import { MuseumDetails } from "@/types";
+import { Museum } from "@/types";
 import { snakeToCamel } from "@/utils";
 
 export async function POST(request: Request) {
@@ -90,9 +90,9 @@ export async function GET(request: Request) {
   }
 }
 
-async function fetchMuseumsByIds(placeIds: string[]): Promise<MuseumDetails[]> {
+async function fetchMuseumsByIds(placeIds: string[]): Promise<Museum[]> {
   try {
-    const museums: MuseumDetails[] = [];
+    const museums: Museum[] = [];
     const errors: { placeId: string; error: string }[] = [];
 
     const promises = placeIds.map(async (placeId) => {
@@ -130,29 +130,20 @@ async function fetchMuseumsByIds(placeIds: string[]): Promise<MuseumDetails[]> {
 
 async function fetchSingleMuseumDetails(
   placeId: string,
-): Promise<MuseumDetails | null> {
+): Promise<Museum | null> {
   try {
-    // Define the fields you want to retrieve
+    // Only fetch the fields needed for the card component
     const fields = [
       "place_id",
       "name",
       "formatted_address",
-      "formatted_phone_number",
-      "international_phone_number",
-      "website",
-      "url",
       "rating",
       "user_ratings_total",
-      "price_level",
-      "opening_hours",
       "current_opening_hours",
-      "secondary_opening_hours",
       "photos",
-      "reviews",
-      "geometry",
       "types",
       "business_status",
-      "editorial_summary",
+      "geometry",
     ].join(",");
 
     const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
@@ -161,8 +152,7 @@ async function fetchSingleMuseumDetails(
     const data = await response.json();
 
     if (data.status === "OK" && data.result) {
-      // Convert snake_case to camelCase
-      return snakeToCamel<MuseumDetails>(data.result);
+      return snakeToCamel<Museum>(data.result);
     } else if (data.status === "NOT_FOUND") {
       console.warn(`Museum with place ID ${placeId} not found`);
       return null;

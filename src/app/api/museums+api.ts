@@ -40,7 +40,21 @@ async function fetchNearbyMuseums(
     const radius = 5000;
     const type = "museum";
 
-    const apiUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=${type}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+    // Use fields parameter for nearby search too
+    const fields = [
+      "place_id",
+      "name",
+      "vicinity",
+      "rating",
+      "user_ratings_total",
+      "opening_hours",
+      "photos",
+      "types",
+      "business_status",
+      "geometry",
+    ].join(",");
+
+    const apiUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=${type}&fields=${fields}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
 
     const response = await fetch(apiUrl);
     const data = await response.json();

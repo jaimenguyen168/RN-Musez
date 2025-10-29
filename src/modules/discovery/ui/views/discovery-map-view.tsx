@@ -6,14 +6,11 @@ import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 
 const DiscoveryMapView = () => {
   const {
-    location,
     coords,
     isLoading: isLocationLoading,
     error: locationError,
-    getCurrentLocation,
   } = useLocationManager(true);
 
-  // Prepare params for the museum query
   const museumsParams = coords
     ? {
         latitude: coords.latitude,
@@ -25,7 +22,6 @@ const DiscoveryMapView = () => {
     data: museums = [],
     isLoading: museumsLoading,
     error: museumsError,
-    refetch: refetchMuseums,
   } = useMuseumsQuery(museumsParams, {
     retry: 2,
     retryDelay: 1000,
