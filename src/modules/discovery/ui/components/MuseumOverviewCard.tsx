@@ -1,14 +1,14 @@
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Image, Pressable, TouchableOpacity } from "react-native";
 import React from "react";
 import { Museum } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
+import { api } from "../../../../../convex/_generated/api";
+import { useQuery, useMutation } from "convex/react";
 
 interface MuseumOverviewCardProps {
   museum: Museum;
   variant?: "compact" | "detailed";
   onCardPress?: () => void;
-  onFavoritePress?: () => void;
-  isFavorite?: boolean;
   distanceInMeters?: number;
 }
 
@@ -16,10 +16,22 @@ const MuseumOverviewCard = ({
   museum,
   variant = "compact",
   onCardPress,
-  onFavoritePress,
-  isFavorite = false,
   distanceInMeters,
 }: MuseumOverviewCardProps) => {
+  const isSaved = useQuery(api.function.museums.isMuseumSaved, {
+    userId: "1234",
+    museumId: museum.placeId,
+  });
+
+  const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
+
+  const onFavoritePress = async () => {
+    await toggleSavedMuseum({
+      userId: "1234",
+      museumId: museum.placeId,
+    });
+  };
+
   const getPhotoUrl = () => {
     if (museum.photos && museum.photos.length > 0) {
       const photoReference = museum.photos[0].photoReference;
@@ -39,7 +51,7 @@ const MuseumOverviewCard = ({
 
   if (variant === "compact") {
     return (
-      <Pressable
+      <TouchableOpacity
         onPress={onCardPress}
         className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
       >
@@ -55,16 +67,16 @@ const MuseumOverviewCard = ({
               <Ionicons name="image-outline" size={48} color="#9CA3AF" />
             </View>
           )}
-          <Pressable
+          <TouchableOpacity
             onPress={onFavoritePress}
             className="absolute top-4 right-4 bg-white/90 rounded-full p-2"
           >
             <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
+              name={isSaved ? "heart" : "heart-outline"}
               size={24}
-              color={isFavorite ? "#EC4899" : "#6B7280"}
+              color={isSaved ? "#EC4899" : "#6B7280"}
             />
-          </Pressable>
+          </TouchableOpacity>
         </View>
 
         <View className="p-4">
@@ -100,7 +112,7 @@ const MuseumOverviewCard = ({
             </View>
           )}
         </View>
-      </Pressable>
+      </TouchableOpacity>
     );
   }
 
@@ -175,9 +187,9 @@ const MuseumOverviewCard = ({
           className="absolute top-3 right-3 bg-white/90 rounded-full p-2"
         >
           <Ionicons
-            name={isFavorite ? "heart" : "heart-outline"}
+            name={isSaved ? "heart" : "heart-outline"}
             size={20}
-            color={isFavorite ? "#EC4899" : "#6B7280"}
+            color={isSaved ? "#EC4899" : "#6B7280"}
           />
         </Pressable>
       </View>

@@ -7,8 +7,6 @@ interface MuseumRowListProps {
   title: string;
   museums: Museum[];
   onCardPress: (museumId: string) => void;
-  onFavoritePress: (museumId: string) => void;
-  favoriteMuseumIds?: string[];
   onShowAll?: () => void;
   userLocation?: {
     latitude: number;
@@ -20,8 +18,6 @@ const MuseumRowList = ({
   title,
   museums,
   onCardPress,
-  onFavoritePress,
-  favoriteMuseumIds = [],
   onShowAll,
   userLocation,
 }: MuseumRowListProps) => {
@@ -75,8 +71,6 @@ const MuseumRowList = ({
               museum={item}
               variant="compact"
               onCardPress={() => onCardPress(item.placeId)}
-              onFavoritePress={() => onFavoritePress(item.placeId)}
-              isFavorite={favoriteMuseumIds.includes(item.placeId)}
               distanceInMeters={calculateDistance(item)}
             />
           </View>

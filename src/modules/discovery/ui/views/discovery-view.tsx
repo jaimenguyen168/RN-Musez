@@ -10,7 +10,6 @@ import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 
 const DiscoveryView = () => {
   const router = useRouter();
-
   const {
     coords,
     isLoading: isLocationLoading,
@@ -81,8 +80,6 @@ const DiscoveryView = () => {
           title="Nearby"
           museums={museums}
           onCardPress={(id) => handleGoToMuseum(id)}
-          onFavoritePress={(id) => {}}
-          favoriteMuseumIds={[]}
           onShowAll={handleShowAll}
           userLocation={coords || undefined}
         />
