@@ -22,8 +22,8 @@ const SnapHeader = ({
 
       {/* Plus Button - only show when there's scrollable content */}
       {showPlusButton && (
-        <TouchableOpacity onPress={onPlusPress} className="p-3">
-          <Ionicons name="add" size={24} color="#374151" />
+        <TouchableOpacity onPress={onPlusPress} className="p-3 -mr-3">
+          <Ionicons name="add" size={32} color="#374151" />
         </TouchableOpacity>
       )}
     </View>
