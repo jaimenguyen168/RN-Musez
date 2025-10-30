@@ -12,7 +12,6 @@ export const getSavedMuseumIds = query({
 
     return savedMuseums.map((saved) => ({
       museumId: saved.museumId,
-      visitStatus: saved.visitStatus,
       personalNotes: saved.personalNotes,
     }));
   },
@@ -49,7 +48,6 @@ export const toggleSavedMuseum = mutation({
       const savedId = await ctx.db.insert("savedMuseums", {
         userId: args.userId,
         museumId: args.museumId,
-        visitStatus: args.visitStatus || "want_to_visit",
       });
 
       return {

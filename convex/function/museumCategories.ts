@@ -1,0 +1,185 @@
+import { mutation, query } from "../_generated/server";
+import { v } from "convex/values";
+
+// Get all museums organized by categories
+export const getMuseumsByCategories = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const categories = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .collect();
+
+    // Group by category
+    const categorizedMuseums: Record<string, any[]> = {};
+
+    categories.forEach((category) => {
+      if (!categorizedMuseums[category.categoryName]) {
+        categorizedMuseums[category.categoryName] = [];
+      }
+      categorizedMuseums[category.categoryName].push({
+        museumId: category.museumId,
+        categoryDisplayName: category.categoryDisplayName,
+        order: category.order,
+      });
+    });
+
+    // Sort each category by order if specified, otherwise by addedAt
+    Object.keys(categorizedMuseums).forEach((categoryName) => {
+      categorizedMuseums[categoryName].sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        return b.addedAt - a.addedAt; // newest first
+      });
+    });
+
+    return categorizedMuseums;
+  },
+});
+
+// Add museum to a category (museum must already be saved)
+export const addMuseumToCategory = mutation({
+  args: {
+    userId: v.string(),
+    museumId: v.string(),
+    categoryName: v.string(),
+    categoryDisplayName: v.string(),
+    order: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Check if museum is saved first
+    const savedMuseum = await ctx.db
+      .query("savedMuseums")
+      .withIndex("by_user_museum_id", (q) =>
+        q.eq("userId", args.userId).eq("museumId", args.museumId),
+      )
+      .first();
+
+    if (!savedMuseum) {
+      return {
+        success: false,
+        message: "Museum must be saved before adding to categories",
+      };
+    }
+
+    // Check if already in this category
+    const existingCategory = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user_category", (q) =>
+        q.eq("userId", args.userId).eq("categoryName", args.categoryName),
+      )
+      .filter((q) => q.eq(q.field("museumId"), args.museumId))
+      .first();
+
+    if (existingCategory) {
+      return {
+        success: false,
+        message: "Museum already in this category",
+      };
+    }
+
+    // Add to category
+    await ctx.db.insert("museumCategories", {
+      userId: args.userId,
+      museumId: args.museumId,
+      categoryName: args.categoryName,
+      categoryDisplayName: args.categoryDisplayName,
+      order: args.order,
+    });
+
+    return {
+      success: true,
+      action: "added_to_category",
+      categoryName: args.categoryName,
+    };
+  },
+});
+
+// Remove museum from a specific category
+export const removeMuseumFromCategory = mutation({
+  args: {
+    userId: v.string(),
+    museumId: v.string(),
+    categoryName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const categoryEntry = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user_category", (q) =>
+        q.eq("userId", args.userId).eq("categoryName", args.categoryName),
+      )
+      .filter((q) => q.eq(q.field("museumId"), args.museumId))
+      .first();
+
+    if (!categoryEntry) {
+      return { success: false, message: "Museum not in this category" };
+    }
+
+    await ctx.db.delete(categoryEntry._id);
+
+    return {
+      success: true,
+      action: "removed_from_category",
+      categoryName: args.categoryName,
+    };
+  },
+});
+
+// Get categories for a specific museum
+export const getMuseumCategories = query({
+  args: {
+    userId: v.string(),
+    museumId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const categories = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user_museum", (q) =>
+        q.eq("userId", args.userId).eq("museumId", args.museumId),
+      )
+      .collect();
+
+    return categories.map((cat) => ({
+      categoryName: cat.categoryName,
+      categoryDisplayName: cat.categoryDisplayName,
+    }));
+  },
+});
+
+// Get all user categories with counts
+export const getUserCategories = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const categories = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    // Get unique categories with counts
+    const categoryMap = new Map<
+      string,
+      {
+        name: string;
+        displayName: string;
+        count: number;
+      }
+    >();
+
+    categories.forEach((cat) => {
+      const existing = categoryMap.get(cat.categoryName);
+      if (existing) {
+        existing.count++;
+      } else {
+        categoryMap.set(cat.categoryName, {
+          name: cat.categoryName,
+          displayName: cat.categoryDisplayName,
+          count: 1,
+        });
+      }
+    });
+
+    return Array.from(categoryMap.values());
+  },
+});

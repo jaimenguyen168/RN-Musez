@@ -1,122 +1,177 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
-import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import React, { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
-import { MuseumDetails } from "@/types";
-import MuseumOverviewCard from "@/modules/discovery/ui/components/MuseumOverviewCard";
+import { Ionicons } from "@expo/vector-icons";
+import FavoriteGrid, {
+  CategorySection,
+} from "@/modules/favorite/ui/components/FavoriteGrid";
+import FavoriteEmpty from "@/modules/favorite/ui/components/FavoriteEmpty";
+import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
+import { useMuseumListStore } from "@/stores/museumListStore";
+import { useRouter } from "expo-router";
 
 const FavoriteView = () => {
-  const [museums, setMuseums] = useState<MuseumDetails[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { setMuseumList } = useMuseumListStore();
 
   const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
     userId: "1234",
   });
+  const categorizedMuseumIds = useQuery(
+    api.function.museumCategories.getMuseumsByCategories,
+    {
+      userId: "1234",
+    },
+  );
 
-  useEffect(() => {
-    if (!savedMuseumIds || savedMuseumIds.length === 0) return;
+  // Get all unique museum IDs (saved + categorized)
+  const allMuseumIds = useMemo(() => {
+    const savedIds = savedMuseumIds?.map((item) => item.museumId) || [];
+    const categorizedIds = categorizedMuseumIds
+      ? Object.values(categorizedMuseumIds)
+          .flat()
+          .map((item) => item.museumId)
+      : [];
 
-    const fetchMuseumDetails = async () => {
-      setLoading(true);
-      setError(null);
+    return Array.from(new Set([...savedIds, ...categorizedIds]));
+  }, [savedMuseumIds, categorizedMuseumIds]);
 
-      try {
-        // Extract just the museumId values
-        const placeIds = savedMuseumIds.map((item) => item.museumId);
+  const {
+    data: museums = [],
+    isLoading: loading,
+    error,
+  } = useMuseumsFavorites({ museumIds: allMuseumIds });
 
-        console.log("Fetching details for place IDs:", placeIds);
+  const categories = useMemo(() => {
+    if (museums.length === 0) return [];
 
-        // Call your API
-        const response = await fetch("/api/museum-ids", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ placeIds }),
-        });
+    const categories: CategorySection[] = [];
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    // Create museum lookup map
+    const museumMap = new Map(
+      museums.map((museum) => [museum.placeId, museum]),
+    );
 
-        const data = await response.json();
+    // 1. Add "Your Favorites" with ALL saved museums
+    if (savedMuseumIds && savedMuseumIds.length > 0) {
+      const favoriteMuseums = savedMuseumIds
+        .map((saved) => museumMap.get(saved.museumId))
+        .filter((museum) => museum !== undefined);
 
-        if (!data.success) {
-          throw new Error(data.error || "Failed to fetch museums");
-        }
+      categories.push({
+        title: "Your Favorites",
+        count: favoriteMuseums.length,
+        museums: favoriteMuseums,
+        categoryKey: "all_favorites",
+      });
+    }
 
-        console.log("Fetched museum details:", data.data);
-        setMuseums(data.data);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error";
-        console.error("Error fetching museum details:", errorMessage);
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // 2. Add custom categories
+    if (categorizedMuseumIds && Object.keys(categorizedMuseumIds).length > 0) {
+      Object.entries(categorizedMuseumIds).forEach(
+        ([categoryName, museumData]) => {
+          if (museumData.length === 0) return;
 
-    fetchMuseumDetails();
-  }, [savedMuseumIds]);
+          // Get the display name from the first item (they should all be the same)
+          const displayName =
+            museumData[0]?.categoryDisplayName || categoryName;
 
-  if (!savedMuseumIds) {
+          // Get museums for this category
+          const categoryMuseums = museumData
+            .map((item) => museumMap.get(item.museumId))
+            .filter((museum) => museum !== undefined);
+
+          if (categoryMuseums.length > 0) {
+            categories.push({
+              title: displayName,
+              count: categoryMuseums.length,
+              museums: categoryMuseums,
+              categoryKey: categoryName,
+            });
+          }
+        },
+      );
+    }
+
+    return categories;
+  }, [museums, savedMuseumIds, categorizedMuseumIds]);
+
+  const handleDiscoveryPress = () => {
+    router.push("/discovery");
+  };
+
+  const handleCategoryPress = (category: CategorySection) => {
+    setMuseumList(category.title, category.museums);
+    router.push("/museums");
+  };
+
+  if (!savedMuseumIds && !categorizedMuseumIds) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" />
-        <Text className="mt-2">Loading saved museums...</Text>
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text className="mt-2 text-gray-600">Loading saved museums...</Text>
       </View>
     );
   }
 
-  if (savedMuseumIds.length === 0) {
+  if (
+    (!savedMuseumIds || savedMuseumIds.length === 0) &&
+    (!categorizedMuseumIds || Object.keys(categorizedMuseumIds).length === 0)
+  ) {
     return (
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-lg font-semibold text-gray-600">
-          No saved museums yet
-        </Text>
-        <Text className="text-gray-500 text-center mt-2">
-          Start exploring and save museums you want to visit!
-        </Text>
+      <View className="flex-1 bg-gray-50">
+        <FavoriteEmpty onDiscoveryPress={handleDiscoveryPress} />
       </View>
     );
   }
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" />
-        <Text className="mt-2">Fetching museum details...</Text>
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text className="mt-2 text-gray-600">Fetching museum details...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-red-500 text-center">
-          Error loading museums: {error}
-        </Text>
+      <View className="flex-1 justify-center items-center p-4 bg-gray-50">
+        <View className="bg-white rounded-2xl p-6 items-center shadow-lg">
+          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+          <Text className="text-red-500 text-center mt-4 font-semibold">
+            Error loading museums
+          </Text>
+          <Text className="text-gray-600 text-center mt-2">
+            {error.message}
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="p-4">
-        <Text className="text-2xl font-bold text-gray-900">Saved Museums</Text>
-        <Text className="text-gray-600 mt-1">
-          {museums.length} museum{museums.length !== 1 ? "s" : ""} saved
-        </Text>
-      </View>
-
       <FlatList
-        data={museums}
-        keyExtractor={(item) => item.placeId}
-        renderItem={({ item }) => <MuseumOverviewCard museum={item} />}
+        data={categories}
+        numColumns={2}
+        keyExtractor={(item) => item.categoryKey || item.title}
+        renderItem={({ item }) => (
+          <FavoriteGrid
+            category={item}
+            onPress={() => handleCategoryPress(item)}
+          />
+        )}
+        columnWrapperStyle={{
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+        }}
+        contentContainerStyle={{
+          paddingBottom: 32,
+          paddingTop: 128,
+        }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
       />
     </View>
   );
