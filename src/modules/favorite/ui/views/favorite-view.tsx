@@ -1,6 +1,6 @@
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
-import React, { useMemo } from "react";
-import { useQuery } from "convex/react";
+import { ActivityIndicator, FlatList, Text, View, Alert } from "react-native";
+import React, { useMemo, useState } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 import FavoriteGrid, {
@@ -10,10 +10,15 @@ import FavoriteEmpty from "@/modules/favorite/ui/components/FavoriteEmpty";
 import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useRouter } from "expo-router";
+import FavoriteHeader from "@/modules/favorite/ui/components/FavoriteHeader";
+import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionModal";
+import { Museum } from "@/types";
 
 const FavoriteView = () => {
   const router = useRouter();
   const { setMuseumList } = useMuseumListStore();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
 
   const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
     userId: "1234",
@@ -25,7 +30,11 @@ const FavoriteView = () => {
     },
   );
 
-  // Get all unique museum IDs (saved + categorized)
+  // Mutation for creating collections
+  const createCollectionMutation = useMutation(
+    api.function.museumCategories.createCollection,
+  );
+
   const allMuseumIds = useMemo(() => {
     const savedIds = savedMuseumIds?.map((item) => item.museumId) || [];
     const categorizedIds = categorizedMuseumIds
@@ -106,6 +115,53 @@ const FavoriteView = () => {
     router.push("/museums");
   };
 
+  const handleAddFavoriteCollectionPress = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleCreateCollection = async (
+    name: string,
+    selectedMuseums: Museum[],
+  ) => {
+    try {
+      setIsCreatingCollection(true);
+
+      const museumIds = selectedMuseums.map((museum) => museum.placeId);
+
+      const result = await createCollectionMutation({
+        userId: "1234",
+        collectionName: name,
+        museumIds: museumIds,
+      });
+
+      if (result.success) {
+        Alert.alert(
+          "Success",
+          `Collection "${result.categoryDisplayName}" created successfully with ${result.museumsAdded} museums.`,
+          [{ text: "OK" }],
+        );
+        setIsModalVisible(false);
+      } else {
+        Alert.alert("Error", result.message || "Failed to create collection", [
+          { text: "OK" },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      Alert.alert(
+        "Error",
+        "An unexpected error occurred while creating the collection.",
+        [{ text: "OK" }],
+      );
+    } finally {
+      setIsCreatingCollection(false);
+    }
+  };
+
   if (!savedMuseumIds && !categorizedMuseumIds) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
@@ -121,6 +177,7 @@ const FavoriteView = () => {
   ) {
     return (
       <View className="flex-1 bg-gray-50">
+        <FavoriteHeader onAddPress={handleAddFavoriteCollectionPress} />
         <FavoriteEmpty onDiscoveryPress={handleDiscoveryPress} />
       </View>
     );
@@ -152,7 +209,8 @@ const FavoriteView = () => {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 relative">
+      <FavoriteHeader onAddPress={handleAddFavoriteCollectionPress} />
       <FlatList
         data={categories}
         numColumns={2}
@@ -168,10 +226,20 @@ const FavoriteView = () => {
           paddingHorizontal: 16,
         }}
         contentContainerStyle={{
-          paddingBottom: 32,
+          flexGrow: 1,
           paddingTop: 128,
+          paddingBottom: 32,
         }}
         showsVerticalScrollIndicator={false}
+      />
+
+      {/* Modal */}
+      <AddCollectionModal
+        visible={isModalVisible}
+        onClose={closeModal}
+        museums={museums}
+        onCreateCollection={handleCreateCollection}
+        isCreating={isCreatingCollection}
       />
     </View>
   );

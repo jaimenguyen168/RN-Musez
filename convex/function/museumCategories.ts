@@ -1,6 +1,85 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 
+function stringToSlug(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, and multiple hyphens with single hyphen
+    .replace(/^-+|-+$/g, ""); // Remove leading and trailing hyphens
+}
+
+// Create a new collection with museums
+export const createCollection = mutation({
+  args: {
+    userId: v.string(),
+    collectionName: v.string(),
+    museumIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const categoryName = stringToSlug(args.collectionName);
+    const categoryDisplayName = args.collectionName.trim();
+
+    // Check if category with this name already exists
+    const existingCategory = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user_category", (q) =>
+        q.eq("userId", args.userId).eq("categoryName", categoryName),
+      )
+      .first();
+
+    if (existingCategory) {
+      return {
+        success: false,
+        message: "A collection with this name already exists",
+      };
+    }
+
+    // Validate that all museums are saved by the user
+    const savedMuseums = await ctx.db
+      .query("savedMuseums")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const savedMuseumIds = new Set(
+      savedMuseums.map((museum) => museum.museumId),
+    );
+    const invalidMuseumIds = args.museumIds.filter(
+      (id) => !savedMuseumIds.has(id),
+    );
+
+    if (invalidMuseumIds.length > 0) {
+      return {
+        success: false,
+        message: "Some museums are not saved by this user",
+        invalidMuseumIds,
+      };
+    }
+
+    // Add all museums to the new category
+    const insertPromises = args.museumIds.map((museumId, index) =>
+      ctx.db.insert("museumCategories", {
+        userId: args.userId,
+        museumId,
+        categoryName,
+        categoryDisplayName,
+        order: index, // Use index as order
+      }),
+    );
+
+    await Promise.all(insertPromises);
+
+    return {
+      success: true,
+      action: "collection_created",
+      categoryName,
+      categoryDisplayName,
+      museumsAdded: args.museumIds.length,
+    };
+  },
+});
+
 // Get all museums organized by categories
 export const getMuseumsByCategories = query({
   args: { userId: v.string() },

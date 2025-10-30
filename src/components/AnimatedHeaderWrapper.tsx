@@ -70,7 +70,7 @@ const AnimatedHeaderWrapper = ({
           top: 0,
           left: 0,
           right: 0,
-          height: 100,
+          height: 120,
           zIndex: 1000,
           opacity: titleOpacity,
         }}
@@ -82,11 +82,16 @@ const AnimatedHeaderWrapper = ({
             flex: 1,
             justifyContent: "flex-end",
             alignItems: "center",
-            paddingBottom: 8,
+            paddingBottom: 24,
             ...headerContainerStyle,
           }}
         >
-          <Animated.Text style={defaultTitleStyle}>{title}</Animated.Text>
+          <Animated.Text
+            className="text-xl font-bold text-black tracking-wide"
+            style={titleStyle}
+          >
+            {title}
+          </Animated.Text>
         </BlurView>
       </Animated.View>
 
