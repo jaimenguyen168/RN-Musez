@@ -31,3 +31,12 @@ export const getPhotoUrl = (museum: Museum | MuseumDetails) => {
   }
   return null;
 };
+
+export function stringToSlug(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, and multiple hyphens with single hyphen
+    .replace(/^-+|-+$/g, ""); // Remove leading and trailing hyphens
+}

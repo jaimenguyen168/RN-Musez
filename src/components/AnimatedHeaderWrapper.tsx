@@ -1,15 +1,8 @@
 import React, { ReactNode } from "react";
-import {
-  Animated,
-  FlatList,
-  StatusBar,
-  View,
-  ViewStyle,
-  TextStyle,
-} from "react-native";
+import { Animated, FlatList, StatusBar, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
 import { useHeader } from "@/hooks/useHeader";
+import BlurNavigationHeader from "./BlurNavigationHeader";
 
 interface AnimatedHeaderWrapperProps {
   children: ReactNode;
@@ -17,13 +10,16 @@ interface AnimatedHeaderWrapperProps {
   title?: string;
   scrollThreshold?: number;
   backgroundColor?: string;
-  titleStyle?: TextStyle;
-  headerContainerStyle?: ViewStyle;
+  titleStyle?: string;
   showStatusBar?: boolean;
   statusBarStyle?: "default" | "light-content" | "dark-content";
   // Blur props
   blurIntensity?: number;
   blurType?: "light" | "dark" | "regular";
+  // Navigation header props
+  leftComponent?: ReactNode;
+  rightComponent?: ReactNode;
+  secondRightComponent?: ReactNode;
 }
 
 const AnimatedHeaderWrapper = ({
@@ -32,25 +28,20 @@ const AnimatedHeaderWrapper = ({
   title = "Musez",
   scrollThreshold = 80,
   backgroundColor = "white",
-  titleStyle,
-  headerContainerStyle,
+  titleStyle = "text-xl font-bold text-black tracking-wide",
   showStatusBar = true,
   statusBarStyle = "dark-content",
   // Blur props
-  blurIntensity = 20,
+  blurIntensity = 80,
   blurType = "light",
+  // Navigation header props
+  leftComponent,
+  rightComponent,
+  secondRightComponent,
 }: AnimatedHeaderWrapperProps) => {
   const { headerOpacity, titleOpacity, headerTranslateY, onScroll } = useHeader(
     { scrollThreshold },
   );
-
-  const defaultTitleStyle: TextStyle = {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000",
-    letterSpacing: 0.5,
-    ...titleStyle,
-  };
 
   const renderContent = () => <View className="flex-1">{children}</View>;
 
@@ -63,42 +54,32 @@ const AnimatedHeaderWrapper = ({
         />
       )}
 
-      {/* Animated Top Title Bar with Blur */}
+      {/* Animated Blur Navigation Header */}
       <Animated.View
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: 120,
           zIndex: 1000,
           opacity: titleOpacity,
         }}
       >
-        <BlurView
-          intensity={blurIntensity}
-          tint={blurType}
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            alignItems: "center",
-            paddingBottom: 24,
-            ...headerContainerStyle,
-          }}
-        >
-          <Animated.Text
-            className="text-xl font-bold text-black tracking-wide"
-            style={titleStyle}
-          >
-            {title}
-          </Animated.Text>
-        </BlurView>
+        <BlurNavigationHeader
+          title={title}
+          leftComponent={leftComponent}
+          rightComponent={rightComponent}
+          secondRightComponent={secondRightComponent}
+          blurIntensity={blurIntensity}
+          blurType={blurType}
+          titleStyle={titleStyle}
+        />
       </Animated.View>
 
       <FlatList
         data={[1]}
         renderItem={renderContent}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(_, index) => index.toString()}
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}

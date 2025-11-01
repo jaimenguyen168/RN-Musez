@@ -15,9 +15,7 @@ export const museumCategories = defineTable({
   museumId: v.string(),
   categoryName: v.string(),
   categoryDisplayName: v.string(),
-  order: v.optional(v.number()),
 })
   .index("by_user", ["userId"])
   .index("by_user_category", ["userId", "categoryName"])
-  .index("by_user_museum", ["userId", "museumId"])
-  .index("by_user_category_order", ["userId", "categoryName", "order"]);
+  .index("by_user_museum", ["userId", "museumId"]);

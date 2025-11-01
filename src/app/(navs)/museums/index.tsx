@@ -3,6 +3,7 @@ import React from "react";
 import { useRouter } from "expo-router";
 import MuseumListView from "@/modules/museums/ui/views/museum-list-view";
 import { useMuseumListStore } from "@/stores/museumListStore";
+import BackButton from "@/components/BackButton";
 
 export default function MuseumsScreen() {
   const router = useRouter();
@@ -10,6 +11,10 @@ export default function MuseumsScreen() {
 
   const handleCardPress = (museumId: string) => {
     router.push(`/museums/${museumId}`);
+  };
+
+  const handleBackPress = () => {
+    router.back();
   };
 
   if (museums.length === 0) {
@@ -28,5 +33,11 @@ export default function MuseumsScreen() {
     );
   }
 
-  return <MuseumListView museums={museums} onCardPress={handleCardPress} />;
+  return (
+    <MuseumListView
+      museums={museums}
+      onCardPress={handleCardPress}
+      leftComponent={<BackButton onPress={handleBackPress} />}
+    />
+  );
 }

@@ -1,14 +1,27 @@
 import { View, Text, FlatList } from "react-native";
-import React from "react";
+import React, { ReactNode } from "react";
 import { Museum } from "@/types";
 import MuseumOverviewCard from "@/modules/discovery/ui/components/MuseumOverviewCard";
+import { useMuseumListStore } from "@/stores/museumListStore";
+import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 
 interface MuseumListViewProps {
   museums: Museum[];
   onCardPress?: (museumId: string) => void;
+  leftComponent?: ReactNode;
+  rightComponent?: ReactNode;
+  secondRightComponent?: ReactNode;
 }
 
-const MuseumListView = ({ museums, onCardPress }: MuseumListViewProps) => {
+const MuseumListView = ({
+  museums,
+  onCardPress,
+  leftComponent,
+  rightComponent,
+  secondRightComponent,
+}: MuseumListViewProps) => {
+  const { title } = useMuseumListStore();
+
   const renderMuseumItem = ({ item }: { item: Museum }) => (
     <MuseumOverviewCard
       museum={item}
@@ -29,6 +42,13 @@ const MuseumListView = ({ museums, onCardPress }: MuseumListViewProps) => {
 
   return (
     <View className="flex-1">
+      <BlurNavigationHeader
+        title={title}
+        leftComponent={leftComponent}
+        rightComponent={rightComponent}
+        secondRightComponent={secondRightComponent}
+      />
+
       {/* Museum List */}
       <FlatList
         data={museums}

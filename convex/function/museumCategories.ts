@@ -1,14 +1,6 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
-
-function stringToSlug(str: string): string {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "") // Remove special characters
-    .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, and multiple hyphens with single hyphen
-    .replace(/^-+|-+$/g, ""); // Remove leading and trailing hyphens
-}
+import { stringToSlug } from "@/utils";
 
 // Create a new collection with museums
 export const createCollection = mutation({
@@ -64,7 +56,6 @@ export const createCollection = mutation({
         museumId,
         categoryName,
         categoryDisplayName,
-        order: index, // Use index as order
       }),
     );
 
@@ -76,6 +67,46 @@ export const createCollection = mutation({
       categoryName,
       categoryDisplayName,
       museumsAdded: args.museumIds.length,
+    };
+  },
+});
+
+// Delete an entire collection (all museums in a category)
+export const deleteCollection = mutation({
+  args: {
+    userId: v.string(),
+    categoryName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get all entries for this category
+    const categoryEntries = await ctx.db
+      .query("museumCategories")
+      .withIndex("by_user_category", (q) =>
+        q.eq("userId", args.userId).eq("categoryName", args.categoryName),
+      )
+      .collect();
+
+    console.log("categoryName", args.categoryName);
+
+    if (categoryEntries.length === 0) {
+      return {
+        success: false,
+        message: "Collection not found",
+      };
+    }
+
+    // Delete all entries in this category
+    const deletePromises = categoryEntries.map((entry) =>
+      ctx.db.delete(entry._id),
+    );
+
+    await Promise.all(deletePromises);
+
+    return {
+      success: true,
+      action: "collection_deleted",
+      categoryName: args.categoryName,
+      museumsRemoved: categoryEntries.length,
     };
   },
 });
@@ -100,7 +131,6 @@ export const getMuseumsByCategories = query({
       categorizedMuseums[category.categoryName].push({
         museumId: category.museumId,
         categoryDisplayName: category.categoryDisplayName,
-        order: category.order,
       });
     });
 
@@ -165,7 +195,6 @@ export const addMuseumToCategory = mutation({
       museumId: args.museumId,
       categoryName: args.categoryName,
       categoryDisplayName: args.categoryDisplayName,
-      order: args.order,
     });
 
     return {

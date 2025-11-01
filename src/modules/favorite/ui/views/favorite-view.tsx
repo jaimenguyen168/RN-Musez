@@ -1,4 +1,11 @@
-import { ActivityIndicator, FlatList, Text, View, Alert } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Text,
+  View,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import React, { useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
@@ -10,9 +17,9 @@ import FavoriteEmpty from "@/modules/favorite/ui/components/FavoriteEmpty";
 import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useRouter } from "expo-router";
-import FavoriteHeader from "@/modules/favorite/ui/components/FavoriteHeader";
 import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionModal";
 import { Museum } from "@/types";
+import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 
 const FavoriteView = () => {
   const router = useRouter();
@@ -69,10 +76,10 @@ const FavoriteView = () => {
         .filter((museum) => museum !== undefined);
 
       categories.push({
-        title: "Your Favorites",
+        title: "Saved",
         count: favoriteMuseums.length,
         museums: favoriteMuseums,
-        categoryKey: "all_favorites",
+        categoryKey: "saved",
       });
     }
 
@@ -112,7 +119,7 @@ const FavoriteView = () => {
 
   const handleCategoryPress = (category: CategorySection) => {
     setMuseumList(category.title, category.museums);
-    router.push("/museums");
+    router.push("/collections");
   };
 
   const handleAddFavoriteCollectionPress = () => {
@@ -177,7 +184,7 @@ const FavoriteView = () => {
   ) {
     return (
       <View className="flex-1 bg-gray-50">
-        <FavoriteHeader onAddPress={handleAddFavoriteCollectionPress} />
+        <BlurNavigationHeader title="Favorites" />
         <FavoriteEmpty onDiscoveryPress={handleDiscoveryPress} />
       </View>
     );
@@ -208,9 +215,18 @@ const FavoriteView = () => {
     );
   }
 
+  const rightComponent = (
+    <TouchableOpacity
+      onPress={handleAddFavoriteCollectionPress}
+      className="justify-center items-center p-2"
+    >
+      <Ionicons name="add" size={24} color="black" />
+    </TouchableOpacity>
+  );
+
   return (
     <View className="flex-1 bg-gray-50 relative">
-      <FavoriteHeader onAddPress={handleAddFavoriteCollectionPress} />
+      <BlurNavigationHeader title="Favorite" rightComponent={rightComponent} />
       <FlatList
         data={categories}
         numColumns={2}
