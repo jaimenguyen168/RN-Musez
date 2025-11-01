@@ -33,7 +33,7 @@ interface ParallaxScrollViewProps {
 }
 
 const { width } = Dimensions.get("window");
-const HEADER_HEIGHT = 320;
+const HEADER_HEIGHT = 360;
 
 const ParallaxScrollView = ({
   children,
@@ -136,7 +136,7 @@ const ParallaxScrollView = ({
           top: 0,
           left: 0,
           right: 0,
-          height: 100,
+          height: 120,
           zIndex: 1000,
           opacity: animatedHeaderOpacity,
         }}
@@ -147,7 +147,7 @@ const ParallaxScrollView = ({
             flex: 1,
             justifyContent: "flex-end",
             alignItems: "center",
-            paddingBottom: 8,
+            paddingBottom: 16,
             paddingHorizontal: 20,
             ...headerContainerStyle,
           }}
@@ -250,21 +250,22 @@ const ParallaxScrollView = ({
                 opacity: titleOpacity,
               }}
             >
-              {/* Additional gradient specifically for title area */}
-              <LinearGradient
-                colors={["transparent", "rgba(0,0,0,0.4)"]}
-                locations={[0, 1]}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                }}
-              />
               <View className="px-6 relative">{headerTitle}</View>
             </Animated.View>
           )}
+
+          {/* Additional gradient specifically for title area */}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.4)"]}
+            locations={[0, 1]}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
         </Animated.View>
 
         {/* Scrollable Content */}

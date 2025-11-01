@@ -1,45 +1,29 @@
 export interface Museum {
-  businessStatus: string;
+  placeId: string;
+  name: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  vicinity?: string;
+  formattedAddress?: string;
+  photos?: {
+    photoReference: string;
+    height: number;
+    width: number;
+  }[];
+  openingHours?: {
+    openNow: boolean;
+  };
+  currentOpeningHours?: {
+    openNow: boolean;
+  };
+  businessStatus?: string;
+  types: string[];
   geometry: {
     location: {
       lat: number;
       lng: number;
     };
-    viewport: {
-      northeast: {
-        lat: number;
-        lng: number;
-      };
-      southwest: {
-        lat: number;
-        lng: number;
-      };
-    };
   };
-  icon: string;
-  iconBackgroundColor: string;
-  iconMaskBaseUri: string;
-  name: string;
-  openingHours: {
-    openNow: boolean;
-  };
-  photos: {
-    height: number;
-    htmlAttributions: string[];
-    photoReference: string;
-    width: number;
-  }[];
-  placeId: string;
-  plusCode: {
-    compoundCode: string;
-    globalCode: string;
-  };
-  rating: number;
-  reference: string;
-  scope: string;
-  types: string[];
-  userRatingsTotal: number;
-  vicinity: string;
 }
 
 export interface MuseumDetails {

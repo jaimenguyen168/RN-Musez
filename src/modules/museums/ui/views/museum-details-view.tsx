@@ -17,6 +17,8 @@ import AboutMuseum from "@/modules/museums/ui/components/AboutMuseum";
 import Reviews from "@/modules/museums/ui/components/Reviews";
 import Divider from "@/components/Divider";
 import ContactMuseum from "@/modules/museums/ui/components/ContactMuseum";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 interface MuseumDetailsViewProps {
   museumId: string;
@@ -25,7 +27,6 @@ interface MuseumDetailsViewProps {
 const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
 
   const {
     data: museumDetails,
@@ -33,13 +34,22 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
     error,
   } = useMuseumDetailsQuery(museumId);
 
-  const getPhotoUrl = (photoReference: string, maxWidth: number = 800) => {
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+  const isSaved = useQuery(api.function.museums.isMuseumSaved, {
+    userId: "1234",
+    museumId: museumId,
+  });
+
+  const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
+
+  const onFavoritePress = async () => {
+    await toggleSavedMuseum({
+      userId: "1234",
+      museumId: museumId,
+    });
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    // TODO: Implement favorite functionality (save to storage, API call, etc.)
+  const getPhotoUrl = (photoReference: string, maxWidth: number = 800) => {
+    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
   };
 
   const handleImagePress = (index: number) => {
@@ -92,13 +102,13 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
 
   const FavoriteButton = (
     <TouchableOpacity
-      onPress={toggleFavorite}
+      onPress={onFavoritePress}
       className="bg-white/80 rounded-full p-2"
     >
       <Ionicons
-        name={isFavorite ? "heart" : "heart-outline"}
+        name={isSaved ? "heart" : "heart-outline"}
         size={24}
-        color={isFavorite ? "#EF4444" : "#374151"}
+        color={isSaved ? "#EF4444" : "#374151"}
       />
     </TouchableOpacity>
   );
