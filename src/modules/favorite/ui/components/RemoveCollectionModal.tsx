@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 import { getPhotoUrl } from "@/utils";
 
 interface RemoveCollectionModalProps {

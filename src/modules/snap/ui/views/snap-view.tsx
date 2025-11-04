@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import { ArtworkAnalysis, useArtworkStore } from "@/stores/artworkStore";
+import { useArtworkStore } from "@/stores/artworkStore";
 import {
   CameraOptions,
   ImagePickerResponse,
@@ -19,6 +19,7 @@ import {
 import { analyzeArtwork } from "@/services/geminiService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
+import { Artwork } from "@/types/artwork";
 
 interface ImageAsset {
   uri: string;
@@ -79,11 +80,9 @@ const SnapView = () => {
     try {
       const result = await analyzeArtwork(selectedImage.uri);
 
-      const artworkData: ArtworkAnalysis = {
-        id: generateArtworkId(),
+      const artworkData: Artwork = {
         ...result,
         imageUri: selectedImage.uri,
-        analyzedAt: new Date(),
       };
 
       setCurrentArtwork(artworkData);

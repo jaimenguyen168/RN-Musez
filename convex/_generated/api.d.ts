@@ -8,8 +8,10 @@
  * @module
  */
 
+import type * as function_artworks from "../function/artworks.js";
 import type * as function_museumCategories from "../function/museumCategories.js";
 import type * as function_museums from "../function/museums.js";
+import type * as schema_artworks from "../schema/artworks.js";
 import type * as schema_museums from "../schema/museums.js";
 
 import type {
@@ -27,8 +29,10 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "function/artworks": typeof function_artworks;
   "function/museumCategories": typeof function_museumCategories;
   "function/museums": typeof function_museums;
+  "schema/artworks": typeof schema_artworks;
   "schema/museums": typeof schema_museums;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

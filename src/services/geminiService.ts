@@ -1,28 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ArtworkInsights } from "@/types/artwork";
 
 const genAI = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY);
-
-interface ArtworkAnalysis {
-  title?: string;
-  artist?: string;
-  period?: string;
-  style?: string;
-  description?: string;
-  significance?: string;
-  confidence?: "high" | "medium" | "low";
-  error?: string;
-
-  medium?: string;
-  location?: string;
-  dateCreated?: string;
-  funFact?: string;
-  culturalContext?: string;
-}
 export const analyzeArtwork = async (
   imageUri: string,
-): Promise<ArtworkAnalysis> => {
+): Promise<ArtworkInsights> => {
   try {
-    // Use the correct model name for vision tasks
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
     // Convert image to base64
@@ -74,15 +57,14 @@ Return ONLY the JSON object, no additional text.`;
 
     const text = result.response.text();
 
-    // Try to parse JSON directly first
     try {
-      return JSON.parse(text) as ArtworkAnalysis;
+      return JSON.parse(text) as ArtworkInsights;
     } catch {
       // Fallback: extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
-          return JSON.parse(jsonMatch[0]) as ArtworkAnalysis;
+          return JSON.parse(jsonMatch[0]) as ArtworkInsights;
         } catch {
           return { error: "Could not parse response as valid JSON" };
         }

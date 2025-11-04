@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 
 export interface FetchMuseumsParams {
   latitude: number;

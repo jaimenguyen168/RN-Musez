@@ -1,6 +1,6 @@
 import { View, Text, Image, Pressable, TouchableOpacity } from "react-native";
 import React, { useMemo } from "react";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";

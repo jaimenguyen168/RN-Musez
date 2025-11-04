@@ -1,4 +1,4 @@
-import { MuseumDetails } from "@/types";
+import { MuseumDetails } from "@/types/museum";
 import { snakeToCamel } from "@/utils";
 
 export async function GET(request: Request) {

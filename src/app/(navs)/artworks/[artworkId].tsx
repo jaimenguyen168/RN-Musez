@@ -1,25 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { ArtworkAnalysis, useArtworkStore } from "@/stores/artworkStore";
+import { useArtworkStore } from "@/stores/artworkStore";
 import ArtworkDetailsView from "@/modules/snap/ui/views/artwork-details-view";
+import { Artwork } from "@/types/artwork";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 export default function ArtworkDetailsScreen() {
   const { artworkId } = useLocalSearchParams<{ artworkId: string }>();
   const { getCurrentArtwork } = useArtworkStore();
-  const [artwork, setArtwork] = useState<ArtworkAnalysis | null>(null);
+  const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const shouldFetchFromDB = artworkId !== "new" && artworkId;
+  const artworkFromDB = useQuery(
+    api.function.artworks.getArtwork,
+    shouldFetchFromDB ? { artworkId: artworkId as Id<"artworks"> } : "skip",
+  );
 
   useEffect(() => {
     const loadArtwork = async () => {
       try {
-        if (artworkId === "new") {
-          const artworkData = getCurrentArtwork();
-          setArtwork(artworkData);
+        if (shouldFetchFromDB && artworkFromDB !== undefined) {
+          if (artworkFromDB?.imageUri) {
+            const artwork: Artwork = {
+              ...artworkFromDB,
+              imageUri: artworkFromDB.imageUri,
+            };
+            setArtwork(artwork);
+          } else {
+            console.error("Artwork missing imageUri");
+            Alert.alert("Error", "Artwork data is incomplete");
+          }
         } else {
-          console.log("Artwork ID:", artworkId);
-          // TODO: Add logic to fetch artwork by ID from store or API
-          // For now, fallback to current artwork
           const artworkData = getCurrentArtwork();
           setArtwork(artworkData);
         }
@@ -32,7 +47,13 @@ export default function ArtworkDetailsScreen() {
     };
 
     loadArtwork();
-  }, [artworkId, getCurrentArtwork]);
+  }, [artworkId, getCurrentArtwork, artworkFromDB, shouldFetchFromDB]);
 
-  return <ArtworkDetailsView artwork={artwork} loading={loading} />;
+  return (
+    <ArtworkDetailsView
+      artwork={artwork}
+      loading={loading}
+      showButton={!shouldFetchFromDB}
+    />
+  );
 }

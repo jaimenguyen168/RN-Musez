@@ -1,6 +1,6 @@
 import { View, Text, FlatList } from "react-native";
 import React, { ReactNode } from "react";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 import MuseumOverviewCard from "@/modules/discovery/ui/components/MuseumOverviewCard";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";

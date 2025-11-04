@@ -1,18 +1,33 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import Divider from "@/components/Divider";
-import { ArtworkAnalysis } from "@/stores/artworkStore";
+import { Artwork } from "@/types/artwork";
+import { useMutation } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 interface ArtworkDetailsViewProps {
-  artwork: ArtworkAnalysis | null;
+  artwork: Artwork | null;
   loading: boolean;
+  showButton?: boolean;
 }
 
-const ArtworkDetailsView = ({ artwork, loading }: ArtworkDetailsViewProps) => {
+const ArtworkDetailsView = ({
+  artwork,
+  loading,
+  showButton = false,
+}: ArtworkDetailsViewProps) => {
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const createArtwork = useMutation(api.function.artworks.createArtwork);
 
   const getConfidenceColor = (confidence?: string) => {
     switch (confidence?.toLowerCase()) {
@@ -37,6 +52,51 @@ const ArtworkDetailsView = ({ artwork, loading }: ArtworkDetailsViewProps) => {
         return "bg-red-50 border-red-200";
       default:
         return "bg-gray-50 border-gray-200";
+    }
+  };
+
+  const handleSaveArtwork = async () => {
+    if (!artwork) return;
+
+    setIsSaving(true);
+    try {
+      await createArtwork({
+        artwork: {
+          ...artwork,
+          userId: "1234",
+        },
+      });
+
+      Alert.alert(
+        "Artwork Saved!",
+        "Your artwork has been successfully saved to your collection.",
+        [
+          {
+            text: "Snap New One",
+            onPress: () => router.push("/snap"),
+          },
+          {
+            text: "View Collection",
+            onPress: () =>
+              router.push({
+                pathname: "/favorite",
+                params: {
+                  artwork: "true",
+                },
+              }),
+            style: "default",
+          },
+        ],
+      );
+    } catch (error) {
+      console.error("Error saving artwork:", error);
+      Alert.alert(
+        "Save Failed",
+        "There was an error saving your artwork. Please try again.",
+        [{ text: "OK" }],
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -130,7 +190,7 @@ const ArtworkDetailsView = ({ artwork, loading }: ArtworkDetailsViewProps) => {
     >
       <View className="bg-secondary pt-12">
         {/* Main Content Card */}
-        <View className="mx-4 gap-0 bg-white rounded-3xl shadow-lg overflow-hidden">
+        <View className="mx-4 pb-4 gap-0 bg-white rounded-3xl shadow-lg overflow-hidden">
           {/* Artwork Title & Info Section */}
           <View className="p-6">
             <Text className="text-2xl font-bold text-gray-900 mb-2">
@@ -331,31 +391,42 @@ const ArtworkDetailsView = ({ artwork, loading }: ArtworkDetailsViewProps) => {
           )}
 
           {/* General Info */}
-          <Divider />
-          <View className="p-6">
-            <View className="flex-row items-center mb-4">
-              <Ionicons name="information-circle" size={24} color="#6B7280" />
-              <Text className="text-xl font-bold text-gray-900 ml-2">Info</Text>
-            </View>
-            <Text className="text-gray-600 text-sm">
-              Generated at {artwork.analyzedAt.toLocaleTimeString()} on{" "}
-              {artwork.analyzedAt.toLocaleDateString()}
-            </Text>
-          </View>
+          {/*<Divider />*/}
+          {/*<View className="p-6">*/}
+          {/*  <View className="flex-row items-center mb-4">*/}
+          {/*    <Ionicons name="information-circle" size={24} color="#6B7280" />*/}
+          {/*    <Text className="text-xl font-bold text-gray-900 ml-2">Info</Text>*/}
+          {/*  </View>*/}
+          {/*  <Text className="text-gray-600 text-sm">*/}
+          {/*    Generated at {artwork.createdAt.toLocaleTimeString()} on{" "}*/}
+          {/*    {artwork.createdAt.toLocaleDateString()}*/}
+          {/*  </Text>*/}
+          {/*</View>*/}
 
           {/* Action Buttons */}
-          <Divider />
-          <View className="p-6">
-            <TouchableOpacity
-              className="bg-primary py-4 px-6 rounded-2xl flex-row items-center justify-center"
-              onPress={() => router.push("/snap")}
-            >
-              <Ionicons name="camera" size={24} color="white" />
-              <Text className="text-white text-lg font-semibold ml-3">
-                Analyze New Artwork
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {showButton && (
+            <>
+              <Divider />
+              <View className="p-6">
+                <TouchableOpacity
+                  className={`py-4 px-6 rounded-2xl flex-row items-center justify-center ${
+                    isSaving ? "bg-gray-400" : "bg-primary"
+                  }`}
+                  onPress={handleSaveArtwork}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Ionicons name="heart" size={24} color="white" />
+                  )}
+                  <Text className="text-white text-lg font-semibold ml-3">
+                    {isSaving ? "Saving..." : "Save Artwork"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Bottom Spacing */}

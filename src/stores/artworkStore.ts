@@ -1,39 +1,20 @@
 import { create } from "zustand";
-
-export interface ArtworkAnalysis {
-  id: string;
-  title?: string;
-  artist?: string;
-  period?: string;
-  style?: string;
-  description?: string;
-  significance?: string;
-  confidence?: "high" | "medium" | "low";
-  imageUri: string;
-  analyzedAt: Date;
-  error?: string;
-
-  medium?: string;
-  location?: string;
-  dateCreated?: string;
-  funFact?: string;
-  culturalContext?: string;
-}
+import { Artwork } from "@/types/artwork";
 
 interface ArtworkState {
-  currentArtwork: ArtworkAnalysis | null;
-  artworkHistory: ArtworkAnalysis[];
-  setCurrentArtwork: (artwork: ArtworkAnalysis) => void;
-  getCurrentArtwork: () => ArtworkAnalysis | null;
+  currentArtwork: Artwork | null;
+  artworkHistory: Artwork[];
+  setCurrentArtwork: (artwork: Artwork) => void;
+  getCurrentArtwork: () => Artwork | null;
   clearCurrentArtwork: () => void;
-  addToHistory: (artwork: ArtworkAnalysis) => void;
+  addToHistory: (artwork: Artwork) => void;
 }
 
 export const useArtworkStore = create<ArtworkState>((set, get) => ({
   currentArtwork: null,
   artworkHistory: [],
 
-  setCurrentArtwork: (artwork: ArtworkAnalysis) => {
+  setCurrentArtwork: (artwork: Artwork) => {
     set({ currentArtwork: artwork });
     // Also add to history
     const { artworkHistory } = get();
@@ -56,7 +37,7 @@ export const useArtworkStore = create<ArtworkState>((set, get) => ({
 
   clearCurrentArtwork: () => set({ currentArtwork: null }),
 
-  addToHistory: (artwork: ArtworkAnalysis) => {
+  addToHistory: (artwork: Artwork) => {
     const { artworkHistory } = get();
     const existingIndex = artworkHistory.findIndex(
       (item) => item.id === artwork.id,
