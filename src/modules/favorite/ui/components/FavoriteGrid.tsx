@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
 import React from "react";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 import { Ionicons } from "@expo/vector-icons";
 import { getPhotoUrl } from "@/utils";
 

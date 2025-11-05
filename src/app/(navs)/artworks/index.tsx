@@ -1,10 +1,11 @@
 import { View, Text } from "react-native";
 import React from "react";
 
-export default function ArtDetailsScreen() {
+const ArtsScreen = () => {
   return (
     <View>
-      <Text>ArtDetailsScreen</Text>
+      <Text>ArtsScreen</Text>
     </View>
   );
-}
+};
+export default ArtsScreen;

@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { stringToSlug } from "@/utils";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 
 interface UseCollectionMenuProps {
   title: string;

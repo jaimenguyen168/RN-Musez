@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 
 interface MuseumListState {
   title: string;

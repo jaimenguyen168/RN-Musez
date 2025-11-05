@@ -1,4 +1,4 @@
-import { Museum, MuseumDetails } from "@/types";
+import { Museum, MuseumDetails } from "@/types/museum";
 
 export function snakeToCamel<T = any>(obj: any): T {
   if (obj === null || obj === undefined) {

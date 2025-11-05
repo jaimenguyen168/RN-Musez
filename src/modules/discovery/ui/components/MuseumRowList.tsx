@@ -1,6 +1,6 @@
 import { View, Text, FlatList, Pressable } from "react-native";
 import React from "react";
-import { Museum } from "@/types";
+import { Museum } from "@/types/museum";
 import MuseumOverviewCard from "./MuseumOverviewCard";
 
 interface MuseumRowListProps {

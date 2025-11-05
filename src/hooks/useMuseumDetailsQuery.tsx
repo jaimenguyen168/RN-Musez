@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { MuseumDetails } from "@/types";
+import { MuseumDetails } from "@/types/museum";
 
 export interface FetchMuseumDetailsParams {
   museumId: string;
