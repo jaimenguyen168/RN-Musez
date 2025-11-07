@@ -12,6 +12,8 @@
     "prebuild": "expo prebuild"
   },
   "dependencies": {
+    "@clerk/clerk-expo": "^2.18.3",
+    "@clerk/clerk-react": "^5.53.8",
     "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/ui": "~0.2.0-beta.7",
     "@expo/vector-icons": "^15.0.3",
@@ -34,6 +36,7 @@
     "expo-linking": "~8.0.8",
     "expo-location": "^19.0.7",
     "expo-router": "~6.0.14",
+    "expo-secure-store": "^15.0.7",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-symbols": "~1.0.7",
