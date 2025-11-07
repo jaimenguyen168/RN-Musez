@@ -16,7 +16,9 @@ const fetchMuseumsApi = async ({
   latitude,
   longitude,
 }: FetchMuseumsParams): Promise<Museum[]> => {
-  const response = await fetch(`/api/museums?lat=${latitude}&lng=${longitude}`);
+  const response = await fetch(
+    `${process.env.EXPO_PUBLIC_BASE_URL}/api/museums?lat=${latitude}&lng=${longitude}`,
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

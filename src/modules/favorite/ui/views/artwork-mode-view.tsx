@@ -21,6 +21,8 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
     userId: "1234",
   });
 
+  console.log(savedArtworks);
+
   const renderArtworkItem = ({ item }: { item: ArtworkDoc }) => (
     <TouchableOpacity
       onPress={() => onArtworkPress(item)}

@@ -5,6 +5,8 @@ import {
   StatusBar,
   TextStyle,
   ViewStyle,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import React, { useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,6 +32,9 @@ interface ParallaxScrollViewProps {
   // Blur props
   blurIntensity?: number;
   blurType?: "light" | "dark" | "regular";
+
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  scrollEventThrottle?: number;
 }
 
 const { width } = Dimensions.get("window");
@@ -48,13 +53,16 @@ const ParallaxScrollView = ({
   titleStyle,
   headerContainerStyle,
   showStatusBar = true,
-  statusBarStyle = "dark-content",
+  statusBarStyle = "light-content",
   // New props for individual controls
   leftControl,
   rightControl,
   // Blur props
   blurIntensity = 20,
   blurType = "light",
+
+  onScroll,
+  scrollEventThrottle = 16,
 }: ParallaxScrollViewProps) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -119,6 +127,14 @@ const ParallaxScrollView = ({
     letterSpacing: 0.5,
     ...titleStyle,
   };
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: onScroll,
+    },
+  );
 
   return (
     <View className="flex-1" style={{ backgroundColor }}>
@@ -274,11 +290,8 @@ const ParallaxScrollView = ({
           contentContainerStyle={{
             paddingTop: headerHeight,
           }}
-          scrollEventThrottle={16}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false },
-          )}
+          scrollEventThrottle={scrollEventThrottle}
+          onScroll={handleScroll}
           showsVerticalScrollIndicator={false}
           bounces={true}
         >

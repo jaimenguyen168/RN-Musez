@@ -1,5 +1,5 @@
 import { ActivityIndicator, Alert, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker } from "@/components/MapView";
 import { useEffect } from "react";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
