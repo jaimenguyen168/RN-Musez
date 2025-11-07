@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Platform, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker } from "@/components/MapView";
 import * as Linking from "expo-linking";
 
 interface FixedMapLinkingProps {

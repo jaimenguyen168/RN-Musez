@@ -14,7 +14,9 @@ export interface MuseumDetailsResponse {
 const fetchMuseumDetailsApi = async ({
   museumId,
 }: FetchMuseumDetailsParams): Promise<MuseumDetails> => {
-  const response = await fetch(`/api/museum-details?place_id=${museumId}`);
+  const response = await fetch(
+    `${process.env.EXPO_PUBLIC_BASE_URL}/api/museum-details?place_id=${museumId}`,
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

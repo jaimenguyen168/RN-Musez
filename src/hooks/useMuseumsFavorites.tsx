@@ -19,13 +19,16 @@ const fetchMuseumsByIdsApi = async ({
     return [];
   }
 
-  const response = await fetch("/api/museum-ids", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${process.env.EXPO_PUBLIC_BASE_URL}/api/museum-ids`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ placeIds: museumIds }),
     },
-    body: JSON.stringify({ placeIds: museumIds }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
