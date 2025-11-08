@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { FlatList, View, ActivityIndicator, Text } from "react-native";
 import { useQuery } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,12 +7,17 @@ import FavoriteGrid, {
 } from "@/modules/favorite/ui/components/FavoriteGrid";
 import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
 import { api } from "../../../../../convex/_generated/api";
+import { Museum } from "@/types/museum";
 
 interface MuseumModeViewProps {
   onCategoryPress: (category: CategorySection) => void;
+  onMuseumsLoaded: (museums: Museum[]) => void;
 }
 
-const MuseumModeView = ({ onCategoryPress }: MuseumModeViewProps) => {
+const MuseumModeView = ({
+  onCategoryPress,
+  onMuseumsLoaded,
+}: MuseumModeViewProps) => {
   const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
     userId: "1234",
   });
@@ -39,6 +44,13 @@ const MuseumModeView = ({ onCategoryPress }: MuseumModeViewProps) => {
     isLoading: loading,
     error,
   } = useMuseumsFavorites({ museumIds: allMuseumIds });
+
+  // Send museums back to parent when they're loaded
+  useEffect(() => {
+    if (museums.length > 0) {
+      onMuseumsLoaded(museums);
+    }
+  }, [museums, onMuseumsLoaded]);
 
   const categories = useMemo(() => {
     if (museums.length === 0) return [];

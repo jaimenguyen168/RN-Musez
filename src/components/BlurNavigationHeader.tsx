@@ -65,7 +65,7 @@ const BlurNavigationHeader = ({
         </View>
 
         {/* Bottom Component */}
-        {bottomComponent && <View>{bottomComponent}</View>}
+        {bottomComponent && <View className="px-6">{bottomComponent}</View>}
       </BlurView>
     </View>
   );

@@ -4,8 +4,9 @@ import {
   View,
   Alert,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,13 +18,14 @@ import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionMo
 import { Museum } from "@/types/museum";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import { Doc } from "../../../../../convex/_generated/dataModel";
-import ViewModePicker from "@/modules/favorite/ui/components/ViewModePicker";
 import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
-import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
+import TabsPicker from "@/components/TabsPicker";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
+
+const { width: screenWidth } = Dimensions.get("window");
 
 const FavoriteView = () => {
   const router = useRouter();
@@ -35,7 +37,9 @@ const FavoriteView = () => {
   const { setMuseumList } = useMuseumListStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [museums, setMuseums] = useState<Museum[]>([]);
 
+  // Only fetch museum IDs for isEmpty check, actual data handled in MuseumModeView
   const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
     userId: "1234",
   });
@@ -49,24 +53,20 @@ const FavoriteView = () => {
     userId: "1234",
   });
 
-  const allMuseumIds = useMemo(() => {
-    const savedIds = savedMuseumIds?.map((item) => item.museumId) || [];
-    const categorizedIds = categorizedMuseumIds
-      ? Object.values(categorizedMuseumIds)
-          .flat()
-          .map((item) => item.museumId)
-      : [];
-
-    return Array.from(new Set([...savedIds, ...categorizedIds]));
-  }, [savedMuseumIds, categorizedMuseumIds]);
-
-  const { data: museums = [] } = useMuseumsFavorites({
-    museumIds: allMuseumIds,
-  });
+  const viewModeOptions: [string, string] = ["Museums", "Artworks"];
 
   const createCollectionMutation = useMutation(
     api.function.museumCategories.createCollection,
   );
+
+  // Helper functions to convert between display labels and internal values
+  const getDisplayValue = (mode: ViewMode): string => {
+    return mode === "museum" ? "Museums" : "Artworks";
+  };
+
+  const getInternalValue = (display: string): ViewMode => {
+    return display === "Museums" ? "museum" : "artwork";
+  };
 
   const handleDiscoveryPress = () => {
     router.push("/discovery");
@@ -129,8 +129,9 @@ const FavoriteView = () => {
     }
   };
 
-  const handleViewModeChange = (newMode: ViewMode) => {
-    setViewMode(newMode);
+  // Callback to receive museums from MuseumModeView
+  const handleMuseumsLoaded = (loadedMuseums: Museum[]) => {
+    setMuseums(loadedMuseums);
   };
 
   const isLoading = !savedMuseumIds && !categorizedMuseumIds;
@@ -153,12 +154,14 @@ const FavoriteView = () => {
 
   if (isEmpty) {
     return (
-      <View className="flex-1 bg-gray-50">
+      <View className="flex-1 bg-gray-50 px-6">
         <BlurNavigationHeader title="Favorites" />
         <View className="items-center pt-32">
-          <ViewModePicker
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
+          <TabsPicker
+            options={viewModeOptions}
+            selectedValue={getDisplayValue(viewMode)}
+            onSelectionChange={(value) => setViewMode(getInternalValue(value))}
+            width={screenWidth - 48}
           />
         </View>
         <FavoriteEmpty onDiscoveryPress={handleDiscoveryPress} />
@@ -183,16 +186,21 @@ const FavoriteView = () => {
         height={160}
         rightComponent={rightComponent}
         bottomComponent={
-          <ViewModePicker
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
+          <TabsPicker
+            options={viewModeOptions}
+            selectedValue={getDisplayValue(viewMode)}
+            onSelectionChange={(value) => setViewMode(getInternalValue(value))}
+            width={screenWidth - 48}
           />
         }
       />
 
       {viewMode === "museum" ? (
         <>
-          <MuseumModeView onCategoryPress={handleCategoryPress} />
+          <MuseumModeView
+            onCategoryPress={handleCategoryPress}
+            onMuseumsLoaded={handleMuseumsLoaded}
+          />
 
           <AddCollectionModal
             visible={isModalVisible}

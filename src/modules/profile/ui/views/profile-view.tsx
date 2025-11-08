@@ -7,13 +7,13 @@ import {
   Switch,
   Animated,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import SettingsItem from "@/modules/profile/ui/components/SettingsItem";
+import { useAuth } from "@clerk/clerk-expo";
 
 const ProfileView = () => {
-  const router = useRouter();
+  const { signOut } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -39,6 +39,15 @@ const ProfileView = () => {
     outputRange: [84, 42],
     extrapolate: "clamp",
   });
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      console.log("Logout successful");
+    } catch (error) {
+      console.log("Logout error:", error);
+    }
+  };
 
   const EditButton = (
     <TouchableOpacity className="bg-white/80 rounded-full p-2">
@@ -160,7 +169,7 @@ const ProfileView = () => {
           />
 
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={handleLogout}
             className="flex-row items-center justify-between py-4 px-6"
             activeOpacity={0.7}
           >
