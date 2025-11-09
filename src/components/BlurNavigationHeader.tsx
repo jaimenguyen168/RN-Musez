@@ -27,7 +27,6 @@ const BlurNavigationHeader = ({
   height = 100,
   titleStyle = "text-xl font-bold text-black tracking-wide",
   containerStyle = "",
-  bottomComponentStyle = "",
 }: BlurNavigationHeaderProps) => {
   return (
     <View className={`absolute top-0 left-0 right-0 z-10 ${containerStyle}`}>
@@ -65,7 +64,7 @@ const BlurNavigationHeader = ({
         </View>
 
         {/* Bottom Component */}
-        {bottomComponent && <View>{bottomComponent}</View>}
+        {bottomComponent && <View className="px-6">{bottomComponent}</View>}
       </BlurView>
     </View>
   );

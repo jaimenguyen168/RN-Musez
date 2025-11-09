@@ -4,26 +4,29 @@ import {
   View,
   Alert,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 import { CategorySection } from "@/modules/favorite/ui/components/FavoriteGrid";
-import FavoriteEmpty from "@/modules/favorite/ui/components/FavoriteEmpty";
+import FavoriteMuseumsEmpty from "@/modules/favorite/ui/components/FavoriteMuseumsEmpty";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionModal";
 import { Museum } from "@/types/museum";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import { Doc } from "../../../../../convex/_generated/dataModel";
-import ViewModePicker from "@/modules/favorite/ui/components/ViewModePicker";
 import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
-import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
+import TabsPicker from "@/components/TabsPicker";
+import FavoriteArtworksEmpty from "@/modules/favorite/ui/components/FavoriteArtworksEmpty";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
+
+const { width: screenWidth } = Dimensions.get("window");
 
 const FavoriteView = () => {
   const router = useRouter();
@@ -35,41 +38,34 @@ const FavoriteView = () => {
   const { setMuseumList } = useMuseumListStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [museums, setMuseums] = useState<Museum[]>([]);
 
-  const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
-    userId: "1234",
-  });
+  const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds);
   const categorizedMuseumIds = useQuery(
     api.function.museumCategories.getMuseumsByCategories,
-    {
-      userId: "1234",
-    },
   );
-  const savedArtworks = useQuery(api.function.artworks.getAllArtworks, {
-    userId: "1234",
-  });
+  const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
-  const allMuseumIds = useMemo(() => {
-    const savedIds = savedMuseumIds?.map((item) => item.museumId) || [];
-    const categorizedIds = categorizedMuseumIds
-      ? Object.values(categorizedMuseumIds)
-          .flat()
-          .map((item) => item.museumId)
-      : [];
-
-    return Array.from(new Set([...savedIds, ...categorizedIds]));
-  }, [savedMuseumIds, categorizedMuseumIds]);
-
-  const { data: museums = [] } = useMuseumsFavorites({
-    museumIds: allMuseumIds,
-  });
+  const viewModeOptions: [string, string] = ["Museums", "Artworks"];
 
   const createCollectionMutation = useMutation(
     api.function.museumCategories.createCollection,
   );
 
+  const getDisplayValue = (mode: ViewMode): string => {
+    return mode === "museum" ? "Museums" : "Artworks";
+  };
+
+  const getInternalValue = (display: string): ViewMode => {
+    return display === "Museums" ? "museum" : "artwork";
+  };
+
   const handleDiscoveryPress = () => {
     router.push("/discovery");
+  };
+
+  const handleSnapPress = () => {
+    router.push("/snap");
   };
 
   const handleCategoryPress = (category: CategorySection) => {
@@ -78,7 +74,6 @@ const FavoriteView = () => {
   };
 
   const handleArtworkPress = (artwork: ArtworkDoc) => {
-    // Navigate to artwork detail page
     router.push(`/artworks/${artwork._id}`);
   };
 
@@ -100,7 +95,6 @@ const FavoriteView = () => {
       const museumIds = selectedMuseums.map((museum) => museum.placeId);
 
       const result = await createCollectionMutation({
-        userId: "1234",
         collectionName: name,
         museumIds: museumIds,
       });
@@ -129,8 +123,9 @@ const FavoriteView = () => {
     }
   };
 
-  const handleViewModeChange = (newMode: ViewMode) => {
-    setViewMode(newMode);
+  // Callback to receive museums from MuseumModeView
+  const handleMuseumsLoaded = (loadedMuseums: Museum[]) => {
+    setMuseums(loadedMuseums);
   };
 
   const isLoading = !savedMuseumIds && !categorizedMuseumIds;
@@ -153,15 +148,26 @@ const FavoriteView = () => {
 
   if (isEmpty) {
     return (
-      <View className="flex-1 bg-gray-50">
-        <BlurNavigationHeader title="Favorites" />
-        <View className="items-center pt-32">
-          <ViewModePicker
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
-          />
-        </View>
-        <FavoriteEmpty onDiscoveryPress={handleDiscoveryPress} />
+      <View className="flex-1 bg-gray-50 px-6 py-32">
+        <BlurNavigationHeader
+          title="Favorite"
+          height={160}
+          bottomComponent={
+            <TabsPicker
+              options={viewModeOptions}
+              selectedValue={getDisplayValue(viewMode)}
+              onSelectionChange={(value) =>
+                setViewMode(getInternalValue(value))
+              }
+              width={screenWidth - 42}
+            />
+          }
+        />
+        {viewMode === "museum" ? (
+          <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
+        ) : (
+          <FavoriteArtworksEmpty onSnapPress={handleSnapPress} />
+        )}
       </View>
     );
   }
@@ -183,16 +189,21 @@ const FavoriteView = () => {
         height={160}
         rightComponent={rightComponent}
         bottomComponent={
-          <ViewModePicker
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
+          <TabsPicker
+            options={viewModeOptions}
+            selectedValue={getDisplayValue(viewMode)}
+            onSelectionChange={(value) => setViewMode(getInternalValue(value))}
+            width={screenWidth - 42}
           />
         }
       />
 
       {viewMode === "museum" ? (
         <>
-          <MuseumModeView onCategoryPress={handleCategoryPress} />
+          <MuseumModeView
+            onCategoryPress={handleCategoryPress}
+            onMuseumsLoaded={handleMuseumsLoaded}
+          />
 
           <AddCollectionModal
             visible={isModalVisible}

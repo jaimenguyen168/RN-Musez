@@ -13,15 +13,18 @@ export interface LocationState {
   // State
   location: Location.LocationObject | null;
   coords: LocationCoords | null;
+  address: string | null;
   isLoading: boolean;
   error: string | null;
   lastUpdated: number | null;
 
   // Actions
   setLocation: (location: Location.LocationObject) => void;
+  setAddress: (address: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   getCurrentLocation: () => Promise<Location.LocationObject | null>;
+  getLocationAddress: (coords: LocationCoords) => Promise<string | null>;
   refreshLocation: () => Promise<void>;
   clearLocation: () => void;
 
@@ -37,6 +40,7 @@ export const useLocationStore = create<LocationState>()(
       // Initial state
       location: null,
       coords: null,
+      address: null,
       isLoading: false,
       error: null,
       lastUpdated: null,
@@ -54,12 +58,62 @@ export const useLocationStore = create<LocationState>()(
         });
       },
 
+      setAddress: (address: string | null) => {
+        set({ address });
+      },
+
       setLoading: (isLoading: boolean) => {
         set({ isLoading });
       },
 
       setError: (error: string | null) => {
         set({ error, isLoading: false });
+      },
+
+      getLocationAddress: async (
+        coords: LocationCoords,
+      ): Promise<string | null> => {
+        try {
+          const addressResponse = await Location.reverseGeocodeAsync({
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          });
+
+          if (addressResponse && addressResponse.length > 0) {
+            const address = addressResponse[0];
+
+            // Format the address - prioritize city and country/state
+            let formattedAddress = "";
+
+            if (address.city) {
+              formattedAddress += address.city;
+            } else if (address.district) {
+              formattedAddress += address.district;
+            } else if (address.subregion) {
+              formattedAddress += address.subregion;
+            }
+
+            if (address.country) {
+              if (formattedAddress) formattedAddress += ", ";
+
+              // For US, show state instead of country if available
+              if (address.country === "United States" && address.region) {
+                formattedAddress += address.region;
+              } else {
+                formattedAddress += address.country;
+              }
+            }
+
+            const finalAddress = formattedAddress || "Unknown Location";
+            set({ address: finalAddress });
+            return finalAddress;
+          }
+
+          return null;
+        } catch (error) {
+          console.error("Error getting address:", error);
+          return null;
+        }
       },
 
       getCurrentLocation: async (): Promise<Location.LocationObject | null> => {
@@ -85,10 +139,17 @@ export const useLocationStore = create<LocationState>()(
 
           console.log("Location obtained:", location);
 
-          // Update store
+          // Update store with location
           state.setLocation(location);
-          set({ isLoading: false });
 
+          // Get address for the location
+          const coords = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
+          await state.getLocationAddress(coords);
+
+          set({ isLoading: false });
           return location;
         } catch (error) {
           console.error("Error getting location:", error);
@@ -107,6 +168,7 @@ export const useLocationStore = create<LocationState>()(
         set({
           location: null,
           coords: null,
+          address: null,
           error: null,
           lastUpdated: null,
         });
@@ -122,24 +184,24 @@ export const useLocationStore = create<LocationState>()(
     {
       name: "location-store",
       storage: createJSONStorage(() => AsyncStorage),
-      // Only persist the location data, not loading states
+      // Persist location data including address
       partialize: (state) => ({
         location: state.location,
         coords: state.coords,
+        address: state.address,
         lastUpdated: state.lastUpdated,
       }),
     },
   ),
 );
 
-// Selector hooks for better performance
 export const useLocation = () => useLocationStore((state) => state.location);
 export const useCoords = () => useLocationStore((state) => state.coords);
+export const useAddress = () => useLocationStore((state) => state.address);
 export const useLocationLoading = () =>
   useLocationStore((state) => state.isLoading);
 export const useLocationError = () => useLocationStore((state) => state.error);
 
-// Remove useLocationActions entirely and add these individual hooks:
 export const useGetCurrentLocation = () =>
   useLocationStore((state) => state.getCurrentLocation);
 export const useRefreshLocation = () =>
@@ -150,3 +212,5 @@ export const useSetLocation = () =>
   useLocationStore((state) => state.setLocation);
 export const useIsLocationStale = () =>
   useLocationStore((state) => state.isLocationStale);
+export const useGetLocationAddress = () =>
+  useLocationStore((state) => state.getLocationAddress);

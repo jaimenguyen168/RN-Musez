@@ -28,6 +28,9 @@ const ArtworkDetailsView = ({
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const createArtwork = useMutation(api.function.artworks.createArtwork);
+  const generateUploadUrl = useMutation(
+    api.function.artworks.generateUploadUrl,
+  );
 
   const getConfidenceColor = (confidence?: string) => {
     switch (confidence?.toLowerCase()) {
@@ -55,15 +58,45 @@ const ArtworkDetailsView = ({
     }
   };
 
+  const uploadImageToConvex = async (imageUri: string): Promise<string> => {
+    try {
+      // Get the upload URL from Convex
+      const uploadUrl = await generateUploadUrl();
+
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": blob.type,
+        },
+        body: blob,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+      }
+
+      const result = await uploadResponse.json();
+      return result.storageId;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw new Error("Failed to upload image");
+    }
+  };
+
   const handleSaveArtwork = async () => {
     if (!artwork) return;
 
     setIsSaving(true);
     try {
+      const convexImageUrl = await uploadImageToConvex(artwork.imageUri);
+
       await createArtwork({
         artwork: {
           ...artwork,
-          userId: "1234",
+          imageUri: convexImageUrl,
         },
       });
 
@@ -129,7 +162,6 @@ const ArtworkDetailsView = ({
     );
   }
 
-  // Header controls for ParallaxScrollView
   const HeaderControls = (
     <View className="flex-row justify-between items-center">
       <TouchableOpacity
@@ -165,6 +197,7 @@ const ArtworkDetailsView = ({
       headerControls={HeaderControls}
       headerTitle={HeaderTitle}
       animatedTitle="Artwork"
+      scrollViewClassName="bg-secondary"
       leftControl={
         <TouchableOpacity
           onPress={() => router.back()}
@@ -185,8 +218,7 @@ const ArtworkDetailsView = ({
       backgroundColor="white"
       showStatusBar={true}
       statusBarStyle="dark-content"
-      blurIntensity={20}
-      blurType="light"
+      blurType="dark"
     >
       <View className="bg-secondary pt-12">
         {/* Main Content Card */}

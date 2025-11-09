@@ -2,11 +2,13 @@ import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-interface FavoriteEmptyProps {
+interface FavoriteMuseumsEmptyProps {
   onDiscoveryPress: () => void;
 }
 
-const FavoriteEmpty = ({ onDiscoveryPress }: FavoriteEmptyProps) => (
+const FavoriteMuseumsEmpty = ({
+  onDiscoveryPress,
+}: FavoriteMuseumsEmptyProps) => (
   <View className="flex-1 items-center justify-center p-8">
     <View className="bg-white rounded-3xl p-8 items-center shadow-lg w-full max-w-sm">
       <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
@@ -31,4 +33,4 @@ const FavoriteEmpty = ({ onDiscoveryPress }: FavoriteEmptyProps) => (
   </View>
 );
 
-export default FavoriteEmpty;
+export default FavoriteMuseumsEmpty;

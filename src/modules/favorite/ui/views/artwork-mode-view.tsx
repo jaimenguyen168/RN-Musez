@@ -17,11 +17,7 @@ const IMAGE_SIZE =
   (screenWidth - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
 
 const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
-  const savedArtworks = useQuery(api.function.artworks.getAllArtworks, {
-    userId: "1234",
-  });
-
-  console.log(savedArtworks);
+  const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
   const renderArtworkItem = ({ item }: { item: ArtworkDoc }) => (
     <TouchableOpacity

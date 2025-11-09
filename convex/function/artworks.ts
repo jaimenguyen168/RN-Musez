@@ -1,16 +1,27 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
+import { getAuthenticatedUser } from "../utils";
 
 export const getAllArtworks = query({
-  args: {
-    userId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthenticatedUser(ctx);
+
+    const artworks = await ctx.db
       .query("artworks")
-      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .filter((q) => q.eq(q.field("userId"), user._id))
       .order("desc")
       .collect();
+
+    return await Promise.all(
+      artworks.map(async (artwork) => {
+        const imageUrl = await ctx.storage.getUrl(artwork.imageUri);
+        return {
+          ...artwork,
+          imageUri: imageUrl || artwork.imageUri,
+        };
+      }),
+    );
   },
 });
 
@@ -19,14 +30,31 @@ export const getArtwork = query({
     artworkId: v.id("artworks"),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.artworkId);
+    const artwork = await ctx.db.get(args.artworkId);
+
+    if (!artwork) {
+      return null;
+    }
+
+    const imageUrl = await ctx.storage.getUrl(artwork.imageUri);
+
+    return {
+      ...artwork,
+      imageUri: imageUrl || artwork.imageUri,
+    };
+  },
+});
+
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
   },
 });
 
 export const createArtwork = mutation({
   args: {
     artwork: v.object({
-      userId: v.string(),
       imageUri: v.string(),
       title: v.optional(v.string()),
       artist: v.optional(v.string()),
@@ -48,8 +76,11 @@ export const createArtwork = mutation({
     }),
   },
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+
     return await ctx.db.insert("artworks", {
       ...args.artwork,
+      userId: user._id,
     });
   },
 });
