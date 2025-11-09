@@ -12,6 +12,7 @@
     "prebuild": "expo prebuild"
   },
   "dependencies": {
+    "@clerk/backend": "^2.20.0",
     "@clerk/clerk-expo": "^2.18.3",
     "@clerk/clerk-react": "^5.53.8",
     "@expo-google-fonts/manrope": "^0.4.2",

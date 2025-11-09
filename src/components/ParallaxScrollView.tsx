@@ -18,6 +18,7 @@ interface ParallaxScrollViewProps {
   headerHeight?: number;
   headerControls?: React.ReactNode;
   headerTitle?: React.ReactNode;
+  scrollViewClassName?: string;
   // New props for animated header
   animatedTitle?: string;
   scrollThreshold?: number;
@@ -30,7 +31,6 @@ interface ParallaxScrollViewProps {
   leftControl?: React.ReactNode;
   rightControl?: React.ReactNode;
   // Blur props
-  blurIntensity?: number;
   blurType?: "light" | "dark" | "regular";
 
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -46,6 +46,7 @@ const ParallaxScrollView = ({
   headerHeight = HEADER_HEIGHT,
   headerControls,
   headerTitle,
+  scrollViewClassName = "bg-white",
   // New props for animated header
   animatedTitle = "Musez",
   scrollThreshold = 120,
@@ -58,8 +59,7 @@ const ParallaxScrollView = ({
   leftControl,
   rightControl,
   // Blur props
-  blurIntensity = 20,
-  blurType = "light",
+  blurType = "dark",
 
   onScroll,
   scrollEventThrottle = 16,
@@ -123,7 +123,7 @@ const ParallaxScrollView = ({
   const defaultTitleStyle: TextStyle = {
     fontSize: 18,
     fontWeight: "600",
-    color: "#000",
+    color: "#FFFFFF",
     letterSpacing: 0.5,
     ...titleStyle,
   };
@@ -233,14 +233,14 @@ const ParallaxScrollView = ({
 
             {/* Enhanced Gradient overlay for better text readability */}
             <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
+              colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.5)"]}
               locations={[0, 0.6, 1]}
               style={{
                 position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 128,
+                height: "100%",
               }}
             />
           </Animated.View>
@@ -286,7 +286,7 @@ const ParallaxScrollView = ({
 
         {/* Scrollable Content */}
         <Animated.ScrollView
-          className="flex-1"
+          className={`flex-1 ${scrollViewClassName}`}
           contentContainerStyle={{
             paddingTop: headerHeight,
           }}
@@ -296,9 +296,7 @@ const ParallaxScrollView = ({
           bounces={true}
         >
           {/* Content Container */}
-          <View className="bg-white rounded-t-3xl -mt-5 min-h-[800px]">
-            {children}
-          </View>
+          <View className="rounded-t-3xl -mt-5 min-h-[800px]">{children}</View>
         </Animated.ScrollView>
       </View>
     </View>

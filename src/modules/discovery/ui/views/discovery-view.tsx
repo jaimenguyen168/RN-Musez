@@ -13,6 +13,7 @@ import { useMuseumListStore } from "@/stores/museumListStore";
 const DiscoveryView = () => {
   const router = useRouter();
   const {
+    address,
     coords,
     isLoading: isLocationLoading,
     error: locationError,
@@ -115,7 +116,7 @@ const DiscoveryView = () => {
 
   const headerComponent = (
     <DiscoveryHeader
-      place="Philadelphia, USA"
+      place={address || "Unknown Location"}
       onLocationPress={handleLocationPress}
       onChatPress={() => {}}
       onBellPress={() => {}}

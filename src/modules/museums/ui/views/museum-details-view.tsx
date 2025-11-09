@@ -137,14 +137,14 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
       headerControls={HeaderControls}
       headerTitle={HeaderTitle}
       animatedTitle="Details"
+      scrollViewClassName="bg-secondary"
       leftControl={BackButton}
       rightControl={FavoriteButton}
       scrollThreshold={120}
       backgroundColor="white"
       showStatusBar={true}
       statusBarStyle="dark-content"
-      blurIntensity={20}
-      blurType="light"
+      blurType="dark"
     >
       <View className="bg-secondary pt-12">
         {/* Image Gallery Thumbnails */}

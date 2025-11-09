@@ -11,7 +11,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 import { CategorySection } from "@/modules/favorite/ui/components/FavoriteGrid";
-import FavoriteEmpty from "@/modules/favorite/ui/components/FavoriteEmpty";
+import FavoriteMuseumsEmpty from "@/modules/favorite/ui/components/FavoriteMuseumsEmpty";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionModal";
@@ -21,6 +21,7 @@ import { Doc } from "../../../../../convex/_generated/dataModel";
 import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
 import TabsPicker from "@/components/TabsPicker";
+import FavoriteArtworksEmpty from "@/modules/favorite/ui/components/FavoriteArtworksEmpty";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
@@ -59,7 +60,6 @@ const FavoriteView = () => {
     api.function.museumCategories.createCollection,
   );
 
-  // Helper functions to convert between display labels and internal values
   const getDisplayValue = (mode: ViewMode): string => {
     return mode === "museum" ? "Museums" : "Artworks";
   };
@@ -72,13 +72,16 @@ const FavoriteView = () => {
     router.push("/discovery");
   };
 
+  const handleSnapPress = () => {
+    router.push("/snap");
+  };
+
   const handleCategoryPress = (category: CategorySection) => {
     setMuseumList(category.title, category.museums);
     router.push("/collections");
   };
 
   const handleArtworkPress = (artwork: ArtworkDoc) => {
-    // Navigate to artwork detail page
     router.push(`/artworks/${artwork._id}`);
   };
 
@@ -154,7 +157,7 @@ const FavoriteView = () => {
 
   if (isEmpty) {
     return (
-      <View className="flex-1 bg-gray-50 px-6">
+      <View className="flex-1 bg-gray-50 px-6 pb-32">
         <BlurNavigationHeader title="Favorites" />
         <View className="items-center pt-32">
           <TabsPicker
@@ -164,7 +167,11 @@ const FavoriteView = () => {
             width={screenWidth - 48}
           />
         </View>
-        <FavoriteEmpty onDiscoveryPress={handleDiscoveryPress} />
+        {viewMode === "museum" ? (
+          <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
+        ) : (
+          <FavoriteArtworksEmpty onSnapPress={handleSnapPress} />
+        )}
       </View>
     );
   }
