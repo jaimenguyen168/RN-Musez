@@ -8,8 +8,7 @@ import { Museum } from "@/types/museum";
 
 interface UseCollectionMenuProps {
   title: string;
-  museums: any[]; // Replace with your museum type
-  userId: string;
+  museums: any[];
   isDeleting: boolean;
   setIsDeleting: (value: boolean) => void;
   setMuseumList?: (title: string, museums: Museum[]) => void; // Add this for updating museums after removal
@@ -18,7 +17,6 @@ interface UseCollectionMenuProps {
 export const useCollectionMenu = ({
   title,
   museums,
-  userId,
   isDeleting,
   setIsDeleting,
   setMuseumList,
@@ -59,7 +57,6 @@ export const useCollectionMenu = ({
       // Remove each selected museum from the collection
       const removePromises = selectedMuseums.map((museum) =>
         removeMuseumFromCategory({
-          userId,
           museumId: museum.placeId,
           categoryName,
         }),
@@ -125,7 +122,6 @@ export const useCollectionMenu = ({
             setIsDeleting(true);
             try {
               const result = await deleteCollection({
-                userId,
                 categoryName: stringToSlug(title),
               });
 
@@ -184,7 +180,6 @@ export const useCollectionMenu = ({
     }
   };
 
-  // Menu options configuration
   const menuOptions = useMemo(
     () => [
       {

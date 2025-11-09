@@ -1,23 +1,22 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
+import { getAuthenticatedUser } from "../utils";
 import { stringToSlug } from "@/utils";
 
-// Create a new collection with museums
 export const createCollection = mutation({
   args: {
-    userId: v.string(),
     collectionName: v.string(),
     museumIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
     const categoryName = stringToSlug(args.collectionName);
     const categoryDisplayName = args.collectionName.trim();
 
-    // Check if category with this name already exists
     const existingCategory = await ctx.db
       .query("museumCategories")
       .withIndex("by_user_category", (q) =>
-        q.eq("userId", args.userId).eq("categoryName", categoryName),
+        q.eq("userId", user._id).eq("categoryName", categoryName),
       )
       .first();
 
@@ -28,10 +27,9 @@ export const createCollection = mutation({
       };
     }
 
-    // Validate that all museums are saved by the user
     const savedMuseums = await ctx.db
       .query("savedMuseums")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
     const savedMuseumIds = new Set(
@@ -49,10 +47,9 @@ export const createCollection = mutation({
       };
     }
 
-    // Add all museums to the new category
     const insertPromises = args.museumIds.map((museumId, index) =>
       ctx.db.insert("museumCategories", {
-        userId: args.userId,
+        userId: user._id,
         museumId,
         categoryName,
         categoryDisplayName,
@@ -71,22 +68,19 @@ export const createCollection = mutation({
   },
 });
 
-// Delete an entire collection (all museums in a category)
 export const deleteCollection = mutation({
   args: {
-    userId: v.string(),
     categoryName: v.string(),
   },
   handler: async (ctx, args) => {
-    // Get all entries for this category
+    const user = await getAuthenticatedUser(ctx);
+
     const categoryEntries = await ctx.db
       .query("museumCategories")
       .withIndex("by_user_category", (q) =>
-        q.eq("userId", args.userId).eq("categoryName", args.categoryName),
+        q.eq("userId", user._id).eq("categoryName", args.categoryName),
       )
       .collect();
-
-    console.log("categoryName", args.categoryName);
 
     if (categoryEntries.length === 0) {
       return {
@@ -95,7 +89,6 @@ export const deleteCollection = mutation({
       };
     }
 
-    // Delete all entries in this category
     const deletePromises = categoryEntries.map((entry) =>
       ctx.db.delete(entry._id),
     );
@@ -111,17 +104,17 @@ export const deleteCollection = mutation({
   },
 });
 
-// Get all museums organized by categories
 export const getMuseumsByCategories = query({
-  args: { userId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const categories = await ctx.db
       .query("museumCategories")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .order("desc")
       .collect();
 
-    // Group by category
     const categorizedMuseums: Record<string, any[]> = {};
 
     categories.forEach((category) => {
@@ -134,7 +127,6 @@ export const getMuseumsByCategories = query({
       });
     });
 
-    // Sort each category by order if specified, otherwise by addedAt
     Object.keys(categorizedMuseums).forEach((categoryName) => {
       categorizedMuseums[categoryName].sort((a, b) => {
         if (a.order !== undefined && b.order !== undefined) {
@@ -148,21 +140,20 @@ export const getMuseumsByCategories = query({
   },
 });
 
-// Add museum to a category (museum must already be saved)
 export const addMuseumToCategory = mutation({
   args: {
-    userId: v.string(),
     museumId: v.string(),
     categoryName: v.string(),
     categoryDisplayName: v.string(),
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Check if museum is saved first
+    const user = await getAuthenticatedUser(ctx);
+
     const savedMuseum = await ctx.db
       .query("savedMuseums")
       .withIndex("by_user_museum_id", (q) =>
-        q.eq("userId", args.userId).eq("museumId", args.museumId),
+        q.eq("userId", user._id).eq("museumId", args.museumId),
       )
       .first();
 
@@ -173,11 +164,10 @@ export const addMuseumToCategory = mutation({
       };
     }
 
-    // Check if already in this category
     const existingCategory = await ctx.db
       .query("museumCategories")
       .withIndex("by_user_category", (q) =>
-        q.eq("userId", args.userId).eq("categoryName", args.categoryName),
+        q.eq("userId", user._id).eq("categoryName", args.categoryName),
       )
       .filter((q) => q.eq(q.field("museumId"), args.museumId))
       .first();
@@ -189,9 +179,8 @@ export const addMuseumToCategory = mutation({
       };
     }
 
-    // Add to category
     await ctx.db.insert("museumCategories", {
-      userId: args.userId,
+      userId: user._id,
       museumId: args.museumId,
       categoryName: args.categoryName,
       categoryDisplayName: args.categoryDisplayName,
@@ -205,18 +194,18 @@ export const addMuseumToCategory = mutation({
   },
 });
 
-// Remove museum from a specific category
 export const removeMuseumFromCategory = mutation({
   args: {
-    userId: v.string(),
     museumId: v.string(),
     categoryName: v.string(),
   },
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const categoryEntry = await ctx.db
       .query("museumCategories")
       .withIndex("by_user_category", (q) =>
-        q.eq("userId", args.userId).eq("categoryName", args.categoryName),
+        q.eq("userId", user._id).eq("categoryName", args.categoryName),
       )
       .filter((q) => q.eq(q.field("museumId"), args.museumId))
       .first();
@@ -235,17 +224,17 @@ export const removeMuseumFromCategory = mutation({
   },
 });
 
-// Get categories for a specific museum
 export const getMuseumCategories = query({
   args: {
-    userId: v.string(),
     museumId: v.string(),
   },
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const categories = await ctx.db
       .query("museumCategories")
       .withIndex("by_user_museum", (q) =>
-        q.eq("userId", args.userId).eq("museumId", args.museumId),
+        q.eq("userId", user._id).eq("museumId", args.museumId),
       )
       .collect();
 
@@ -256,16 +245,16 @@ export const getMuseumCategories = query({
   },
 });
 
-// Get all user categories with counts
 export const getUserCategories = query({
-  args: { userId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const categories = await ctx.db
       .query("museumCategories")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    // Get unique categories with counts
     const categoryMap = new Map<
       string,
       {

@@ -22,7 +22,6 @@ const MuseumOverviewCard = ({
   const { coords } = useLocationManager(false);
 
   const isSaved = useQuery(api.function.museums.isMuseumSaved, {
-    userId: "1234",
     museumId: museum.placeId,
   });
 
@@ -43,7 +42,6 @@ const MuseumOverviewCard = ({
 
   const onFavoritePress = async () => {
     await toggleSavedMuseum({
-      userId: "1234",
       museumId: museum.placeId,
     });
   };
@@ -123,14 +121,13 @@ const MuseumOverviewCard = ({
     );
   }
 
-  // Detailed variant
   return (
     <Pressable
       onPress={onCardPress}
       className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
     >
-      <View className="flex-row">
-        <View className="w-32 h-40">
+      <View className="flex-row h-48">
+        <View className="w-32">
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
@@ -144,9 +141,9 @@ const MuseumOverviewCard = ({
           )}
         </View>
 
-        <View className="flex-1 p-4">
+        <View className="flex-1 p-4 pr-12">
           <Text
-            className="text-xl font-bold text-gray-900 mb-1"
+            className="text-lg font-bold text-gray-900 mb-1"
             numberOfLines={2}
           >
             {museum.name}
@@ -176,7 +173,7 @@ const MuseumOverviewCard = ({
           )}
 
           {isOpen !== undefined && (
-            <View className="flex-row items-center">
+            <View className="flex-row items-center mt-auto">
               <View
                 className={`w-2 h-2 rounded-full mr-2 ${isOpen ? "bg-green-500" : "bg-red-500"}`}
               />

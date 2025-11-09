@@ -10,7 +10,6 @@ import RemoveCollectionModal from "@/modules/favorite/ui/components/RemoveCollec
 
 const CollectionView = () => {
   const router = useRouter();
-  const userId = "1234";
   const { title, museums, setMuseumList } = useMuseumListStore();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -24,7 +23,6 @@ const CollectionView = () => {
   } = useCollectionMenu({
     title,
     museums,
-    userId,
     isDeleting,
     setIsDeleting,
     setMuseumList,

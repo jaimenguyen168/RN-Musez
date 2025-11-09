@@ -13,6 +13,8 @@ interface MuseumListViewProps {
   secondRightComponent?: ReactNode;
 }
 
+const titleList = ["Saved", "Nearby"];
+
 const MuseumListView = ({
   museums,
   onCardPress,
@@ -21,6 +23,7 @@ const MuseumListView = ({
   secondRightComponent,
 }: MuseumListViewProps) => {
   const { title } = useMuseumListStore();
+  const usedTitle = titleList.includes(title) ? title : "Museums";
 
   const renderMuseumItem = ({ item }: { item: Museum }) => (
     <MuseumOverviewCard
@@ -43,7 +46,7 @@ const MuseumListView = ({
   return (
     <View className="flex-1">
       <BlurNavigationHeader
-        title={title}
+        title={usedTitle}
         leftComponent={leftComponent}
         rightComponent={rightComponent}
         secondRightComponent={secondRightComponent}
@@ -58,7 +61,7 @@ const MuseumListView = ({
         contentContainerStyle={{
           paddingHorizontal: 8,
           paddingBottom: 16,
-          paddingTop: 128,
+          paddingTop: 112,
         }}
         ItemSeparatorComponent={() => <View className="h-2" />}
       />

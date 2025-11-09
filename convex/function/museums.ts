@@ -1,12 +1,15 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
+import { getAuthenticatedUser } from "../utils";
 
 export const getSavedMuseumIds = query({
-  args: { userId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const savedMuseums = await ctx.db
       .query("savedMuseums")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .order("desc")
       .collect();
 
@@ -19,21 +22,15 @@ export const getSavedMuseumIds = query({
 
 export const toggleSavedMuseum = mutation({
   args: {
-    userId: v.string(),
     museumId: v.string(),
-    visitStatus: v.optional(
-      v.union(
-        v.literal("want_to_visit"),
-        v.literal("visited"),
-        v.literal("favorite"),
-      ),
-    ),
   },
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const existingSave = await ctx.db
       .query("savedMuseums")
       .withIndex("by_user_museum_id", (q) =>
-        q.eq("userId", args.userId).eq("museumId", args.museumId),
+        q.eq("userId", user._id).eq("museumId", args.museumId),
       )
       .first();
 
@@ -46,7 +43,7 @@ export const toggleSavedMuseum = mutation({
       };
     } else {
       const savedId = await ctx.db.insert("savedMuseums", {
-        userId: args.userId,
+        userId: user._id,
         museumId: args.museumId,
       });
 
@@ -62,14 +59,15 @@ export const toggleSavedMuseum = mutation({
 
 export const isMuseumSaved = query({
   args: {
-    userId: v.string(),
     museumId: v.string(),
   },
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+
     const savedMuseum = await ctx.db
       .query("savedMuseums")
       .withIndex("by_user_museum_id", (q) =>
-        q.eq("userId", args.userId).eq("museumId", args.museumId),
+        q.eq("userId", user._id).eq("museumId", args.museumId),
       )
       .first();
 

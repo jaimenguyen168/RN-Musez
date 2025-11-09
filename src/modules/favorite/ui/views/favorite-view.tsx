@@ -40,19 +40,11 @@ const FavoriteView = () => {
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [museums, setMuseums] = useState<Museum[]>([]);
 
-  // Only fetch museum IDs for isEmpty check, actual data handled in MuseumModeView
-  const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
-    userId: "1234",
-  });
+  const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds);
   const categorizedMuseumIds = useQuery(
     api.function.museumCategories.getMuseumsByCategories,
-    {
-      userId: "1234",
-    },
   );
-  const savedArtworks = useQuery(api.function.artworks.getAllArtworks, {
-    userId: "1234",
-  });
+  const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
   const viewModeOptions: [string, string] = ["Museums", "Artworks"];
 
@@ -103,7 +95,6 @@ const FavoriteView = () => {
       const museumIds = selectedMuseums.map((museum) => museum.placeId);
 
       const result = await createCollectionMutation({
-        userId: "1234",
         collectionName: name,
         museumIds: museumIds,
       });
@@ -157,16 +148,21 @@ const FavoriteView = () => {
 
   if (isEmpty) {
     return (
-      <View className="flex-1 bg-gray-50 px-6 pb-32">
-        <BlurNavigationHeader title="Favorites" />
-        <View className="items-center pt-32">
-          <TabsPicker
-            options={viewModeOptions}
-            selectedValue={getDisplayValue(viewMode)}
-            onSelectionChange={(value) => setViewMode(getInternalValue(value))}
-            width={screenWidth - 48}
-          />
-        </View>
+      <View className="flex-1 bg-gray-50 px-6 py-32">
+        <BlurNavigationHeader
+          title="Favorite"
+          height={160}
+          bottomComponent={
+            <TabsPicker
+              options={viewModeOptions}
+              selectedValue={getDisplayValue(viewMode)}
+              onSelectionChange={(value) =>
+                setViewMode(getInternalValue(value))
+              }
+              width={screenWidth - 42}
+            />
+          }
+        />
         {viewMode === "museum" ? (
           <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
         ) : (
@@ -197,7 +193,7 @@ const FavoriteView = () => {
             options={viewModeOptions}
             selectedValue={getDisplayValue(viewMode)}
             onSelectionChange={(value) => setViewMode(getInternalValue(value))}
-            width={screenWidth - 48}
+            width={screenWidth - 42}
           />
         }
       />

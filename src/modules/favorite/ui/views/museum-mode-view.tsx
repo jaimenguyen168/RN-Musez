@@ -18,14 +18,9 @@ const MuseumModeView = ({
   onCategoryPress,
   onMuseumsLoaded,
 }: MuseumModeViewProps) => {
-  const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {
-    userId: "1234",
-  });
+  const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {});
   const categorizedMuseumIds = useQuery(
     api.function.museumCategories.getMuseumsByCategories,
-    {
-      userId: "1234",
-    },
   );
 
   const allMuseumIds = useMemo(() => {

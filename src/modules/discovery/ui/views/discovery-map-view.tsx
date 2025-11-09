@@ -1,10 +1,25 @@
-import { ActivityIndicator, Alert, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  View,
+  TextInput,
+  Text,
+} from "react-native";
 import MapView, { Marker } from "@/components/MapView";
-import { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
+import BlurNavigationHeader from "@/components/BlurNavigationHeader";
+import BackButton from "@/components/BackButton";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 const DiscoveryMapView = () => {
+  const router = useRouter();
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const {
     coords,
     isLoading: isLocationLoading,
@@ -27,6 +42,15 @@ const DiscoveryMapView = () => {
     retryDelay: 1000,
   });
 
+  // Filter museums based on search query
+  const filteredMuseums = useMemo(() => {
+    if (!searchQuery.trim()) return museums;
+
+    return museums.filter((museum) =>
+      museum.name.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+    );
+  }, [museums, searchQuery]);
+
   useEffect(() => {
     if (museumsError) {
       Alert.alert("Error", museumsError.message);
@@ -41,8 +65,62 @@ const DiscoveryMapView = () => {
 
   const loading = isLocationLoading || museumsLoading;
 
+  const handleMarkerPress = (museumId: string) => {
+    router.push(`/museums/${museumId}`);
+  };
+
+  const handleSearchToggle = () => {
+    setShowSearchBar(!showSearchBar);
+    if (showSearchBar) {
+      setSearchQuery("");
+    }
+  };
+
+  const rightComponent = (
+    <TouchableOpacity
+      onPress={handleSearchToggle}
+      className="justify-center items-center p-2"
+    >
+      <Ionicons
+        name={showSearchBar ? "close" : "search"}
+        size={24}
+        color="black"
+      />
+    </TouchableOpacity>
+  );
+
+  const searchBarComponent = showSearchBar ? (
+    <View className="pb-6">
+      <View className="rounded-2xl px-4 py-3 flex-row items-center bg-white/30 border border-gray-400">
+        <Ionicons name="search" size={20} color="#6B7280" />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search museums..."
+          placeholderTextColor="#9CA3AF"
+          className="flex-1 ml-3 text-gray-900 text-base"
+          autoFocus={true}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")} className="ml-2">
+            <Ionicons name="close-circle" size={20} color="#6B7280" />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  ) : null;
+
   return (
     <View className="flex-1 items-center justify-center">
+      <BlurNavigationHeader
+        title={"Explore"}
+        leftComponent={<BackButton onPress={() => router.back()} />}
+        rightComponent={rightComponent}
+        bottomComponent={searchBarComponent}
+        height={showSearchBar ? 165 : 100}
+      />
       <MapView
         initialRegion={{
           latitude: coords?.latitude || 39.9526,
@@ -66,7 +144,7 @@ const DiscoveryMapView = () => {
           height: "100%",
         }}
       >
-        {museums.map((museum, index) => (
+        {filteredMuseums.map((museum, index) => (
           <Marker
             key={museum.placeId || index}
             coordinate={{
@@ -75,7 +153,13 @@ const DiscoveryMapView = () => {
             }}
             title={museum.name}
             description={`${museum.vicinity} • Rating: ${museum.rating || "N/A"}`}
-            pinColor={"teal"}
+            pinColor={
+              (museum.openingHours?.openNow ??
+              museum.currentOpeningHours?.openNow)
+                ? "purple"
+                : "gray"
+            }
+            onPress={() => handleMarkerPress(museum.placeId)}
           />
         ))}
       </MapView>
