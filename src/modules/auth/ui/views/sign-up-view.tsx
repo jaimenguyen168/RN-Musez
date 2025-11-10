@@ -16,6 +16,7 @@ import { getClerkErrorMessage, SignUpFormData } from "@/modules/auth/types";
 import { useRouter } from "expo-router";
 import { signUpSchema } from "@/modules/auth/schemas";
 import { useSignUpFormValidation } from "@/modules/auth/schemas/validator";
+import AppButton from "@/components/AppButton";
 
 const SignUpView = () => {
   const router = useRouter();
@@ -181,18 +182,14 @@ const SignUpView = () => {
           />
 
           {/* Register Button */}
-          <TouchableOpacity
-            onPress={handleRegister}
-            className={`bg-orange-500 rounded-xl py-4 mb-8 mt-4 ${isLoading ? "opacity-70" : ""}`}
-            disabled={isLoading}
-          >
+          <AppButton onPress={handleRegister} disabled={isLoading}>
             <Text className="text-white text-center font-semibold text-lg">
               {isLoading ? "Registering..." : "Register"}
             </Text>
-          </TouchableOpacity>
+          </AppButton>
 
           {/* OR Divider */}
-          <View className="flex-row items-center mb-8">
+          <View className="flex-row items-center my-8">
             <View className="flex-1 h-px bg-gray-300" />
             <Text className="mx-4 text-gray-500 bg-gray-200 px-3 py-1 rounded-full text-sm">
               OR
@@ -210,7 +207,7 @@ const SignUpView = () => {
           <View className="flex-row justify-center items-center">
             <Text className="text-gray-600">Already have an account? </Text>
             <TouchableOpacity onPress={handleLogin}>
-              <Text className="text-orange-500 font-semibold">Login</Text>
+              <Text className="text-primary font-bold">Login</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

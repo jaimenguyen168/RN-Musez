@@ -6,6 +6,7 @@ import {
   Image,
   Switch,
   Animated,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -37,13 +38,19 @@ const ProfileView = () => {
     extrapolate: "clamp",
   });
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      console.log("Logout successful");
-    } catch (error) {
-      console.log("Logout error:", error);
-    }
+  const handleLogOut = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      {
+        text: "Cancel",
+        onPress: () => console.log("Cancel Pressed"),
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: () => signOut(),
+      },
+    ]);
   };
 
   if (!user) {
@@ -169,7 +176,7 @@ const ProfileView = () => {
           />
 
           <TouchableOpacity
-            onPress={handleLogout}
+            onPress={handleLogOut}
             className="flex-row items-center justify-between py-4 px-6"
             activeOpacity={0.7}
           >

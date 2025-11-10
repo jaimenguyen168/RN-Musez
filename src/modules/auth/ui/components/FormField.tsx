@@ -27,7 +27,7 @@ const FormField: React.FC<FormFieldProps> = ({
   showPasswordToggle = false,
   onTogglePassword,
   containerClassName = "mb-6",
-  inputClassName = "bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base",
+  inputClassName = "bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base",
   labelClassName = "text-gray-700 font-medium mb-2",
   ...props
 }) => {

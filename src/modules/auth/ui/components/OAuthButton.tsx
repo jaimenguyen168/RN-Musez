@@ -33,14 +33,12 @@ const OAuthButton = ({ provider, disabled = false }: OAuthButtonProps) => {
   const onPress = useCallback(async () => {
     if (disabled) return;
 
-    const redirectUri = AuthSession.makeRedirectUri();
-    console.log("Using redirect URI:", redirectUri);
     console.log(`OAuth button pressed ${provider}`);
 
     try {
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: config.strategy,
-        redirectUrl: redirectUri,
+        redirectUrl: AuthSession.makeRedirectUri(),
       });
 
       console.log("SSO Flow result:", { createdSessionId });
@@ -57,8 +55,8 @@ const OAuthButton = ({ provider, disabled = false }: OAuthButtonProps) => {
 
   const buttonClasses = [
     config.backgroundColor,
-    config.borderColor ? `border ${config.borderColor}` : "",
-    "rounded-xl py-3 shadow-sm flex-1",
+    config.borderColor ? `border-2 ${config.borderColor}` : "",
+    "rounded-2xl py-3 flex-1",
     disabled ? "opacity-50" : "",
   ]
     .filter(Boolean)

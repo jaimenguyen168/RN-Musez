@@ -1,6 +1,6 @@
 import React from "react";
-import SignInView from "@/modules/auth/ui/views/sign-in-view";
+import OnboardingView from "@/modules/auth/ui/views/onboarding-view";
 
 export default function SignInScreen() {
-  return <SignInView />;
+  return <OnboardingView />;
 }
