@@ -110,12 +110,12 @@ const SignInView = () => {
   };
 
   const handleForgotPassword = () => {
-    console.log("Forgot password pressed");
+    router.push("/reset-password");
   };
 
-  const handleNeedHelp = () => {
-    console.log("Need help pressed");
-  };
+  // const handleNeedHelp = () => {
+  //   console.log("Need help pressed");
+  // };
 
   const handleRegister = () => {
     router.push("/sign-up");
@@ -140,8 +140,8 @@ const SignInView = () => {
               Welcome to <Text className="text-primary font-bold">Musez</Text>{" "}
               👋
             </Text>
-            <Text className="text-gray-600 text-base">
-              Login to access your account and continue your journey
+            <Text className="text-gray-600 text-base font-light">
+              Login to discover amazing artworks and museums
             </Text>
           </View>
 
@@ -150,7 +150,7 @@ const SignInView = () => {
             options={tabOptions}
             selectedValue={getDisplayValue(selectedTab)}
             onSelectionChange={handleTabChange}
-            width={screenWidth - 48}
+            width={screenWidth - 44}
           />
 
           {/* Input Fields */}
@@ -196,12 +196,12 @@ const SignInView = () => {
           />
 
           {/* Help and Forgot Password */}
-          <View className="flex-row justify-between mb-8">
-            <TouchableOpacity onPress={handleNeedHelp}>
-              <Text className="text-gray-600">Need a help?</Text>
-            </TouchableOpacity>
+          <View className="flex-row justify-end mb-8">
+            {/*<TouchableOpacity onPress={handleNeedHelp}>*/}
+            {/*  <Text className="text-gray-600 underline">Need a help?</Text>*/}
+            {/*</TouchableOpacity>*/}
             <TouchableOpacity onPress={handleForgotPassword}>
-              <Text className="text-gray-600">Forgot Password</Text>
+              <Text className="text-gray-600 underline">Forgot Password</Text>
             </TouchableOpacity>
           </View>
 
@@ -231,7 +231,7 @@ const SignInView = () => {
           <View className="flex-row justify-center items-center">
             <Text className="text-gray-600">Don&apos;t have a account? </Text>
             <TouchableOpacity onPress={handleRegister}>
-              <Text className="text-primary font-bold">Register</Text>
+              <Text className="text-primary font-bold underline">Register</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

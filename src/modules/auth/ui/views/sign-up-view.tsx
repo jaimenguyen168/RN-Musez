@@ -115,11 +115,12 @@ const SignUpView = () => {
           {/* Header */}
           <View className="mb-8">
             <Text className="text-3xl font-medium text-gray-900 mb-2">
-              Welcome to <Text className="text-primary font-bold">Musez</Text>{" "}
+              Join <Text className="text-primary font-bold">Musez</Text> today
               👋
             </Text>
-            <Text className="text-gray-600 text-base">
-              Register to access your account and continue your journey
+            <Text className="text-gray-600 text-base font-light">
+              Create your account and start{"\n"}Exploring amazing artworks and
+              museums
             </Text>
           </View>
 
@@ -207,7 +208,7 @@ const SignUpView = () => {
           <View className="flex-row justify-center items-center">
             <Text className="text-gray-600">Already have an account? </Text>
             <TouchableOpacity onPress={handleLogin}>
-              <Text className="text-primary font-bold">Login</Text>
+              <Text className="text-primary font-bold underline">Login</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
