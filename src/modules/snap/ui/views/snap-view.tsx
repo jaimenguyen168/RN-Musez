@@ -20,6 +20,7 @@ import { analyzeArtwork } from "@/services/geminiService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { Artwork } from "@/types/artwork";
+import AppButton from "@/components/AppButton";
 
 interface ImageAsset {
   uri: string;
@@ -69,10 +70,6 @@ const SnapView = () => {
     }
   };
 
-  const generateArtworkId = () => {
-    return `artwork_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  };
-
   const handleGenerate = async () => {
     if (!selectedImage) return;
 
@@ -114,9 +111,9 @@ const SnapView = () => {
           </View>
 
           <View className="w-full max-w-sm">
-            <TouchableOpacity
-              className="bg-primary py-4 px-8 rounded-2xl shadow flex-row items-center justify-center"
+            <AppButton
               onPress={selectImage}
+              className="flex-row items-center justify-center"
             >
               <MaterialCommunityIcons
                 name="image-search"
@@ -126,7 +123,7 @@ const SnapView = () => {
               <Text className="text-white text-lg font-semibold ml-3">
                 Choose Image
               </Text>
-            </TouchableOpacity>
+            </AppButton>
           </View>
         </View>
       </View>
@@ -162,12 +159,11 @@ const SnapView = () => {
 
           {/* Buttons */}
           <View className="w-full gap-4">
-            <TouchableOpacity
-              className={`py-4 px-8 w-full rounded-2xl shadow-sm flex-row items-center justify-center ${
-                loading ? "bg-primary-600" : "bg-primary"
-              }`}
+            <AppButton
               onPress={handleGenerate}
               disabled={loading}
+              loading={loading}
+              className="flex-row items-center justify-center"
             >
               {loading ? (
                 <>
@@ -184,12 +180,13 @@ const SnapView = () => {
                   </Text>
                 </>
               )}
-            </TouchableOpacity>
+            </AppButton>
 
             {/* Secondary actions in a row */}
             <View className="flex-row gap-3">
-              <TouchableOpacity
-                className="flex-1 bg-white border border-gray-300 py-3 px-4 rounded-xl flex-row items-center justify-center"
+              <AppButton
+                variant="outline"
+                className="flex-row flex-1 items-center justify-center"
                 onPress={selectImage}
                 disabled={loading}
               >
@@ -197,15 +194,15 @@ const SnapView = () => {
                 <Text className="text-gray-600 font-medium ml-2">
                   New Photo
                 </Text>
-              </TouchableOpacity>
+              </AppButton>
 
-              <TouchableOpacity
-                className="bg-white border border-gray-300 py-3 px-4 rounded-xl flex-row items-center justify-center"
+              <AppButton
+                variant="outline"
                 onPress={() => setSelectedImage(null)}
                 disabled={loading}
               >
                 <Ionicons name="close" size={20} color="#6B7280" />
-              </TouchableOpacity>
+              </AppButton>
             </View>
           </View>
         </View>
