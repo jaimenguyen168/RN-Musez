@@ -1,8 +1,10 @@
 import React, { ReactNode } from "react";
-import { Animated, FlatList, StatusBar, View } from "react-native";
+import { Animated, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useHeader } from "@/hooks/useHeader";
 import BlurNavigationHeader from "./BlurNavigationHeader";
+import { StatusBar } from "expo-status-bar";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface AnimatedHeaderWrapperProps {
   children: ReactNode;
@@ -11,8 +13,6 @@ interface AnimatedHeaderWrapperProps {
   scrollThreshold?: number;
   backgroundColor?: string;
   titleStyle?: string;
-  showStatusBar?: boolean;
-  statusBarStyle?: "default" | "light-content" | "dark-content";
   // Blur props
   blurIntensity?: number;
   blurType?: "light" | "dark" | "regular";
@@ -27,33 +27,36 @@ const AnimatedHeaderWrapper = ({
   headerComponent,
   title = "Musez",
   scrollThreshold = 80,
-  backgroundColor = "white",
-  titleStyle = "text-xl font-bold text-black tracking-wide",
-  showStatusBar = true,
-  statusBarStyle = "dark-content",
+  backgroundColor,
+  titleStyle,
   // Blur props
   blurIntensity = 80,
-  blurType = "light",
+  blurType,
   // Navigation header props
   leftComponent,
   rightComponent,
   secondRightComponent,
 }: AnimatedHeaderWrapperProps) => {
+  const { isDark } = useTheme();
   const { headerOpacity, titleOpacity, headerTranslateY, onScroll } = useHeader(
     { scrollThreshold },
   );
 
+  // Auto-determine values based on theme if not provided
+  const dynamicBackgroundColor =
+    backgroundColor || (isDark ? "#111827" : "white");
+  const dynamicBlurType = blurType || (isDark ? "dark" : "light");
+  const dynamicTitleStyle =
+    titleStyle ||
+    `text-xl font-bold tracking-wide ${isDark ? "text-white" : "text-black"}`;
+
   const renderContent = () => <View className="flex-1">{children}</View>;
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
-      {showStatusBar && (
-        <StatusBar
-          barStyle={statusBarStyle}
-          backgroundColor={backgroundColor}
-        />
-      )}
-
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: dynamicBackgroundColor }}
+    >
       {/* Animated Blur Navigation Header */}
       <Animated.View
         style={{
@@ -71,9 +74,11 @@ const AnimatedHeaderWrapper = ({
           rightComponent={rightComponent}
           secondRightComponent={secondRightComponent}
           blurIntensity={blurIntensity}
-          blurType={blurType}
-          titleStyle={titleStyle}
+          blurType={dynamicBlurType}
+          titleStyle={dynamicTitleStyle}
+          statusBarStyle={isDark ? "light" : "dark"}
         />
+        <StatusBar style={isDark ? "light" : "dark"} />
       </Animated.View>
 
       <FlatList

@@ -26,13 +26,12 @@ const AboutMuseum = ({
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name={iconName} size={20} color={iconColor} />
-          <Text className="text-lg font-semibold ml-2 text-gray-900">
-            {title}
-          </Text>
+          <Text className="text-lg font-semibold ml-2 text-main">{title}</Text>
         </View>
       )}
-      <Text className="text-base leading-7 text-gray-700">{content}</Text>
+      <Text className="text-base leading-7 text-secondary">{content}</Text>
     </View>
   );
 };
+
 export default AboutMuseum;

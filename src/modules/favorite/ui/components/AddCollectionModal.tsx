@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Museum } from "@/types/museum";
 import { getPhotoUrl } from "@/utils";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface AddCollectionModalProps {
   visible: boolean;
@@ -31,6 +32,7 @@ const AddCollectionModal = ({
   onCreateCollection,
   isCreating = false,
 }: AddCollectionModalProps) => {
+  const { isDark } = useTheme();
   const [collectionName, setCollectionName] = useState("");
   const [selectedMuseums, setSelectedMuseums] = useState<Set<string>>(
     new Set(),
@@ -77,7 +79,9 @@ const AddCollectionModal = ({
           onPress={() => handleMuseumPress(item)}
           disabled={isCreating}
           className={`rounded-lg overflow-hidden ${
-            isSelected ? "border-2 border-blue-500" : "border border-gray-200"
+            isSelected
+              ? "border-2 border-blue-500"
+              : "border border-gray-200 dark:border-gray-700"
           } ${isCreating ? "opacity-50" : ""}`}
         >
           <View className="relative aspect-square">
@@ -88,8 +92,12 @@ const AddCollectionModal = ({
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-full bg-gray-200 justify-center items-center">
-                <Ionicons name="image-outline" size={20} color="#666" />
+              <View className="w-full h-full bg-divider justify-center items-center">
+                <Ionicons
+                  name="image-outline"
+                  size={20}
+                  color={isDark ? "#9CA3AF" : "#666"}
+                />
               </View>
             )}
 
@@ -102,7 +110,7 @@ const AddCollectionModal = ({
 
           <View className="p-1.5" style={{ height: 40 }}>
             <Text
-              className="text-xs font-medium text-gray-800 line-clamp-2"
+              className="text-xs font-medium text-main line-clamp-2"
               numberOfLines={2}
             >
               {item.name}
@@ -128,15 +136,17 @@ const AddCollectionModal = ({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={30}
       >
-        <View className="flex-1 bg-white px-6 gap-6 py-12">
+        <View className="flex-1 bg-white dark:bg-gray-900 px-6 gap-6 py-12">
           {/* Modal Header */}
           <View className="flex-row justify-between items-center">
-            <Text className="text-lg font-semibold">Create Collection</Text>
+            <Text className="text-lg font-semibold text-main">
+              Create Collection
+            </Text>
             <TouchableOpacity onPress={handleClose} disabled={isCreating}>
               <Ionicons
                 name="close"
                 size={24}
-                color={isCreating ? "#ccc" : "#666"}
+                color={isCreating ? "#ccc" : isDark ? "#9CA3AF" : "#666"}
               />
             </TouchableOpacity>
           </View>
@@ -144,27 +154,30 @@ const AddCollectionModal = ({
           <View className="flex-1">
             {/* Collection Name Input */}
             <View className="mb-6">
-              <Text className="text-base font-medium text-gray-800 mb-2">
+              <Text className="text-base font-medium text-main mb-2">
                 Name Collection
               </Text>
               <TextInput
                 value={collectionName}
                 onChangeText={setCollectionName}
                 placeholder="Ex : Collection 2024"
-                className={`border border-gray-300 rounded-lg p-4 text-base ${
-                  isCreating ? "bg-gray-100" : ""
-                }`}
+                placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+                className={`border border-soft rounded-lg p-4 text-base ${
+                  isCreating
+                    ? "bg-gray-100 dark:bg-gray-800"
+                    : "bg-white dark:bg-gray-900"
+                } text-gray-900 dark:text-white`}
                 maxLength={30}
                 editable={!isCreating}
               />
-              <Text className="text-sm text-gray-500 mt-1">
+              <Text className="text-sm text-secondary mt-1">
                 {collectionName.length}/30 Character
               </Text>
             </View>
 
             {/* Museums Grid */}
             <View className="flex-1">
-              <Text className="text-base font-medium text-gray-800 mb-3">
+              <Text className="text-base font-medium text-main mb-3">
                 Select Museums ({selectedMuseums.size} selected)
               </Text>
               <FlatList
@@ -185,7 +198,7 @@ const AddCollectionModal = ({
               className={`py-4 rounded-lg ${
                 collectionName.trim() && selectedMuseums.size > 0 && !isCreating
                   ? "bg-orange-500"
-                  : "bg-gray-300"
+                  : "bg-gray-300 dark:bg-gray-700"
               }`}
             >
               <View className="flex-row justify-center items-center">

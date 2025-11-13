@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, TouchableOpacity, Animated } from "react-native";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface TabsPickerProps {
   options: [string, string];
@@ -14,6 +15,7 @@ const TabsPicker = ({
   onSelectionChange,
   width,
 }: TabsPickerProps) => {
+  const { isDark } = useTheme();
   const [leftOption, rightOption] = options;
   const isLeftSelected = selectedValue === leftOption;
   const buttonWidth = width / 2;
@@ -73,7 +75,7 @@ const TabsPicker = ({
 
   return (
     <View className="mb-4" style={{ width }}>
-      <View className="bg-gray-100 rounded-3xl shadow-sm relative overflow-hidden">
+      <View className="bg-surface rounded-3xl shadow-sm relative overflow-hidden">
         {/* Sliding Background Indicator */}
         <Animated.View
           style={{
@@ -81,7 +83,7 @@ const TabsPicker = ({
             left: slideAnimation,
             width: buttonWidth - 8,
             height: 32,
-            backgroundColor: "white",
+            backgroundColor: isDark ? "#111827" : "white",
             borderRadius: 24,
             marginVertical: 4,
             marginHorizontal: 4,
@@ -110,7 +112,7 @@ const TabsPicker = ({
                 opacity: leftTextOpacity,
                 fontSize: 16,
                 fontWeight: "600",
-                color: "#1F2937",
+                color: isDark ? "#FFFFFF" : "#1F2937",
               }}
             >
               {leftOption}
@@ -129,7 +131,7 @@ const TabsPicker = ({
                 opacity: rightTextOpacity,
                 fontSize: 16,
                 fontWeight: "600",
-                color: "#1F2937",
+                color: isDark ? "#FFFFFF" : "#1F2937",
               }}
             >
               {rightOption}

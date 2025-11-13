@@ -18,6 +18,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ActivityIndicator, View } from "react-native";
+import { ThemeProvider } from "@/provider/ThemeProvider";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -59,7 +60,9 @@ export default function RootLayout() {
       <ClerkLoaded>
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <QueryClientProvider client={queryClient}>
-            <RootAuthLayout />
+            <ThemeProvider>
+              <RootAuthLayout />
+            </ThemeProvider>
           </QueryClientProvider>
         </ConvexProviderWithClerk>
       </ClerkLoaded>
@@ -84,7 +87,7 @@ const RootAuthLayout = () => {
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
       <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(core)" />
       </Stack.Protected>
     </Stack>
   );

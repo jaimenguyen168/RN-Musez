@@ -5,8 +5,8 @@ import { useArtworkStore } from "@/stores/artworkStore";
 import ArtworkDetailsView from "@/modules/snap/ui/views/artwork-details-view";
 import { Artwork } from "@/types/artwork";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+import { api } from "../../../../../convex/_generated/api";
+import { Id } from "../../../../../convex/_generated/dataModel";
 
 export default function ArtworkDetailsScreen() {
   const { artworkId } = useLocalSearchParams<{ artworkId: string }>();

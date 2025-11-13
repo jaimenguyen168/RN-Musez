@@ -2,6 +2,7 @@ import React from "react";
 import { ContextMenu, Host, Button } from "@expo/ui/swift-ui";
 import { SFSymbol } from "expo-symbols";
 import { scaleEffect } from "@expo/ui/swift-ui/modifiers";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface MenuOption {
   label: string;
@@ -25,6 +26,7 @@ const ContextMenuDropdown = ({
   onValueChange,
   iconScale = 1.2,
 }: ContextMenuDropdownProps) => {
+  const { isDark } = useTheme();
   const handleOptionSelect = (option: MenuOption) => {
     onValueChange(option.value);
   };
@@ -47,8 +49,8 @@ const ContextMenuDropdown = ({
         <ContextMenu.Trigger>
           <Button
             systemImage="ellipsis.circle"
-            color="black"
             modifiers={[scaleEffect(iconScale)]}
+            color={isDark ? "white" : "black"}
           />
         </ContextMenu.Trigger>
       </ContextMenu>

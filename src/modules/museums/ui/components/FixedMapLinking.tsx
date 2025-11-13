@@ -81,18 +81,16 @@ const FixedMapLinking = ({
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="location" size={20} color="#6366F1" />
-          <Text className="text-lg font-semibold ml-2 text-gray-900">
-            Location
-          </Text>
+          <Text className="text-lg font-semibold ml-2 text-main">Location</Text>
         </View>
       )}
 
-      <Text className="text-gray-600 mb-4 leading-relaxed">{address}</Text>
+      <Text className="text-secondary mb-4 leading-relaxed">{address}</Text>
 
       {/* Map View */}
       <TouchableOpacity
         onPress={() => openInMaps(latitude, longitude, name)}
-        className="rounded-2xl overflow-hidden shadow-lg"
+        className="rounded-2xl overflow-hidden shadow-lg border border-soft"
         style={{ height }}
       >
         <MapView

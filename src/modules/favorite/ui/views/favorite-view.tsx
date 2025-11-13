@@ -22,6 +22,7 @@ import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
 import TabsPicker from "@/components/TabsPicker";
 import FavoriteArtworksEmpty from "@/modules/favorite/ui/components/FavoriteArtworksEmpty";
+import { useTheme } from "@/provider/ThemeProvider";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
@@ -30,6 +31,7 @@ const { width: screenWidth } = Dimensions.get("window");
 
 const FavoriteView = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const { artwork } = useLocalSearchParams<{ artwork?: string }>();
   const [viewMode, setViewMode] = useState<ViewMode>(
     artwork === "true" ? "artwork" : "museum",
@@ -139,19 +141,21 @@ const FavoriteView = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-app">
         <ActivityIndicator size="large" color="#6366F1" />
-        <Text className="mt-2 text-gray-600">Loading saved items...</Text>
+        <Text className="mt-2 text-secondary">Loading saved items...</Text>
       </View>
     );
   }
 
   if (isEmpty) {
     return (
-      <View className="flex-1 bg-gray-50 px-6 py-32">
+      <View className="flex-1 bg-app px-6 py-32">
         <BlurNavigationHeader
           title="Favorite"
           height={160}
+          statusBarStyle={isDark ? "light" : "dark"}
+          blurType={isDark ? "dark" : "light"}
           bottomComponent={
             <TabsPicker
               options={viewModeOptions}
@@ -178,12 +182,12 @@ const FavoriteView = () => {
         onPress={handleAddFavoriteCollectionPress}
         className="justify-center items-center p-2"
       >
-        <Ionicons name="add" size={24} color="black" />
+        <Ionicons name="add" size={24} color={isDark ? "#FFFFFF" : "#000000"} />
       </TouchableOpacity>
     ) : null;
 
   return (
-    <View className="flex-1 bg-gray-50 relative">
+    <View className="flex-1 bg-app relative">
       <BlurNavigationHeader
         title="Favorite"
         height={160}
@@ -196,6 +200,8 @@ const FavoriteView = () => {
             width={screenWidth - 42}
           />
         }
+        statusBarStyle={isDark ? "light" : "dark"}
+        blurType={isDark ? "dark" : "light"}
       />
 
       {viewMode === "museum" ? (

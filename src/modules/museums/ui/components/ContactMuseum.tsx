@@ -9,7 +9,6 @@ interface ContactMuseumProps {
   showTitle?: boolean;
   title?: string;
   iconColor?: string;
-  backgroundColor?: string;
 }
 
 const ContactMuseum = ({
@@ -18,7 +17,6 @@ const ContactMuseum = ({
   showTitle = true,
   title = "Contact",
   iconColor = "#6366F1",
-  backgroundColor = "#F9FAFB", // bg-gray-50
 }: ContactMuseumProps) => {
   const handlePhonePress = async () => {
     if (phoneNumber) {
@@ -50,23 +48,17 @@ const ContactMuseum = ({
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="accessibility" size={20} color={iconColor} />
-          <Text className="text-lg font-semibold ml-2 text-gray-900">
-            {title}
-          </Text>
+          <Text className="text-lg font-semibold ml-2 text-main">{title}</Text>
         </View>
       )}
 
       {phoneNumber && (
         <TouchableOpacity
-          className="flex-row items-center p-4 rounded-xl mb-3"
-          style={{ backgroundColor }}
+          className="flex-row items-center p-4 rounded-xl mb-3 bg-surface"
           onPress={handlePhonePress}
         >
           <Ionicons name="call-outline" size={20} color={iconColor} />
-          <Text
-            className="ml-3 text-base font-medium"
-            style={{ color: iconColor }}
-          >
+          <Text className="ml-3 text-base font-medium text-main">
             {phoneNumber}
           </Text>
         </TouchableOpacity>
@@ -74,14 +66,12 @@ const ContactMuseum = ({
 
       {website && (
         <TouchableOpacity
-          className="flex-row items-center p-4 rounded-xl"
-          style={{ backgroundColor }}
+          className="flex-row items-center p-4 rounded-xl bg-surface"
           onPress={handleWebsitePress}
         >
           <Ionicons name="globe-outline" size={20} color={iconColor} />
           <Text
-            className="ml-3 text-base font-medium flex-1"
-            style={{ color: iconColor }}
+            className="ml-3 text-base font-medium flex-1 text-main"
             numberOfLines={1}
           >
             Visit Website

@@ -2,7 +2,6 @@ import {
   View,
   Animated,
   Dimensions,
-  StatusBar,
   TextStyle,
   ViewStyle,
   NativeSyntheticEvent,
@@ -11,6 +10,7 @@ import {
 import React, { useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { StatusBar } from "expo-status-bar";
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -26,7 +26,7 @@ interface ParallaxScrollViewProps {
   titleStyle?: TextStyle;
   headerContainerStyle?: ViewStyle;
   showStatusBar?: boolean;
-  statusBarStyle?: "default" | "light-content" | "dark-content";
+  statusBarStyle?: "dark" | "light" | "auto";
   // New props for individual controls in animated header
   leftControl?: React.ReactNode;
   rightControl?: React.ReactNode;
@@ -46,7 +46,7 @@ const ParallaxScrollView = ({
   headerHeight = HEADER_HEIGHT,
   headerControls,
   headerTitle,
-  scrollViewClassName = "bg-white",
+  scrollViewClassName = "bg-app",
   // New props for animated header
   animatedTitle = "Musez",
   scrollThreshold = 120,
@@ -54,7 +54,7 @@ const ParallaxScrollView = ({
   titleStyle,
   headerContainerStyle,
   showStatusBar = true,
-  statusBarStyle = "light-content",
+  statusBarStyle = "auto",
   // New props for individual controls
   leftControl,
   rightControl,
@@ -137,13 +137,8 @@ const ParallaxScrollView = ({
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor }}>
-      {showStatusBar && (
-        <StatusBar
-          barStyle={statusBarStyle}
-          backgroundColor={backgroundColor}
-        />
-      )}
+    <View className="flex-1 bg-app" style={{ backgroundColor }}>
+      {showStatusBar && <StatusBar style={statusBarStyle} />}
 
       {/* Animated Top Title Bar with Blur */}
       <Animated.View
@@ -200,7 +195,7 @@ const ParallaxScrollView = ({
         </BlurView>
       </Animated.View>
 
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-app">
         {/* Header Container - moves with scroll */}
         <Animated.View
           className="absolute top-0 left-0 right-0 z-10"
@@ -296,7 +291,9 @@ const ParallaxScrollView = ({
           bounces={true}
         >
           {/* Content Container */}
-          <View className="rounded-t-3xl -mt-5 min-h-[800px]">{children}</View>
+          <View className="bg-app rounded-t-3xl -mt-5 min-h-[800px]">
+            {children}
+          </View>
         </Animated.ScrollView>
       </View>
     </View>

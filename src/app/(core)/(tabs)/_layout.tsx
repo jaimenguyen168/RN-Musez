@@ -43,13 +43,6 @@ export default function TabsLayout() {
           drawable="person_drawable"
         />
       </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="search" role="search">
-        <Icon
-          sf={{ default: "magnifyingglass", selected: "magnifyingglass" }}
-          drawable="search_drawable"
-        />
-      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

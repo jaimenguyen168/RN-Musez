@@ -18,6 +18,8 @@ import { getClerkErrorMessage, LoginFormData } from "@/modules/auth/types";
 import { emailSchema, usernameSchema } from "@/modules/auth/schemas";
 import { useRouter } from "expo-router";
 import { useSignInFormValidation } from "@/modules/auth/schemas/validator";
+import AppButton from "@/components/AppButton";
+import Divider from "@/components/Divider";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -109,19 +111,19 @@ const SignInView = () => {
   };
 
   const handleForgotPassword = () => {
-    console.log("Forgot password pressed");
+    router.push("/reset-password");
   };
 
-  const handleNeedHelp = () => {
-    console.log("Need help pressed");
-  };
+  // const handleNeedHelp = () => {
+  //   console.log("Need help pressed");
+  // };
 
   const handleRegister = () => {
     router.push("/sign-up");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-app">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -135,12 +137,12 @@ const SignInView = () => {
         >
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-3xl font-medium text-gray-900 mb-2">
+            <Text className="text-3xl font-medium text-main mb-2">
               Welcome to <Text className="text-primary font-bold">Musez</Text>{" "}
               👋
             </Text>
-            <Text className="text-gray-600 text-base">
-              Login to access your account and continue your journey
+            <Text className="text-secondary text-base font-light">
+              Login to discover amazing artworks and museums
             </Text>
           </View>
 
@@ -149,7 +151,7 @@ const SignInView = () => {
             options={tabOptions}
             selectedValue={getDisplayValue(selectedTab)}
             onSelectionChange={handleTabChange}
-            width={screenWidth - 48}
+            width={screenWidth - 44}
           />
 
           {/* Input Fields */}
@@ -195,33 +197,29 @@ const SignInView = () => {
           />
 
           {/* Help and Forgot Password */}
-          <View className="flex-row justify-between mb-8">
-            <TouchableOpacity onPress={handleNeedHelp}>
-              <Text className="text-gray-600">Need a help?</Text>
-            </TouchableOpacity>
+          <View className="flex-row justify-end mb-8">
+            {/*<TouchableOpacity onPress={handleNeedHelp}>*/}
+            {/*  <Text className="text-gray-600 underline">Need a help?</Text>*/}
+            {/*</TouchableOpacity>*/}
             <TouchableOpacity onPress={handleForgotPassword}>
-              <Text className="text-gray-600">Forgot Password</Text>
+              <Text className="text-secondary underline">Forgot Password</Text>
             </TouchableOpacity>
           </View>
 
           {/* Login Button */}
-          <TouchableOpacity
-            onPress={handleLogin}
-            className={`bg-orange-500 rounded-xl py-4 mb-8 ${isLoading ? "opacity-70" : ""}`}
-            disabled={isLoading}
-          >
+          <AppButton onPress={handleLogin} disabled={isLoading}>
             <Text className="text-white text-center font-semibold text-lg">
               {isLoading ? "Signing In..." : "Login"}
             </Text>
-          </TouchableOpacity>
+          </AppButton>
 
           {/* OR Divider */}
-          <View className="flex-row items-center mb-8">
-            <View className="flex-1 h-px bg-gray-300" />
-            <Text className="mx-4 text-gray-500 bg-gray-200 px-3 py-1 rounded-full text-sm">
+          <View className="flex-row items-center my-8">
+            <Divider className="mx-0" />
+            <Text className="mx-4 text-main bg-surface px-3 py-1 rounded-full text-sm">
               OR
             </Text>
-            <View className="flex-1 h-px bg-gray-300" />
+            <Divider className="mx-0" />
           </View>
 
           {/* Social Login Buttons */}
@@ -232,9 +230,9 @@ const SignInView = () => {
 
           {/* Register Link */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-gray-600">Don&apos;t have a account? </Text>
+            <Text className="text-secondary">Don&apos;t have a account? </Text>
             <TouchableOpacity onPress={handleRegister}>
-              <Text className="text-orange-500 font-semibold">Register</Text>
+              <Text className="text-primary font-bold underline">Register</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

@@ -7,6 +7,7 @@ import {
   TextInputProps,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface FormFieldProps extends TextInputProps {
   label: string;
@@ -19,7 +20,7 @@ interface FormFieldProps extends TextInputProps {
   labelClassName?: string;
 }
 
-const FormField: React.FC<FormFieldProps> = ({
+const FormField = ({
   label,
   error,
   required = false,
@@ -27,10 +28,11 @@ const FormField: React.FC<FormFieldProps> = ({
   showPasswordToggle = false,
   onTogglePassword,
   containerClassName = "mb-6",
-  inputClassName = "bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base",
-  labelClassName = "text-gray-700 font-medium mb-2",
+  inputClassName = "bg-card border border-soft rounded-2xl px-4 py-4 text-base text-main",
+  labelClassName = "text-secondary font-medium mb-2",
   ...props
-}) => {
+}: FormFieldProps) => {
+  const { isDark } = useTheme();
   const hasPasswordToggle = showPasswordToggle && onTogglePassword;
   const finalInputClassName = hasPasswordToggle
     ? `${inputClassName} pr-12`
@@ -59,7 +61,7 @@ const FormField: React.FC<FormFieldProps> = ({
             <Ionicons
               name={secureTextEntry ? "eye" : "eye-off"}
               size={22}
-              color="#6B7280"
+              color={isDark ? "#e5e7eb" : "#6B7280"}
             />
           </TouchableOpacity>
         )}

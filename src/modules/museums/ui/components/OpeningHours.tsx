@@ -22,13 +22,13 @@ const OpeningHours = ({
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="time" size={20} color={iconColor} />
-          <Text className="text-lg font-semibold ml-2 text-gray-900">
+          <Text className="text-lg font-semibold ml-2 text-main">
             Opening Hours
           </Text>
         </View>
       )}
 
-      <View className="bg-gray-50 rounded-xl p-2">
+      <View className="bg-surface rounded-xl px-6 pb-4 pt-2">
         {weekdayText.map((day, index) => {
           const [dayName, ...timeParts] = day.split(": ");
           const timeText = timeParts.join(": ");
@@ -36,12 +36,10 @@ const OpeningHours = ({
           return (
             <View
               key={index}
-              className="flex-row justify-between items-center pt-4 border-b border-gray-200 last:border-b-0"
+              className="flex-row justify-between items-center pt-4 border-b border-divider last:border-b-0"
             >
-              <Text className="text-base font-medium text-gray-900">
-                {dayName}
-              </Text>
-              <Text className="text-base text-gray-600 font-medium">
+              <Text className="text-base font-medium text-main">{dayName}</Text>
+              <Text className="text-base text-secondary font-medium">
                 {timeText || "Closed"}
               </Text>
             </View>
@@ -51,4 +49,5 @@ const OpeningHours = ({
     </View>
   );
 };
+
 export default OpeningHours;

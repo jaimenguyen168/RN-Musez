@@ -36,7 +36,7 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="bg-white rounded-3xl overflow-hidden"
+      className="bg-card rounded-3xl overflow-hidden"
       style={{
         width: CARD_WIDTH,
         marginBottom: 16,
@@ -64,7 +64,7 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
                     resizeMode="cover"
                   />
                 ) : (
-                  <View className="w-full h-full bg-gray-200 items-center justify-center">
+                  <View className="w-full h-full bg-surface items-center justify-center">
                     <Ionicons name="image-outline" size={24} color="#9CA3AF" />
                   </View>
                 )}
@@ -86,7 +86,7 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
                     resizeMode="cover"
                   />
                 ) : (
-                  <View className="w-full h-full bg-gray-200 items-center justify-center">
+                  <View className="w-full h-full bg-surface items-center justify-center">
                     <Ionicons
                       name="image-outline"
                       size={index === 1 ? 24 : 20}
@@ -102,7 +102,7 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
         {/* Overlay for extra count */}
         {category.count > 4 && (
           <View className="absolute bottom-2 right-2 bg-black/60 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-medium">
+            <Text className="text-white text-xs font-semibold">
               +{category.count - 4}
             </Text>
           </View>
@@ -111,10 +111,10 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
 
       {/* Card Content */}
       <View className="p-4">
-        <Text className="text-lg font-bold text-gray-900 mb-1">
+        <Text className="text-lg font-bold text-main mb-1">
           {category.title}
         </Text>
-        <Text className="text-gray-600 text-sm">{category.count} Saved</Text>
+        <Text className="text-secondary text-sm">{category.count} Saved</Text>
       </View>
     </TouchableOpacity>
   );

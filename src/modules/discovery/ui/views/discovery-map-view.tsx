@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   View,
   TextInput,
-  Text,
 } from "react-native";
 import MapView, { Marker } from "@/components/MapView";
 import React, { useEffect, useState, useMemo } from "react";
@@ -14,9 +13,11 @@ import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import BackButton from "@/components/BackButton";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const DiscoveryMapView = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -84,14 +85,14 @@ const DiscoveryMapView = () => {
       <Ionicons
         name={showSearchBar ? "close" : "search"}
         size={24}
-        color="black"
+        color={isDark ? "white" : "black"}
       />
     </TouchableOpacity>
   );
 
   const searchBarComponent = showSearchBar ? (
     <View className="pb-6">
-      <View className="rounded-2xl px-4 py-3 flex-row items-center bg-white/30 border border-gray-400">
+      <View className="rounded-2xl px-4 py-3 flex-row items-center bg-card border border-soft">
         <Ionicons name="search" size={20} color="#6B7280" />
         <TextInput
           value={searchQuery}
@@ -120,6 +121,7 @@ const DiscoveryMapView = () => {
         rightComponent={rightComponent}
         bottomComponent={searchBarComponent}
         height={showSearchBar ? 165 : 100}
+        blurType={isDark ? "dark" : "light"}
       />
       <MapView
         initialRegion={{

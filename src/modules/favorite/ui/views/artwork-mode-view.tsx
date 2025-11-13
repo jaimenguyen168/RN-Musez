@@ -37,6 +37,7 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
           borderRadius: 8,
         }}
         resizeMode="cover"
+        className="border-gray-300 dark:border-gray-400 border rounded-lg"
       />
     </TouchableOpacity>
   );

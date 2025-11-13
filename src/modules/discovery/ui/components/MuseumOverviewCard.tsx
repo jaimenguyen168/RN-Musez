@@ -7,6 +7,7 @@ import { useQuery, useMutation } from "convex/react";
 import { getPhotoUrl } from "@/utils";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { calculateAndFormatDistance, DistanceUnit } from "@/utils/distance";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface MuseumOverviewCardProps {
   museum: Museum;
@@ -19,6 +20,7 @@ const MuseumOverviewCard = ({
   variant = "compact",
   onCardPress,
 }: MuseumOverviewCardProps) => {
+  const { isDark } = useTheme();
   const { coords } = useLocationManager(false);
 
   const isSaved = useQuery(api.function.museums.isMuseumSaved, {
@@ -55,7 +57,7 @@ const MuseumOverviewCard = ({
     return (
       <TouchableOpacity
         onPress={onCardPress}
-        className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
+        className="bg-card rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
       >
         <View className="relative">
           {photoUrl ? (
@@ -65,39 +67,47 @@ const MuseumOverviewCard = ({
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-56 bg-gray-200 items-center justify-center">
-              <Ionicons name="image-outline" size={48} color="#9CA3AF" />
+            <View className="w-full h-56 bg-surface items-center justify-center">
+              <Ionicons
+                name="image-outline"
+                size={48}
+                color={isDark ? "#6B7280" : "#9CA3AF"}
+              />
             </View>
           )}
           <TouchableOpacity
             onPress={onFavoritePress}
-            className="absolute top-4 right-4 bg-white/90 rounded-full p-2"
+            className="absolute top-4 right-4 bg-surface rounded-full p-2"
           >
             <Ionicons
               name={isSaved ? "heart" : "heart-outline"}
               size={24}
-              color={isSaved ? "#EC4899" : "#6B7280"}
+              color={isSaved ? "#EC4899" : isDark ? "#9CA3AF" : "#6B7280"}
             />
           </TouchableOpacity>
         </View>
 
         <View className="p-4">
-          <Text className="text-xl font-bold text-gray-900 mb-1 line-clamp-2">
+          <Text className="text-lg font-bold text-main mb-1 line-clamp-1">
             {museum.name}
           </Text>
-          <Text className="text-base text-gray-500 mb-3">
+          <Text className="text-base text-secondary mb-3 line-clamp-2">
             {museum.vicinity || museum.formattedAddress}
           </Text>
 
           <View className="flex-row items-center">
             <Ionicons name="star" size={20} color="#F59E0B" />
-            <Text className="text-base font-semibold text-gray-900 ml-1 mr-3">
+            <Text className="text-base font-semibold text-main ml-1 mr-3">
               {museum.rating ? museum.rating.toFixed(1) : "N/A"}
             </Text>
             {formattedDistance && (
               <View className="flex-row items-center gap-1">
-                <MaterialIcons name="directions" size={20} color="#6B7280" />
-                <Text className="text-base text-gray-600">
+                <MaterialIcons
+                  name="directions"
+                  size={20}
+                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                />
+                <Text className="text-base text-secondary">
                   {formattedDistance}
                 </Text>
               </View>
@@ -124,7 +134,7 @@ const MuseumOverviewCard = ({
   return (
     <Pressable
       onPress={onCardPress}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
+      className="bg-card rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
     >
       <View className="flex-row h-48">
         <View className="w-32">
@@ -135,29 +145,30 @@ const MuseumOverviewCard = ({
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-full bg-gray-200 items-center justify-center">
-              <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+            <View className="w-full h-full bg-surface items-center justify-center">
+              <Ionicons
+                name="image-outline"
+                size={32}
+                color={isDark ? "#6B7280" : "#9CA3AF"}
+              />
             </View>
           )}
         </View>
 
         <View className="flex-1 p-4 pr-12">
-          <Text
-            className="text-lg font-bold text-gray-900 mb-1"
-            numberOfLines={2}
-          >
+          <Text className="text-lg font-bold text-main mb-1" numberOfLines={2}>
             {museum.name}
           </Text>
-          <Text className="text-sm text-gray-500 mb-2" numberOfLines={1}>
+          <Text className="text-sm text-secondary mb-2" numberOfLines={1}>
             {museum.vicinity || museum.formattedAddress}
           </Text>
 
           <View className="flex-row items-center mb-2">
             <Ionicons name="star" size={16} color="#F59E0B" />
-            <Text className="text-sm font-semibold text-gray-900 ml-1">
+            <Text className="text-sm font-semibold text-main ml-1">
               {museum.rating ? museum.rating.toFixed(1) : "N/A"}
             </Text>
-            <Text className="text-xs text-gray-500 ml-1">
+            <Text className="text-xs text-secondary ml-1">
               ({museum.userRatingsTotal || 0} Review
               {museum.userRatingsTotal !== 1 ? "s" : ""})
             </Text>
@@ -165,8 +176,12 @@ const MuseumOverviewCard = ({
 
           {formattedDistance && (
             <View className="flex-row items-center mb-2">
-              <Ionicons name="location-outline" size={16} color="#6B7280" />
-              <Text className="text-sm text-gray-600 ml-1">
+              <Ionicons
+                name="location-outline"
+                size={16}
+                color={isDark ? "#9CA3AF" : "#6B7280"}
+              />
+              <Text className="text-sm text-secondary ml-1">
                 {formattedDistance}
               </Text>
             </View>
@@ -188,12 +203,12 @@ const MuseumOverviewCard = ({
 
         <Pressable
           onPress={onFavoritePress}
-          className="absolute top-3 right-3 bg-white/90 rounded-full p-2"
+          className="absolute top-3 right-3 bg-surface rounded-full p-2"
         >
           <Ionicons
             name={isSaved ? "heart" : "heart-outline"}
             size={20}
-            color={isSaved ? "#EC4899" : "#6B7280"}
+            color={isSaved ? "#EC4899" : isDark ? "#9CA3AF" : "#6B7280"}
           />
         </Pressable>
       </View>

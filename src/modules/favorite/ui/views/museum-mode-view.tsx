@@ -104,9 +104,9 @@ const MuseumModeView = ({
   // Loading state
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-app">
         <ActivityIndicator size="large" color="#6366F1" />
-        <Text className="mt-2 text-gray-600">Fetching museum details...</Text>
+        <Text className="mt-2 text-secondary">Fetching museum details...</Text>
       </View>
     );
   }
@@ -114,13 +114,13 @@ const MuseumModeView = ({
   // Error state
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center p-4 bg-gray-50">
-        <View className="bg-white rounded-2xl p-6 items-center shadow-lg">
+      <View className="flex-1 justify-center items-center p-4 bg-app">
+        <View className="bg-card rounded-2xl p-6 items-center shadow-lg border border-soft">
           <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
           <Text className="text-red-500 text-center mt-4 font-semibold">
             Error loading museums
           </Text>
-          <Text className="text-gray-600 text-center mt-2">
+          <Text className="text-secondary text-center mt-2">
             {error.message}
           </Text>
         </View>
