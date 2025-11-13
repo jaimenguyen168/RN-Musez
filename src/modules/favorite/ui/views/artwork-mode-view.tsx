@@ -11,10 +11,13 @@ interface ArtworkModeViewProps {
 }
 
 const { width: screenWidth } = Dimensions.get("window");
-const GRID_SPACING = 8;
-const GRID_COLUMNS = 4;
-const IMAGE_SIZE =
-  (screenWidth - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
+const HORIZONTAL_PADDING = 32;
+const MARGIN_PER_ITEM = 8;
+const COLUMNS = 4;
+
+const availableWidth = screenWidth - HORIZONTAL_PADDING;
+const totalMarginWidth = MARGIN_PER_ITEM * COLUMNS;
+const itemWidth = (availableWidth - totalMarginWidth) / COLUMNS;
 
 const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
@@ -22,22 +25,13 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
   const renderArtworkItem = ({ item }: { item: ArtworkDoc }) => (
     <TouchableOpacity
       onPress={() => onArtworkPress(item)}
-      style={{
-        width: IMAGE_SIZE,
-        height: IMAGE_SIZE,
-        marginRight: GRID_SPACING,
-        marginBottom: GRID_SPACING,
-      }}
+      className="aspect-square m-1"
+      style={{ width: itemWidth }}
     >
       <Image
         source={{ uri: item.imageUri }}
-        style={{
-          width: IMAGE_SIZE,
-          height: IMAGE_SIZE,
-          borderRadius: 8,
-        }}
+        className="flex-1 border-gray-300 dark:border-gray-400 border rounded-lg"
         resizeMode="cover"
-        className="border-gray-300 dark:border-gray-400 border rounded-lg"
       />
     </TouchableOpacity>
   );
@@ -47,7 +41,7 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
       data={savedArtworks || []}
       renderItem={renderArtworkItem}
       keyExtractor={(item) => item._id}
-      numColumns={GRID_COLUMNS}
+      numColumns={4}
       contentContainerStyle={{
         paddingTop: 170,
         paddingHorizontal: 16,
@@ -58,4 +52,5 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
     />
   );
 };
+
 export default ArtworkModeView;

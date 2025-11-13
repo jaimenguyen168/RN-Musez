@@ -4,7 +4,6 @@ import {
   View,
   Alert,
   TouchableOpacity,
-  Dimensions,
 } from "react-native";
 import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
@@ -26,8 +25,6 @@ import { useTheme } from "@/provider/ThemeProvider";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
-
-const { width: screenWidth } = Dimensions.get("window");
 
 const FavoriteView = () => {
   const router = useRouter();
@@ -163,7 +160,6 @@ const FavoriteView = () => {
               onSelectionChange={(value) =>
                 setViewMode(getInternalValue(value))
               }
-              width={screenWidth - 42}
             />
           }
         />
@@ -197,7 +193,6 @@ const FavoriteView = () => {
             options={viewModeOptions}
             selectedValue={getDisplayValue(viewMode)}
             onSelectionChange={(value) => setViewMode(getInternalValue(value))}
-            width={screenWidth - 42}
           />
         }
         statusBarStyle={isDark ? "light" : "dark"}
