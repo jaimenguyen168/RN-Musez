@@ -4,6 +4,7 @@ import { Museum } from "@/types/museum";
 import MuseumOverviewCard from "@/modules/discovery/ui/components/MuseumOverviewCard";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface MuseumListViewProps {
   museums: Museum[];
@@ -22,6 +23,7 @@ const MuseumListView = ({
   rightComponent,
   secondRightComponent,
 }: MuseumListViewProps) => {
+  const { isDark } = useTheme();
   const { title } = useMuseumListStore();
   const usedTitle = titleList.includes(title) ? title : "Museums";
 
@@ -44,13 +46,14 @@ const MuseumListView = ({
   }
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-app">
       <BlurNavigationHeader
         title={usedTitle}
         leftComponent={leftComponent}
         rightComponent={rightComponent}
         secondRightComponent={secondRightComponent}
-        statusBarStyle="dark"
+        statusBarStyle={isDark ? "light" : "dark"}
+        blurType={isDark ? "dark" : "light"}
       />
 
       {/* Museum List */}

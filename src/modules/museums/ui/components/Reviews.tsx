@@ -37,9 +37,7 @@ const Reviews = ({
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="chatbubbles" size={20} color={iconColor} />
-          <Text className="text-lg font-semibold ml-2 text-gray-900">
-            {title}
-          </Text>
+          <Text className="text-lg font-semibold ml-2 text-main">{title}</Text>
         </View>
       )}
 
@@ -47,7 +45,7 @@ const Reviews = ({
         {displayReviews.map((review, index) => (
           <View
             key={index}
-            className="bg-gray-100 p-5 rounded-2xl mr-4"
+            className="bg-surface p-5 rounded-2xl mr-4 border border-soft"
             style={{
               width: cardWidth,
               shadowColor: "#000",
@@ -59,25 +57,25 @@ const Reviews = ({
           >
             <View className="flex-row items-center justify-between mb-3">
               <Text
-                className="text-base font-semibold flex-1 text-gray-900"
+                className="text-base font-semibold flex-1 text-main"
                 numberOfLines={1}
               >
                 {review.authorName}
               </Text>
-              <View className="flex-row items-center ml-2 bg-amber-50 px-2 py-1 rounded-full">
+              <View className="flex-row items-center ml-2 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-full">
                 <Ionicons name="star" size={14} color="#F59E0B" />
-                <Text className="text-sm font-medium text-amber-700 ml-1">
+                <Text className="text-sm font-medium text-amber-700 dark:text-amber-300 ml-1">
                   {review.rating}
                 </Text>
               </View>
             </View>
             <Text
-              className="text-sm leading-6 text-gray-700 mb-3"
+              className="text-sm leading-6 text-secondary mb-3"
               numberOfLines={4}
             >
               {review.text}
             </Text>
-            <Text className="text-xs text-gray-500 font-medium">
+            <Text className="text-xs text-secondary font-medium opacity-75">
               {review.relativeTimeDescription}
             </Text>
           </View>

@@ -15,9 +15,11 @@ import { Ionicons } from "@expo/vector-icons";
 import CodeStep from "@/modules/auth/ui/components/CodeStep";
 import PasswordStep from "@/modules/auth/ui/components/PasswordStep";
 import EmailStep from "@/modules/auth/ui/components/EmailStep";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const ResetPasswordView = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const { signIn, setActive } = useSignIn();
 
   const [email, setEmail] = useState("");
@@ -111,26 +113,28 @@ const ResetPasswordView = () => {
   };
 
   const getHeaderText = () => {
+    const iconColor = isDark ? "#F3F4F6" : "#374151";
+
     switch (step) {
       case "email":
         return (
-          <Text className="text-3xl font-medium text-gray-900 mb-2">
+          <Text className="text-3xl font-medium text-main mb-2">
             Forgot Password?{" "}
-            <Ionicons name="lock-closed-outline" size={24} color="#374151" />
+            <Ionicons name="lock-closed-outline" size={24} color={iconColor} />
           </Text>
         );
       case "code":
         return (
-          <Text className="text-3xl font-medium text-gray-900 mb-2">
+          <Text className="text-3xl font-medium text-main mb-2">
             Check Your Email{" "}
-            <Ionicons name="mail-outline" size={28} color="#374151" />
+            <Ionicons name="mail-outline" size={28} color={iconColor} />
           </Text>
         );
       case "password":
         return (
-          <Text className="text-3xl font-medium text-gray-900 mb-2">
+          <Text className="text-3xl font-medium text-main mb-2">
             Set New Password{" "}
-            <Ionicons name="lock-open-outline" size={24} color="#374151" />
+            <Ionicons name="lock-open-outline" size={24} color={iconColor} />
           </Text>
         );
     }
@@ -140,20 +144,20 @@ const ResetPasswordView = () => {
     switch (step) {
       case "email":
         return (
-          <Text className="text-gray-600 text-base font-light">
+          <Text className="text-secondary text-base font-light">
             Enter your email address and we&apos;ll send you a verification code
           </Text>
         );
       case "code":
         return (
-          <Text className="text-gray-600 text-base font-light">
+          <Text className="text-secondary text-base font-light">
             We&apos;ve sent a verification code to{" "}
-            <Text className="font-semibold text-gray-900">{email}</Text>
+            <Text className="font-semibold text-main">{email}</Text>
           </Text>
         );
       case "password":
         return (
-          <Text className="text-gray-600 text-base font-light">
+          <Text className="text-secondary text-base font-light">
             Choose a new secure password for your Musez account
           </Text>
         );
@@ -196,7 +200,7 @@ const ResetPasswordView = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-app">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -219,7 +223,7 @@ const ResetPasswordView = () => {
           {/* Back to Sign In */}
           <View className="mt-8 flex-row justify-center">
             <TouchableOpacity onPress={() => router.back()}>
-              <Text className="text-gray-600 underline">Back to Sign In</Text>
+              <Text className="text-secondary underline">Back to Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

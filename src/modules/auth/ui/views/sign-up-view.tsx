@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import { signUpSchema } from "@/modules/auth/schemas";
 import { useSignUpFormValidation } from "@/modules/auth/schemas/validator";
 import AppButton from "@/components/AppButton";
+import Divider from "@/components/Divider";
 
 const SignUpView = () => {
   const router = useRouter();
@@ -100,7 +101,7 @@ const SignUpView = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-app">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -114,11 +115,11 @@ const SignUpView = () => {
         >
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-3xl font-medium text-gray-900 mb-2">
+            <Text className="text-3xl font-medium text-main mb-2">
               Join <Text className="text-primary font-bold">Musez</Text> today
               👋
             </Text>
-            <Text className="text-gray-600 text-base font-light">
+            <Text className="text-secondary text-base font-light">
               Create your account and start{"\n"}Exploring amazing artworks and
               museums
             </Text>
@@ -191,11 +192,11 @@ const SignUpView = () => {
 
           {/* OR Divider */}
           <View className="flex-row items-center my-8">
-            <View className="flex-1 h-px bg-gray-300" />
-            <Text className="mx-4 text-gray-500 bg-gray-200 px-3 py-1 rounded-full text-sm">
+            <Divider className="mx-0" />
+            <Text className="mx-4 text-main bg-card px-3 py-1 rounded-full text-sm">
               OR
             </Text>
-            <View className="flex-1 h-px bg-gray-300" />
+            <Divider className="mx-0" />
           </View>
 
           {/* Social Login Buttons */}
@@ -206,7 +207,7 @@ const SignUpView = () => {
 
           {/* Login Link */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-gray-600">Already have an account? </Text>
+            <Text className="text-secondary">Already have an account? </Text>
             <TouchableOpacity onPress={handleLogin}>
               <Text className="text-primary font-bold underline">Login</Text>
             </TouchableOpacity>

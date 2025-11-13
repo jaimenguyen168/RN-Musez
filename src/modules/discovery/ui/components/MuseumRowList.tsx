@@ -2,6 +2,7 @@ import { View, Text, FlatList, Pressable } from "react-native";
 import React from "react";
 import { Museum } from "@/types/museum";
 import MuseumOverviewCard from "./MuseumOverviewCard";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface MuseumRowListProps {
   title: string;
@@ -16,6 +17,8 @@ const MuseumRowList = ({
   onCardPress,
   onShowAll,
 }: MuseumRowListProps) => {
+  const { isDark } = useTheme();
+
   if (museums.length === 0) {
     return null;
   }
@@ -24,10 +27,12 @@ const MuseumRowList = ({
     <View className="mb-6">
       {/* Header */}
       <View className="flex-row justify-between items-center px-6 mb-4">
-        <Text className="text-xl font-bold text-gray-900">{title}</Text>
+        <Text className="text-xl font-bold text-main">{title}</Text>
         {onShowAll && (
           <Pressable onPress={onShowAll}>
-            <Text className="text-base font-medium underline">Show all</Text>
+            <Text className="text-base font-medium underline text-secondary">
+              Show all
+            </Text>
           </Pressable>
         )}
       </View>

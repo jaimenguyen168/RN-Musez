@@ -7,9 +7,11 @@ import ContextMenuDropdown from "@/components/ContextMenuDropdown";
 import MuseumListView from "@/modules/museums/ui/views/museum-list-view";
 import BackButton from "@/components/BackButton";
 import RemoveCollectionModal from "@/modules/favorite/ui/components/RemoveCollectionModal";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const CollectionView = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const { title, museums, setMuseumList } = useMuseumListStore();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -51,7 +53,7 @@ const CollectionView = () => {
       {(isDeleting || isRemoving) && (
         <ActivityIndicator
           size="small"
-          color="#000"
+          color={isDark ? "#fff" : "#000"}
           style={{ marginRight: 8 }}
         />
       )}

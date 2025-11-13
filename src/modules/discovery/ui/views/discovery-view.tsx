@@ -9,9 +9,11 @@ import AnimatedHeaderWrapper from "@/components/AnimatedHeaderWrapper";
 import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 import { calculateRawDistance } from "@/utils/distance";
 import { useMuseumListStore } from "@/stores/museumListStore";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const DiscoveryView = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const {
     address,
     coords,
@@ -129,7 +131,9 @@ const DiscoveryView = () => {
       headerComponent={headerComponent}
       scrollThreshold={80}
       blurIntensity={80}
-      blurType="light"
+      blurType={isDark ? "dark" : "light"}
+      backgroundColor={isDark ? "#111827" : "white"}
+      titleStyle={`text-xl font-bold tracking-wide ${isDark ? "text-white" : "text-black"}`}
     >
       {renderMainContent()}
     </AnimatedHeaderWrapper>

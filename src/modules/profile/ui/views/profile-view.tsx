@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -15,11 +15,12 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const ProfileView = () => {
   const router = useRouter();
   const { signOut } = useAuth();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { setTheme, isDark } = useTheme();
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const user = useQuery(api.function.users.getCurrentUser);
@@ -59,6 +60,10 @@ const ProfileView = () => {
     router.push("/users/edit");
   };
 
+  const handleThemeToggle = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
+
   if (!user) {
     return null;
   }
@@ -66,16 +71,20 @@ const ProfileView = () => {
   const EditButton = (
     <TouchableOpacity
       onPress={handleEditProfile}
-      className="bg-white/80 rounded-full p-2"
+      className="bg-surface rounded-full p-2"
     >
-      <Ionicons name="pencil" size={20} color="#374151" />
+      <Ionicons
+        name="pencil"
+        size={20}
+        color={isDark ? "#F3F4F6" : "#374151"}
+      />
     </TouchableOpacity>
   );
 
   const HeaderTitle = (
     <View className="-mb-24">
       {/* Profile Card overlaid on header */}
-      <View className="bg-white rounded-3xl p-6 border border-gray-200">
+      <View className="bg-card border-soft rounded-3xl p-6 border">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center flex-1">
             <Image
@@ -84,10 +93,10 @@ const ProfileView = () => {
               resizeMode="cover"
             />
             <View className="flex-1">
-              <Text className="text-xl font-bold text-gray-900 mb-1">
+              <Text className="text-xl font-bold mb-1 text-main">
                 {user.username}
               </Text>
-              <Text className="text-gray-600">{user.email}</Text>
+              <Text className="text-secondary">{user.email}</Text>
             </View>
 
             {EditButton}
@@ -95,14 +104,12 @@ const ProfileView = () => {
         </View>
 
         {/* Tier and Points */}
-        <View className="flex-row items-center justify-between bg-primary-600/20 rounded-2xl p-4">
+        <View className="flex-row items-center justify-between rounded-2xl p-4 bg-primary-600/20 dark:bg-primary-600/30">
           <View className="flex-row items-center">
             <View className="bg-primary rounded-full p-2 mr-3">
               <Ionicons name="diamond" size={16} color="white" />
             </View>
-            <Text className="text-lg font-semibold text-gray-900">
-              Tier Gold
-            </Text>
+            <Text className="text-lg font-semibold text-main">Tier Gold</Text>
           </View>
           <Text className="text-xl font-bold text-primary">500 Points</Text>
         </View>
@@ -111,14 +118,14 @@ const ProfileView = () => {
   );
 
   const SectionHeader = ({ title }: { title: string }) => (
-    <View className="px-6 py-4 bg-gray-50">
-      <Text className="text-base font-light text-gray-600 tracking-wider">
+    <View className="px-6 py-4 bg-card">
+      <Text className="text-base font-light tracking-wider text-secondary">
         {title}
       </Text>
     </View>
   );
 
-  const Divider = () => <View className="h-px bg-gray-200 mx-10" />;
+  const Divider = () => <View className="h-px mx-10 bg-divider" />;
 
   return (
     <ParallaxScrollView
@@ -127,7 +134,7 @@ const ProfileView = () => {
       animatedTitle={user.username}
       rightControl={EditButton}
       scrollThreshold={120}
-      backgroundColor="white"
+      backgroundColor={isDark ? "#111827" : "white"}
       showStatusBar={true}
       statusBarStyle="light"
       blurType="dark"
@@ -136,7 +143,7 @@ const ProfileView = () => {
       scrollEventThrottle={16}
     >
       <Animated.View
-        className="bg-gray-50 flex-1 gap-4"
+        className="flex-1 gap-4 bg-app"
         style={{
           paddingTop: animatedPaddingTop,
         }}
@@ -157,11 +164,14 @@ const ProfileView = () => {
             showArrow={false}
             rightComponent={
               <Switch
-                value={isDarkMode}
-                onValueChange={setIsDarkMode}
-                trackColor={{ false: "#E5E7EB", true: "#10B981" }}
-                thumbColor={isDarkMode ? "#ffffff" : "#ffffff"}
-                ios_backgroundColor="#E5E7EB"
+                value={isDark}
+                onValueChange={handleThemeToggle}
+                trackColor={{
+                  false: isDark ? "#374151" : "#E5E7EB",
+                  true: "#10B981",
+                }}
+                thumbColor="#ffffff"
+                ios_backgroundColor={isDark ? "#374151" : "#E5E7EB"}
               />
             }
           />
@@ -186,12 +196,16 @@ const ProfileView = () => {
 
           <TouchableOpacity
             onPress={handleLogOut}
-            className="flex-row items-center justify-between py-4 px-6"
+            className="flex-row items-center justify-between py-4 px-6 bg-card"
             activeOpacity={0.7}
           >
             <View className="flex-row items-center flex-1">
-              <Ionicons name="log-out-outline" size={24} color="#6B7280" />
-              <Text className="ml-4 text-base font-medium text-gray-900">
+              <Ionicons
+                name="log-out-outline"
+                size={24}
+                color={isDark ? "#9CA3AF" : "#6B7280"}
+              />
+              <Text className="ml-4 text-base font-medium text-main">
                 Logout
               </Text>
             </View>

@@ -64,7 +64,7 @@ const CodeStep = ({
       </AppButton>
 
       <View className="mt-6 flex-row justify-center items-center">
-        <Text className="text-gray-600">Didn&apos;t receive the code? </Text>
+        <Text className="text-secondary">Didn&apos;t receive the code? </Text>
         <TouchableOpacity onPress={onResend}>
           <Text className="text-primary font-bold underline">Resend</Text>
         </TouchableOpacity>

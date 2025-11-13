@@ -18,6 +18,7 @@ import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import BackButton from "@/components/BackButton";
 import ImagePicker, { ImageAsset } from "@/components/ImagePicker";
 import { useSignUpFormValidation } from "@/modules/auth/schemas/validator";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const profileSchema = z.object({
   username: z
@@ -40,6 +41,7 @@ interface EditableField {
 
 const EditProfileView = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const user = useQuery(api.function.users.getCurrentUser);
   const { errors, validateForm, clearFieldError } =
     useSignUpFormValidation(profileSchema);
@@ -60,7 +62,6 @@ const EditProfileView = () => {
   const [selectedProfileImage, setSelectedProfileImage] =
     useState<ImageAsset | null>(null);
 
-  // Initialize form data when user data is loaded
   useEffect(() => {
     if (user) {
       setFormData({
@@ -83,8 +84,6 @@ const EditProfileView = () => {
 
   const handleProfileImageSelected = (image: ImageAsset) => {
     setSelectedProfileImage(image);
-    // You can immediately upload the image here or wait until save
-    // For now, we'll just store it locally until save
   };
 
   const handleImageError = (error: string) => {
@@ -151,17 +150,17 @@ const EditProfileView = () => {
   const displayImageUri = selectedProfileImage?.uri || user.imageUrl;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-gray-900">
       {/* Blur Navigation Header */}
       <BlurNavigationHeader
         title="Edit Profile"
         leftComponent={<BackButton onPress={() => router.back()} />}
-        blurType="light"
-        statusBarStyle="dark"
+        blurType={isDark ? "dark" : "light"}
+        statusBarStyle={isDark ? "light" : "dark"}
       />
 
       <ScrollView
-        className="flex-1"
+        className="flex-1 bg-white dark:bg-gray-900"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 100 }}
       >
@@ -192,9 +191,11 @@ const EditProfileView = () => {
             {({ selectImage }) => (
               <TouchableOpacity
                 onPress={selectImage}
-                className="mt-4 px-6 py-3 bg-white border border-gray-200 rounded-xl"
+                className="mt-4 px-6 py-3 bg-card border border-gray-200 dark:border-gray-700 rounded-xl"
               >
-                <Text className="text-gray-700 font-semibold">Edit Photo</Text>
+                <Text className="text-gray-700 dark:text-gray-300 font-semibold">
+                  Edit Photo
+                </Text>
               </TouchableOpacity>
             )}
           </ImagePicker>
@@ -205,7 +206,9 @@ const EditProfileView = () => {
           {/* Username Field */}
           <View className="mb-8">
             <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Username</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
+                Username
+              </Text>
               <TouchableOpacity
                 onPress={() => toggleFieldEdit("username")}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -225,8 +228,10 @@ const EditProfileView = () => {
               editable={editableFields.username}
               containerClassName="mb-0"
               labelClassName="hidden"
-              inputClassName={`bg-white border-0 px-0 py-3 font-medium ${
-                editableFields.username ? "text-gray-900" : "text-gray-500"
+              inputClassName={`bg-white dark:bg-gray-900 border-0 px-0 py-3 font-medium ${
+                editableFields.username
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-500 dark:text-gray-400"
               }`}
               error={errors.username}
             />
@@ -235,7 +240,9 @@ const EditProfileView = () => {
           {/* Email Field (Read-only) */}
           <View className="mb-8">
             <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Email</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
+                Email
+              </Text>
             </View>
             <FormField
               label=""
@@ -245,9 +252,9 @@ const EditProfileView = () => {
               editable={false}
               containerClassName="mb-0"
               labelClassName="hidden"
-              inputClassName="bg-white border-0 px-0 py-3 font-medium text-gray-500"
+              inputClassName="bg-white dark:bg-gray-900 border-0 px-0 py-3 font-medium text-gray-500 dark:text-gray-400"
             />
-            <Text className="text-gray-400 text-xs mt-1">
+            <Text className="text-gray-400 dark:text-gray-500 text-xs mt-1">
               Email cannot be changed
             </Text>
           </View>
@@ -255,7 +262,9 @@ const EditProfileView = () => {
           {/* Password Field */}
           <View className="mb-8">
             <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Password</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
+                Password
+              </Text>
               <TouchableOpacity
                 onPress={() => toggleFieldEdit("password")}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -280,13 +289,15 @@ const EditProfileView = () => {
               editable={editableFields.password}
               containerClassName="mb-0"
               labelClassName="hidden"
-              inputClassName={`bg-white border-0 px-0 py-3 font-medium ${
-                editableFields.password ? "text-gray-900" : "text-gray-500"
+              inputClassName={`bg-white dark:bg-gray-900 border-0 px-0 py-3 font-medium ${
+                editableFields.password
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-500 dark:text-gray-400"
               }`}
               error={errors.password}
             />
             {!editableFields.password && (
-              <Text className="text-gray-400 text-xs mt-1">
+              <Text className="text-gray-400 dark:text-gray-500 text-xs mt-1">
                 Click the pencil to change password
               </Text>
             )}

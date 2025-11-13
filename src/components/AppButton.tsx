@@ -1,5 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, TouchableOpacityProps } from "react-native";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface AppButtonProps extends TouchableOpacityProps {
   children: React.ReactNode;
@@ -16,12 +17,14 @@ const AppButton = ({
   className = "",
   ...props
 }: AppButtonProps) => {
+  const { isDark } = useTheme();
+
   const getVariantClasses = () => {
     switch (variant) {
       case "secondary":
         return "bg-primary-600";
       case "outline":
-        return "bg-white border border-gray-300";
+        return "bg-card border border-soft";
       case "default":
       default:
         return "bg-primary";
@@ -31,7 +34,7 @@ const AppButton = ({
   const getTextColor = () => {
     switch (variant) {
       case "outline":
-        return "text-gray-900";
+        return "text-main";
       case "secondary":
       case "default":
       default:

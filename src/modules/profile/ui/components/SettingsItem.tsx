@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface SettingsItemProps {
   icon: string;
@@ -16,22 +17,30 @@ const SettingsItem = ({
   onPress,
   showArrow = true,
   rightComponent,
-}: SettingsItemProps) => (
-  <TouchableOpacity
-    onPress={onPress}
-    className="flex-row items-center justify-between py-4 px-6"
-    activeOpacity={0.7}
-  >
-    <View className="flex-row items-center flex-1">
-      <Ionicons name={icon as any} size={24} color="#6B7280" />
-      <Text className="ml-4 text-base font-medium text-gray-900">{title}</Text>
-    </View>
-    {rightComponent ? (
-      rightComponent
-    ) : showArrow ? (
-      <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-    ) : null}
-  </TouchableOpacity>
-);
+}: SettingsItemProps) => {
+  const { isDark } = useTheme();
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className="flex-row items-center justify-between py-4 px-6 bg-card"
+      activeOpacity={0.7}
+    >
+      <View className="flex-row items-center flex-1">
+        <Ionicons
+          name={icon as any}
+          size={24}
+          color={isDark ? "#9CA3AF" : "#6B7280"}
+        />
+        <Text className="ml-4 text-base font-medium text-main">{title}</Text>
+      </View>
+      {rightComponent ? (
+        rightComponent
+      ) : showArrow ? (
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      ) : null}
+    </TouchableOpacity>
+  );
+};
 
 export default SettingsItem;

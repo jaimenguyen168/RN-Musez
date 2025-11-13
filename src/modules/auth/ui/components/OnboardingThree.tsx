@@ -2,6 +2,7 @@ import { View, Text, Image } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import covers from "@/constants/covers";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const {
   painting1,
@@ -17,6 +18,22 @@ const {
 } = covers;
 
 const OnboardingThree = () => {
+  const { isDark } = useTheme();
+
+  const lightFogColors = [
+    "rgba(255, 255, 255, 0.6)",
+    "transparent",
+    "rgba(255, 255, 255, 0.6)",
+    "rgba(255, 255, 255, 0.95)",
+  ] as const;
+
+  const darkFogColors = [
+    "rgba(17, 24, 39, 0.6)",
+    "transparent",
+    "rgba(17, 24, 39, 0.6)",
+    "rgba(17, 24, 39, 0.95)",
+  ] as const;
+
   const imageUrlsFirst = [painting1, art1, painting2, painting5];
 
   const imageUrlsSecond = [painting3, statue1, art4];
@@ -25,7 +42,7 @@ const OnboardingThree = () => {
 
   return (
     <View className="w-full h-full flex-col items-center justify-between">
-      <View className="overflow-hidden w-11/12 h-3/4 justify-between items-center bg-white rounded-3xl relative">
+      <View className="overflow-hidden w-11/12 h-3/4 justify-between items-center bg-card rounded-3xl relative">
         {/* Top Row - 4 images with random shifts */}
         <View
           className="w-full px-2 flex-row justify-between items-center gap-3 -ml-64"
@@ -71,14 +88,9 @@ const OnboardingThree = () => {
           ))}
         </View>
 
-        {/* Foggy gradient overlay */}
+        {/* Theme-aware foggy gradient overlay */}
         <LinearGradient
-          colors={[
-            "rgba(255, 255, 255, 0.6)",
-            "transparent",
-            "rgba(255, 255, 255, 0.6)",
-            "rgba(255, 255, 255, 0.95)",
-          ]}
+          colors={isDark ? darkFogColors : lightFogColors}
           locations={[0, 0.3, 0.7, 1]}
           style={{
             position: "absolute",
@@ -92,10 +104,10 @@ const OnboardingThree = () => {
 
       {/* Content positioned at the bottom */}
       <View className="gap-3">
-        <Text className="text-3xl font-bold text-gray-900 text-center leading-tight">
+        <Text className="text-3xl font-bold text-main text-center leading-tight">
           Build Your Personal{"\n"}Art Collection
         </Text>
-        <Text className="text-lg text-gray-600 font-light text-center leading-relaxed">
+        <Text className="text-lg text-secondary font-light text-center leading-relaxed">
           Save your favorite artworks and museums{"\n"}to create your own
           curated gallery
         </Text>

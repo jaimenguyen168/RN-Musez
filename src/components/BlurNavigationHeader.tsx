@@ -27,7 +27,7 @@ const BlurNavigationHeader = ({
   blurIntensity = 80,
   blurType = "light",
   height = 100,
-  titleStyle = "text-xl font-bold text-black tracking-wide",
+  titleStyle = "text-xl font-bold text-main tracking-wide",
   containerStyle = "",
   statusBarStyle = "auto",
 }: BlurNavigationHeaderProps) => {
@@ -55,7 +55,7 @@ const BlurNavigationHeader = ({
           </View>
 
           {/* Title (Center) */}
-          <View className="flex-1 justify-center items-center p-2">
+          <View className="flex-1 justify-center items-center p-2 ">
             {title && <Text className={titleStyle}>{title}</Text>}
           </View>
 

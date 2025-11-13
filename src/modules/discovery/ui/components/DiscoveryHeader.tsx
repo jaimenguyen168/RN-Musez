@@ -3,6 +3,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface DiscoveryHeaderProps {
   place: string;
@@ -17,6 +18,8 @@ const DiscoveryHeader = ({
   onChatPress,
   onBellPress,
 }: DiscoveryHeaderProps) => {
+  const { isDark } = useTheme();
+
   return (
     <View className="px-6 py-4 flex-row items-center justify-between">
       <TouchableOpacity
@@ -40,11 +43,11 @@ const DiscoveryHeader = ({
           <Ionicons name="location" size={18} color="white" />
         </LinearGradient>
         <View className="flex-1">
-          <Text className="text-gray-400 tracking-wider font-light">
+          <Text className="text-secondary tracking-wider font-light">
             Discover museums in
           </Text>
           <View className="flex-row items-center">
-            <Text className="text-2xl font-semibold line-clamp-1 tracking-wide">
+            <Text className="text-2xl font-semibold line-clamp-1 tracking-wide text-main">
               {place}
             </Text>
           </View>
@@ -60,7 +63,7 @@ const DiscoveryHeader = ({
           <Ionicons
             name="chatbubble-ellipses"
             size={32}
-            color={Colors.DarkGrey}
+            color={isDark ? "#9CA3AF" : Colors.DarkGrey}
           />
         </TouchableOpacity>
 
@@ -68,7 +71,11 @@ const DiscoveryHeader = ({
           onPress={onBellPress}
           className="size-12 rounded-lg flex items-center justify-center"
         >
-          <Ionicons name="notifications" size={32} color={Colors.DarkGrey} />
+          <Ionicons
+            name="notifications"
+            size={32}
+            color={isDark ? "#9CA3AF" : Colors.DarkGrey}
+          />
         </TouchableOpacity>
       </View>
     </View>

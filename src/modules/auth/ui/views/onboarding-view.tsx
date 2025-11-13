@@ -74,7 +74,7 @@ const OnboardingView = ({ slides = defaultSlides }: OnboardingViewProps) => {
   const isLastSlide = currentIndex === slides.length - 1;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-app">
       <ScrollView
         ref={scrollViewRef}
         horizontal
@@ -113,7 +113,7 @@ const OnboardingView = ({ slides = defaultSlides }: OnboardingViewProps) => {
           onPress={handleSkip}
           className="flex-shrink"
         >
-          <Text className="text-base text-gray-500 font-bold text-center">
+          <Text className="text-base text-secondary font-bold text-center">
             Skip
           </Text>
         </AppButton>

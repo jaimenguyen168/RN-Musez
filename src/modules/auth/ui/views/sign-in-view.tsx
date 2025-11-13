@@ -19,6 +19,7 @@ import { emailSchema, usernameSchema } from "@/modules/auth/schemas";
 import { useRouter } from "expo-router";
 import { useSignInFormValidation } from "@/modules/auth/schemas/validator";
 import AppButton from "@/components/AppButton";
+import Divider from "@/components/Divider";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -122,7 +123,7 @@ const SignInView = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-app">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -136,11 +137,11 @@ const SignInView = () => {
         >
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-3xl font-medium text-gray-900 mb-2">
+            <Text className="text-3xl font-medium text-main mb-2">
               Welcome to <Text className="text-primary font-bold">Musez</Text>{" "}
               👋
             </Text>
-            <Text className="text-gray-600 text-base font-light">
+            <Text className="text-secondary text-base font-light">
               Login to discover amazing artworks and museums
             </Text>
           </View>
@@ -201,7 +202,7 @@ const SignInView = () => {
             {/*  <Text className="text-gray-600 underline">Need a help?</Text>*/}
             {/*</TouchableOpacity>*/}
             <TouchableOpacity onPress={handleForgotPassword}>
-              <Text className="text-gray-600 underline">Forgot Password</Text>
+              <Text className="text-secondary underline">Forgot Password</Text>
             </TouchableOpacity>
           </View>
 
@@ -214,11 +215,11 @@ const SignInView = () => {
 
           {/* OR Divider */}
           <View className="flex-row items-center my-8">
-            <View className="flex-1 h-px bg-gray-300" />
-            <Text className="mx-4 text-gray-500 bg-gray-200 px-3 py-1 rounded-full text-sm">
+            <Divider className="mx-0" />
+            <Text className="mx-4 text-main bg-surface px-3 py-1 rounded-full text-sm">
               OR
             </Text>
-            <View className="flex-1 h-px bg-gray-300" />
+            <Divider className="mx-0" />
           </View>
 
           {/* Social Login Buttons */}
@@ -229,7 +230,7 @@ const SignInView = () => {
 
           {/* Register Link */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-gray-600">Don&apos;t have a account? </Text>
+            <Text className="text-secondary">Don&apos;t have a account? </Text>
             <TouchableOpacity onPress={handleRegister}>
               <Text className="text-primary font-bold underline">Register</Text>
             </TouchableOpacity>

@@ -46,7 +46,7 @@ const ParallaxScrollView = ({
   headerHeight = HEADER_HEIGHT,
   headerControls,
   headerTitle,
-  scrollViewClassName = "bg-white",
+  scrollViewClassName = "bg-app",
   // New props for animated header
   animatedTitle = "Musez",
   scrollThreshold = 120,
@@ -137,7 +137,7 @@ const ParallaxScrollView = ({
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor }}>
+    <View className="flex-1 bg-app" style={{ backgroundColor }}>
       {showStatusBar && <StatusBar style={statusBarStyle} />}
 
       {/* Animated Top Title Bar with Blur */}
@@ -195,7 +195,7 @@ const ParallaxScrollView = ({
         </BlurView>
       </Animated.View>
 
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-app">
         {/* Header Container - moves with scroll */}
         <Animated.View
           className="absolute top-0 left-0 right-0 z-10"
@@ -291,7 +291,9 @@ const ParallaxScrollView = ({
           bounces={true}
         >
           {/* Content Container */}
-          <View className="rounded-t-3xl -mt-5 min-h-[800px]">{children}</View>
+          <View className="bg-app rounded-t-3xl -mt-5 min-h-[800px]">
+            {children}
+          </View>
         </Animated.ScrollView>
       </View>
     </View>

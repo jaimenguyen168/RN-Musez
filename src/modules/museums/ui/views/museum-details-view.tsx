@@ -19,6 +19,7 @@ import Divider from "@/components/Divider";
 import ContactMuseum from "@/modules/museums/ui/components/ContactMuseum";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface MuseumDetailsViewProps {
   museumId: string;
@@ -26,6 +27,7 @@ interface MuseumDetailsViewProps {
 
 const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const {
@@ -56,16 +58,16 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center p-5">
+      <View className="flex-1 justify-center items-center p-5 bg-app">
         <ActivityIndicator size="large" color="#0066cc" />
-        <Text className="mt-2">Loading museum details...</Text>
+        <Text className="mt-2 text-secondary">Loading museum details...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center p-5">
+      <View className="flex-1 justify-center items-center p-5 bg-app">
         <Text className="text-red-500 text-center">Error: {error.message}</Text>
       </View>
     );
@@ -73,8 +75,8 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
 
   if (!museumDetails) {
     return (
-      <View className="flex-1 justify-center items-center p-5">
-        <Text>No museum details found</Text>
+      <View className="flex-1 justify-center items-center p-5 bg-app">
+        <Text className="text-main">No museum details found</Text>
       </View>
     );
   }
@@ -92,21 +94,25 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   const BackButton = (
     <TouchableOpacity
       onPress={() => router.back()}
-      className="bg-white/80 rounded-full p-2"
+      className="bg-surface rounded-full p-2"
     >
-      <Ionicons name="chevron-back" size={24} color="#374151" />
+      <Ionicons
+        name="chevron-back"
+        size={24}
+        color={isDark ? "#F3F4F6" : "#374151"}
+      />
     </TouchableOpacity>
   );
 
   const FavoriteButton = (
     <TouchableOpacity
       onPress={onFavoritePress}
-      className="bg-white/80 rounded-full p-2"
+      className="bg-surface rounded-full p-2"
     >
       <Ionicons
         name={isSaved ? "heart" : "heart-outline"}
         size={24}
-        color={isSaved ? "#EF4444" : "#374151"}
+        color={isSaved ? "#EF4444" : isDark ? "#F3F4F6" : "#374151"}
       />
     </TouchableOpacity>
   );
@@ -135,16 +141,16 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
       headerControls={HeaderControls}
       headerTitle={HeaderTitle}
       animatedTitle="Details"
-      scrollViewClassName="bg-secondary"
+      scrollViewClassName={isDark ? "bg-gray-900" : "bg-secondary"}
       leftControl={BackButton}
       rightControl={FavoriteButton}
       scrollThreshold={120}
-      backgroundColor="white"
+      backgroundColor={isDark ? "#111827" : "white"}
       showStatusBar={true}
       blurType="dark"
       statusBarStyle="light"
     >
-      <View className="bg-secondary pt-12">
+      <View className={`pt-12 ${isDark ? "bg-gray-900" : "bg-secondary"}`}>
         {/* Image Gallery Thumbnails */}
         {hasPhotos &&
           museumDetails.photos &&
@@ -158,7 +164,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
                     onPress={() => handleImagePress(index)}
                     className={`mr-3 rounded-2xl overflow-hidden shadow-sm ${
                       index === selectedImageIndex
-                        ? "border-2 border-orange-500"
+                        ? "border-2 border-primary"
                         : ""
                     }`}
                     style={{
@@ -182,21 +188,21 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
           )}
 
         {/* Main Content Card */}
-        <View className="mx-4 gap-0 bg-white rounded-3xl shadow-lg overflow-hidden">
+        <View className="mx-4 gap-0 bg-card rounded-3xl shadow-lg overflow-hidden border border-soft">
           {/* Museum Title & Rating Section */}
           <View className="p-6">
-            <Text className="text-2xl font-bold text-gray-900 mb-2">
+            <Text className="text-2xl font-bold text-main mb-2">
               {museumDetails.name}
             </Text>
 
             <View className="flex-row items-center justify-between mb-4">
               {museumDetails.rating && (
-                <View className="flex-row items-center bg-amber-50 py-2 rounded-full">
+                <View className="flex-row items-center bg-amber-50 dark:bg-amber-900/20 py-2 px-3 rounded-full">
                   <Ionicons name="star" size={18} color="#F59E0B" />
-                  <Text className="text-lg font-bold ml-1 text-amber-700">
+                  <Text className="text-lg font-bold ml-1 text-amber-700 dark:text-amber-300">
                     {museumDetails.rating}
                   </Text>
-                  <Text className="text-gray-600 ml-1 text-sm">
+                  <Text className="text-secondary ml-1 text-sm">
                     ({museumDetails.userRatingsTotal})
                   </Text>
                 </View>
@@ -214,8 +220,8 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
                   <Text
                     className={`font-semibold ${
                       museumDetails.openingHours.openNow
-                        ? "text-emerald-600"
-                        : "text-red-600"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {museumDetails.openingHours.openNow ? "Open Now" : "Closed"}
@@ -236,9 +242,9 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
                     .map((type, index) => (
                       <View
                         key={index}
-                        className="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-full mr-2"
+                        className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 px-4 py-2 rounded-full mr-2"
                       >
-                        <Text className="text-indigo-700 text-sm font-medium capitalize">
+                        <Text className="text-indigo-700 dark:text-indigo-300 text-sm font-medium capitalize">
                           {type.replace(/_/g, " ")}
                         </Text>
                       </View>
@@ -248,7 +254,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
             )}
           </View>
 
-          {/* About Section - Using the new About component */}
+          {/* About Section */}
           {museumDetails.editorialSummary && (
             <>
               <Divider />
@@ -286,6 +292,8 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
             height={192}
           />
 
+          <Divider />
+
           {/* Contact Info */}
           {(museumDetails.formattedPhoneNumber || museumDetails.website) && (
             <ContactMuseum
@@ -294,7 +302,6 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
               showTitle={true}
               title="Contact"
               iconColor="#6366F1"
-              backgroundColor="#F9FAFB"
             />
           )}
         </View>

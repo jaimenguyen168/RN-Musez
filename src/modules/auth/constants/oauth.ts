@@ -6,9 +6,9 @@ export const oauthConfigs: Record<OAuthProvider, OAuthConfig> = {
     strategy: "oauth_google",
     ionIcon: "logo-google",
     iconColor: "#4285F4",
-    backgroundColor: "bg-white",
+    backgroundColor: "bg-surface",
     textColor: "text-gray-900",
-    borderColor: "border-gray-100",
+    borderColor: "border-soft",
     icon: icons.googleIcon,
   },
   apple: {
@@ -17,6 +17,6 @@ export const oauthConfigs: Record<OAuthProvider, OAuthConfig> = {
     iconColor: "#FFFFFF",
     backgroundColor: "bg-black",
     textColor: "text-white",
-    borderColor: "border-black",
+    borderColor: "border-black dark:border-gray-800",
   },
 };
