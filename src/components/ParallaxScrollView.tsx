@@ -2,7 +2,6 @@ import {
   View,
   Animated,
   Dimensions,
-  StatusBar,
   TextStyle,
   ViewStyle,
   NativeSyntheticEvent,
@@ -11,6 +10,7 @@ import {
 import React, { useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { StatusBar } from "expo-status-bar";
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -26,7 +26,7 @@ interface ParallaxScrollViewProps {
   titleStyle?: TextStyle;
   headerContainerStyle?: ViewStyle;
   showStatusBar?: boolean;
-  statusBarStyle?: "default" | "light-content" | "dark-content";
+  statusBarStyle?: "dark" | "light" | "auto";
   // New props for individual controls in animated header
   leftControl?: React.ReactNode;
   rightControl?: React.ReactNode;
@@ -54,7 +54,7 @@ const ParallaxScrollView = ({
   titleStyle,
   headerContainerStyle,
   showStatusBar = true,
-  statusBarStyle = "light-content",
+  statusBarStyle = "auto",
   // New props for individual controls
   leftControl,
   rightControl,
@@ -138,12 +138,7 @@ const ParallaxScrollView = ({
 
   return (
     <View className="flex-1" style={{ backgroundColor }}>
-      {showStatusBar && (
-        <StatusBar
-          barStyle={statusBarStyle}
-          backgroundColor={backgroundColor}
-        />
-      )}
+      {showStatusBar && <StatusBar style={statusBarStyle} />}
 
       {/* Animated Top Title Bar with Blur */}
       <Animated.View

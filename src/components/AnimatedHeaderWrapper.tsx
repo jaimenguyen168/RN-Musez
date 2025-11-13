@@ -1,8 +1,9 @@
 import React, { ReactNode } from "react";
-import { Animated, FlatList, StatusBar, View } from "react-native";
+import { Animated, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useHeader } from "@/hooks/useHeader";
 import BlurNavigationHeader from "./BlurNavigationHeader";
+import { StatusBar } from "expo-status-bar";
 
 interface AnimatedHeaderWrapperProps {
   children: ReactNode;
@@ -11,8 +12,6 @@ interface AnimatedHeaderWrapperProps {
   scrollThreshold?: number;
   backgroundColor?: string;
   titleStyle?: string;
-  showStatusBar?: boolean;
-  statusBarStyle?: "default" | "light-content" | "dark-content";
   // Blur props
   blurIntensity?: number;
   blurType?: "light" | "dark" | "regular";
@@ -29,8 +28,6 @@ const AnimatedHeaderWrapper = ({
   scrollThreshold = 80,
   backgroundColor = "white",
   titleStyle = "text-xl font-bold text-black tracking-wide",
-  showStatusBar = true,
-  statusBarStyle = "dark-content",
   // Blur props
   blurIntensity = 80,
   blurType = "light",
@@ -47,13 +44,6 @@ const AnimatedHeaderWrapper = ({
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
-      {showStatusBar && (
-        <StatusBar
-          barStyle={statusBarStyle}
-          backgroundColor={backgroundColor}
-        />
-      )}
-
       {/* Animated Blur Navigation Header */}
       <Animated.View
         style={{
@@ -74,6 +64,7 @@ const AnimatedHeaderWrapper = ({
           blurType={blurType}
           titleStyle={titleStyle}
         />
+        <StatusBar style="dark" />
       </Animated.View>
 
       <FlatList

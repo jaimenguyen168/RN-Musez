@@ -84,7 +84,7 @@ const RootAuthLayout = () => {
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
       <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(core)" />
       </Stack.Protected>
     </Stack>
   );

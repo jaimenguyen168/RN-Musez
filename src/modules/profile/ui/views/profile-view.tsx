@@ -14,8 +14,10 @@ import SettingsItem from "@/modules/profile/ui/components/SettingsItem";
 import { useAuth } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
+import { useRouter } from "expo-router";
 
 const ProfileView = () => {
+  const router = useRouter();
   const { signOut } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -53,12 +55,19 @@ const ProfileView = () => {
     ]);
   };
 
+  const handleEditProfile = () => {
+    router.push("/users/edit");
+  };
+
   if (!user) {
     return null;
   }
 
   const EditButton = (
-    <TouchableOpacity className="bg-white/80 rounded-full p-2">
+    <TouchableOpacity
+      onPress={handleEditProfile}
+      className="bg-white/80 rounded-full p-2"
+    >
       <Ionicons name="pencil" size={20} color="#374151" />
     </TouchableOpacity>
   );
@@ -120,7 +129,7 @@ const ProfileView = () => {
       scrollThreshold={120}
       backgroundColor="white"
       showStatusBar={true}
-      statusBarStyle="light-content"
+      statusBarStyle="light"
       blurType="dark"
       headerHeight={280}
       onScroll={handleScroll}

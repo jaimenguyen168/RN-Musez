@@ -217,7 +217,7 @@ const ArtworkDetailsView = ({
       scrollThreshold={120}
       backgroundColor="white"
       showStatusBar={true}
-      statusBarStyle="dark-content"
+      statusBarStyle="light"
       blurType="dark"
     >
       <View className="bg-secondary pt-12">

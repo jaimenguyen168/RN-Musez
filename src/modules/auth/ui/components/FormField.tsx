@@ -19,7 +19,7 @@ interface FormFieldProps extends TextInputProps {
   labelClassName?: string;
 }
 
-const FormField: React.FC<FormFieldProps> = ({
+const FormField = ({
   label,
   error,
   required = false,
@@ -30,7 +30,7 @@ const FormField: React.FC<FormFieldProps> = ({
   inputClassName = "bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base",
   labelClassName = "text-gray-700 font-medium mb-2",
   ...props
-}) => {
+}: FormFieldProps) => {
   const hasPasswordToggle = showPasswordToggle && onTogglePassword;
   const finalInputClassName = hasPasswordToggle
     ? `${inputClassName} pr-12`

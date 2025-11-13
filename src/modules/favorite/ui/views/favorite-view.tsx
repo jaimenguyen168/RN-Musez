@@ -22,6 +22,7 @@ import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
 import TabsPicker from "@/components/TabsPicker";
 import FavoriteArtworksEmpty from "@/modules/favorite/ui/components/FavoriteArtworksEmpty";
+import { StatusBar } from "expo-status-bar";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
@@ -184,6 +185,7 @@ const FavoriteView = () => {
 
   return (
     <View className="flex-1 bg-gray-50 relative">
+      <StatusBar style="dark" />
       <BlurNavigationHeader
         title="Favorite"
         height={160}
@@ -196,6 +198,7 @@ const FavoriteView = () => {
             width={screenWidth - 42}
           />
         }
+        statusBarStyle="dark"
       />
 
       {viewMode === "museum" ? (

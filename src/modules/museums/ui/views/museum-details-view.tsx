@@ -142,6 +142,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
       backgroundColor="white"
       showStatusBar={true}
       blurType="dark"
+      statusBarStyle="light"
     >
       <View className="bg-secondary pt-12">
         {/* Image Gallery Thumbnails */}

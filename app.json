@@ -64,6 +64,14 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your photo library to let you select and upload images for artwork analysis.",
+          "cameraPermission": "The app needs access to your camera to let you take photos of artworks for AI analysis.",
+          "microphonePermission": "The app needs access to your microphone for video recording features."
+        }
       ]
     ],
     "experiments": {

@@ -50,6 +50,7 @@ const MuseumListView = ({
         leftComponent={leftComponent}
         rightComponent={rightComponent}
         secondRightComponent={secondRightComponent}
+        statusBarStyle="dark"
       />
 
       {/* Museum List */}

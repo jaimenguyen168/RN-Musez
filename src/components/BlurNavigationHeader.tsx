@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
-import { Text, StatusBar, View } from "react-native";
+import { Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
 
 interface BlurNavigationHeaderProps {
@@ -14,6 +15,7 @@ interface BlurNavigationHeaderProps {
   titleStyle?: string;
   containerStyle?: string;
   bottomComponentStyle?: string;
+  statusBarStyle?: "dark" | "light" | "auto";
 }
 
 const BlurNavigationHeader = ({
@@ -27,10 +29,10 @@ const BlurNavigationHeader = ({
   height = 100,
   titleStyle = "text-xl font-bold text-black tracking-wide",
   containerStyle = "",
+  statusBarStyle = "auto",
 }: BlurNavigationHeaderProps) => {
   return (
     <View className={`absolute top-0 left-0 right-0 z-10 ${containerStyle}`}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
       <BlurView
         intensity={blurIntensity}
         tint={blurType}
@@ -44,6 +46,7 @@ const BlurNavigationHeader = ({
           height: height,
         }}
       >
+        <StatusBar style={statusBarStyle} />
         {/* Main Header Row */}
         <View className="flex-row items-end justify-between px-4 flex-1 mb-2">
           {/* Left Component */}
