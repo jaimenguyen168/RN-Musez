@@ -12,6 +12,9 @@ export const upsertFromClerk = internalMutation({
       username: data.username || firstName,
       externalId: data.id,
       imageUrl: data.image_url,
+      imageCoverUrl: data.image_url,
+      coverImageUrl:
+        "https://images.unsplash.com/photo-1491156855053-9cdff72c7f85?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2428",
       ...(email && { email }),
     };
 

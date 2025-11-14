@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { getAuthenticatedUser } from "../utils";
+import { getAuthenticatedUser, getImageUrl } from "../utils";
 
 export const getAllArtworks = query({
   args: {},
@@ -15,7 +15,7 @@ export const getAllArtworks = query({
 
     return await Promise.all(
       artworks.map(async (artwork) => {
-        const imageUrl = await ctx.storage.getUrl(artwork.imageUri);
+        const imageUrl = await getImageUrl(ctx, artwork.imageUri);
         return {
           ...artwork,
           imageUri: imageUrl || artwork.imageUri,
@@ -36,19 +36,12 @@ export const getArtwork = query({
       return null;
     }
 
-    const imageUrl = await ctx.storage.getUrl(artwork.imageUri);
+    const imageUrl = await getImageUrl(ctx, artwork.imageUri);
 
     return {
       ...artwork,
       imageUri: imageUrl || artwork.imageUri,
     };
-  },
-});
-
-export const generateUploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
   },
 });
 

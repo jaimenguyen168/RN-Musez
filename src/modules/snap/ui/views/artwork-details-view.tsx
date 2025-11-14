@@ -14,6 +14,7 @@ import { Artwork } from "@/types/artwork";
 import { useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface ArtworkDetailsViewProps {
   artwork: Artwork | null;
@@ -30,9 +31,7 @@ const ArtworkDetailsView = ({
   const { isDark } = useTheme();
   const [isSaving, setIsSaving] = useState(false);
   const createArtwork = useMutation(api.function.artworks.createArtwork);
-  const generateUploadUrl = useMutation(
-    api.function.artworks.generateUploadUrl,
-  );
+  const { uploadImageToConvex } = useImageUpload();
 
   const getConfidenceColor = (confidence?: string) => {
     switch (confidence?.toLowerCase()) {
@@ -57,34 +56,6 @@ const ArtworkDetailsView = ({
         return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700";
       default:
         return "bg-surface border-soft";
-    }
-  };
-
-  const uploadImageToConvex = async (imageUri: string): Promise<string> => {
-    try {
-      // Get the upload URL from Convex
-      const uploadUrl = await generateUploadUrl();
-
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": blob.type,
-        },
-        body: blob,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-      }
-
-      const result = await uploadResponse.json();
-      return result.storageId;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw new Error("Failed to upload image");
     }
   };
 

@@ -45,18 +45,17 @@ const FormField = ({
         {required && <Text className="text-red-500"> *</Text>}
       </Text>
 
-      <View className="relative">
+      <View>
         <TextInput
           secureTextEntry={secureTextEntry}
-          className={finalInputClassName}
+          className={`relative ${finalInputClassName}`}
           {...props}
         />
 
         {hasPasswordToggle && (
           <TouchableOpacity
             onPress={onTogglePassword}
-            className="absolute right-4 top-4"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="absolute right-4 top-0 bottom-0 justify-center"
           >
             <Ionicons
               name={secureTextEntry ? "eye" : "eye-off"}

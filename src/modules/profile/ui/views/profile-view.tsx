@@ -25,9 +25,6 @@ const ProfileView = () => {
 
   const user = useQuery(api.function.users.getCurrentUser);
 
-  const coverImageUrl =
-    "https://images.unsplash.com/photo-1491156855053-9cdff72c7f85?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2428";
-
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     { useNativeDriver: false },
@@ -129,7 +126,7 @@ const ProfileView = () => {
 
   return (
     <ParallaxScrollView
-      headerImage={coverImageUrl}
+      headerImage={user?.coverImageUrl}
       headerTitle={HeaderTitle}
       animatedTitle={user.username}
       rightControl={EditButton}

@@ -6,6 +6,7 @@ export const users = defineTable({
   username: v.string(),
   email: v.optional(v.string()),
   imageUrl: v.optional(v.string()),
+  coverImageUrl: v.optional(v.string()),
 })
   .index("by_external_id", ["externalId"])
   .index("by_username", ["username"]);
