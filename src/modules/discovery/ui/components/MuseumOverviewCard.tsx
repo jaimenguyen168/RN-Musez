@@ -1,7 +1,8 @@
-import { View, Text, Image, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, Pressable, TouchableOpacity } from "react-native";
 import React, { useMemo } from "react";
 import { Museum } from "@/types/museum";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { getPhotoUrl } from "@/utils";
@@ -48,7 +49,7 @@ const MuseumOverviewCard = ({
     });
   };
 
-  const photoUrl = getPhotoUrl(museum);
+  const photoUrl = getPhotoUrl(museum?.photos?.[0].photoReference || null);
 
   const isOpen =
     museum.openingHours?.openNow ?? museum.currentOpeningHours?.openNow;
@@ -57,14 +58,20 @@ const MuseumOverviewCard = ({
     return (
       <TouchableOpacity
         onPress={onCardPress}
-        className="bg-card rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
+        className="bg-card flex-1 rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
       >
         <View className="relative">
           {photoUrl ? (
             <Image
-              source={{ uri: photoUrl }}
-              className="w-full h-56"
-              resizeMode="cover"
+              source={{
+                uri: photoUrl,
+              }}
+              style={{
+                width: "100%",
+                height: 160,
+              }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
             />
           ) : (
             <View className="w-full h-56 bg-surface items-center justify-center">
@@ -87,15 +94,15 @@ const MuseumOverviewCard = ({
           </TouchableOpacity>
         </View>
 
-        <View className="p-4">
+        <View className="p-4 flex-1">
           <Text className="text-lg font-bold text-main mb-1 line-clamp-1">
             {museum.name}
           </Text>
-          <Text className="text-base text-secondary mb-3 line-clamp-2">
+          <Text className="text-sm text-secondary mb-3">
             {museum.vicinity || museum.formattedAddress}
           </Text>
 
-          <View className="flex-row items-center">
+          <View className="flex-row items-center mt-auto">
             <Ionicons name="star" size={20} color="#F59E0B" />
             <Text className="text-base font-semibold text-main ml-1 mr-3">
               {museum.rating ? museum.rating.toFixed(1) : "N/A"}
@@ -115,7 +122,7 @@ const MuseumOverviewCard = ({
           </View>
 
           {isOpen !== undefined && (
-            <View className="mt-3 flex-row items-center">
+            <View className="mt-2 flex-row items-center">
               <View
                 className={`w-2 h-2 rounded-full mr-2 ${isOpen ? "bg-green-500" : "bg-red-500"}`}
               />
@@ -141,8 +148,12 @@ const MuseumOverviewCard = ({
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
-              className="w-full h-full"
-              resizeMode="cover"
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
             />
           ) : (
             <View className="w-full h-full bg-surface items-center justify-center">

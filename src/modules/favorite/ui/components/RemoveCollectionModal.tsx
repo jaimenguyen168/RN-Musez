@@ -4,16 +4,17 @@ import {
   View,
   Text,
   FlatList,
-  Image,
   TouchableOpacity,
   Pressable,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Museum } from "@/types/museum";
 import { getPhotoUrl } from "@/utils";
+import { useTheme } from "@/provider/ThemeProvider";
 
 interface RemoveCollectionModalProps {
   visible: boolean;
@@ -32,6 +33,7 @@ const RemoveCollectionModal = ({
   onRemoveMuseums,
   isRemoving = false,
 }: RemoveCollectionModalProps) => {
+  const { isDark } = useTheme();
   const [selectedMuseums, setSelectedMuseums] = useState<Set<string>>(
     new Set(),
   );
@@ -67,7 +69,7 @@ const RemoveCollectionModal = ({
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
     const isSelected = selectedMuseums.has(item.placeId);
-    const imageUrl = getPhotoUrl(item);
+    const imageUrl = getPhotoUrl(item.photos?.[0].photoReference || null);
 
     return (
       <View style={{ width: "33.33%" }} className="p-1">
@@ -75,19 +77,29 @@ const RemoveCollectionModal = ({
           onPress={() => handleMuseumPress(item)}
           disabled={isRemoving}
           className={`rounded-lg overflow-hidden ${
-            isSelected ? "border-2 border-red-500" : "border border-gray-200"
+            isSelected
+              ? "border-2 border-red-500"
+              : "border border-gray-200 dark:border-gray-700"
           } ${isRemoving ? "opacity-50" : ""}`}
         >
           <View className="relative aspect-square">
             {imageUrl ? (
               <Image
                 source={{ uri: imageUrl }}
-                className="w-full h-full"
-                resizeMode="cover"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
             ) : (
-              <View className="w-full h-full bg-gray-200 justify-center items-center">
-                <Ionicons name="image-outline" size={20} color="#666" />
+              <View className="w-full h-full bg-divider justify-center items-center">
+                <Ionicons
+                  name="image-outline"
+                  size={20}
+                  color={isDark ? "#9CA3AF" : "#666"}
+                />
               </View>
             )}
 
@@ -100,7 +112,7 @@ const RemoveCollectionModal = ({
 
           <View className="p-1.5" style={{ height: 40 }}>
             <Text
-              className="text-xs font-medium text-gray-800 line-clamp-2"
+              className="text-xs font-medium text-main line-clamp-2"
               numberOfLines={2}
             >
               {item.name}
@@ -125,15 +137,17 @@ const RemoveCollectionModal = ({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={30}
       >
-        <View className="flex-1 bg-white px-6 gap-6 py-12">
+        <View className="flex-1 bg-white dark:bg-gray-900 px-6 gap-6 py-12">
           {/* Modal Header */}
           <View className="flex-row justify-between items-center">
-            <Text className="text-lg font-semibold">Adjust Collection</Text>
+            <Text className="text-lg font-semibold text-main">
+              Adjust Collection
+            </Text>
             <TouchableOpacity onPress={handleClose} disabled={isRemoving}>
               <Ionicons
                 name="close"
                 size={24}
-                color={isRemoving ? "#ccc" : "#666"}
+                color={isRemoving ? "#ccc" : isDark ? "#9CA3AF" : "#666"}
               />
             </TouchableOpacity>
           </View>
@@ -141,17 +155,17 @@ const RemoveCollectionModal = ({
           <View className="flex-1">
             {/* Collection Info */}
             <View className="mb-6">
-              <Text className="text-base font-bold text-gray-800 mb-2">
+              <Text className="text-base font-bold text-main mb-2">
                 {collectionName}
               </Text>
-              <Text className="text-sm text-gray-500">
+              <Text className="text-sm text-secondary">
                 Select museums to remove from this collection
               </Text>
             </View>
 
             {/* Museums Grid */}
             <View className="flex-1">
-              <Text className="text-base font-medium text-gray-800 mb-3">
+              <Text className="text-base font-medium text-main mb-3">
                 Museums in Collection ({selectedMuseums.size} selected for
                 removal)
               </Text>
@@ -167,7 +181,7 @@ const RemoveCollectionModal = ({
                 />
               ) : (
                 <View className="flex-1 justify-center items-center">
-                  <Text className="text-gray-500 text-center">
+                  <Text className="text-secondary text-center">
                     No museums in this collection
                   </Text>
                 </View>
@@ -181,7 +195,7 @@ const RemoveCollectionModal = ({
               className={`py-4 rounded-lg ${
                 selectedMuseums.size > 0 && !isRemoving
                   ? "bg-red-500"
-                  : "bg-gray-300"
+                  : "bg-gray-300 dark:bg-gray-700"
               }`}
             >
               <View className="flex-row justify-center items-center">

@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
+import { View, Text, TouchableOpacity, Dimensions } from "react-native";
+import { Image } from "expo-image";
 import React from "react";
 import { Museum } from "@/types/museum";
 import { Ionicons } from "@expo/vector-icons";
@@ -59,9 +60,18 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
               >
                 {museums[index] ? (
                   <Image
-                    source={{ uri: getPhotoUrl(museums[index]) || "" }}
-                    className="w-full h-full"
-                    resizeMode="cover"
+                    source={{
+                      uri:
+                        getPhotoUrl(
+                          museums[index]?.photos?.[0].photoReference || null,
+                        ) || "",
+                    }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                    }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
                   />
                 ) : (
                   <View className="w-full h-full bg-surface items-center justify-center">
@@ -81,9 +91,17 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
               >
                 {museums[index] ? (
                   <Image
-                    source={{ uri: getPhotoUrl(museums[index]) || "" }}
-                    className="w-full h-full"
-                    resizeMode="cover"
+                    source={
+                      getPhotoUrl(
+                        museums[index].photos?.[0].photoReference || null,
+                      ) || ""
+                    }
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                    }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
                   />
                 ) : (
                   <View className="w-full h-full bg-surface items-center justify-center">
