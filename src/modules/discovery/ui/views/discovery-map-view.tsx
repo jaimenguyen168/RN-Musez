@@ -1,12 +1,6 @@
-import {
-  ActivityIndicator,
-  Alert,
-  TouchableOpacity,
-  View,
-  TextInput,
-} from "react-native";
-import MapView, { Marker } from "@/components/MapView";
-import React, { useEffect, useState, useMemo } from "react";
+import { ActivityIndicator, Alert, TouchableOpacity, View } from "react-native";
+import MapView, { Marker, Region } from "@/components/MapView";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";
@@ -14,43 +8,55 @@ import BackButton from "@/components/BackButton";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/provider/ThemeProvider";
+import CitySearchBar from "@/modules/discovery/ui/components/CitySearchBar";
 
 const DiscoveryMapView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
-  const [showSearchBar, setShowSearchBar] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
+  const mapRef = useRef<MapView>(null);
+
+  const [userSearchedCoordinates, setUserSearchedCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  const [museumFetchCoordinates, setMuseumFetchCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const {
-    coords,
+    coords: userCurrentCoordinates,
     isLoading: isLocationLoading,
     error: locationError,
   } = useLocationManager(true);
 
-  const museumsParams = coords
+  const coordinatesForMuseumQuery =
+    museumFetchCoordinates || userCurrentCoordinates;
+
+  const museumsQueryParameters = coordinatesForMuseumQuery
     ? {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
+        latitude: coordinatesForMuseumQuery.latitude,
+        longitude: coordinatesForMuseumQuery.longitude,
       }
     : null;
 
   const {
-    data: museums = [],
+    data: nearbyMuseums = [],
     isLoading: museumsLoading,
     error: museumsError,
-  } = useMuseumsQuery(museumsParams, {
+  } = useMuseumsQuery(museumsQueryParameters, {
     retry: 2,
     retryDelay: 1000,
   });
 
-  // Filter museums based on search query
-  const filteredMuseums = useMemo(() => {
-    if (!searchQuery.trim()) return museums;
-
-    return museums.filter((museum) =>
-      museum.name.toLowerCase().includes(searchQuery.toLowerCase().trim()),
-    );
-  }, [museums, searchQuery]);
+  const handleMapRegionChangeComplete = (newRegion: Region) => {
+    setMuseumFetchCoordinates({
+      latitude: newRegion.latitude,
+      longitude: newRegion.longitude,
+    });
+  };
 
   useEffect(() => {
     if (museumsError) {
@@ -64,53 +70,87 @@ const DiscoveryMapView = () => {
     }
   }, [locationError]);
 
-  const loading = isLocationLoading || museumsLoading;
+  const isLoadingData = isLocationLoading || museumsLoading;
 
-  const handleMarkerPress = (museumId: string) => {
+  const handleMuseumMarkerPress = (museumId: string) => {
     router.push(`/museums/${museumId}`);
   };
 
   const handleSearchToggle = () => {
-    setShowSearchBar(!showSearchBar);
-    if (showSearchBar) {
-      setSearchQuery("");
+    setIsSearchBarVisible(!isSearchBarVisible);
+  };
+
+  const handleLocationSearchSelect = (newCoordinates: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    mapRef.current?.animateToRegion(
+      {
+        latitude: newCoordinates.latitude,
+        longitude: newCoordinates.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      },
+      200,
+    );
+
+    setUserSearchedCoordinates(newCoordinates);
+    setMuseumFetchCoordinates(newCoordinates);
+  };
+
+  const handleSearchBarClose = () => {
+    setIsSearchBarVisible(false);
+  };
+
+  const handleClearLocationSearch = () => {
+    setIsSearchBarVisible(false);
+    setUserSearchedCoordinates(null);
+    setMuseumFetchCoordinates(null);
+
+    if (userCurrentCoordinates) {
+      mapRef.current?.animateToRegion(
+        {
+          latitude: userCurrentCoordinates.latitude,
+          longitude: userCurrentCoordinates.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        },
+        200,
+      );
     }
   };
 
-  const rightComponent = (
+  const searchToggleButton = (
     <TouchableOpacity
       onPress={handleSearchToggle}
       className="justify-center items-center p-2"
     >
       <Ionicons
-        name={showSearchBar ? "close" : "search"}
+        name={isSearchBarVisible ? "close" : "search"}
         size={24}
         color={isDark ? "white" : "black"}
       />
     </TouchableOpacity>
   );
 
-  const searchBarComponent = showSearchBar ? (
-    <View className="pb-6">
-      <View className="rounded-2xl px-4 py-3 flex-row items-center bg-card border border-soft">
-        <Ionicons name="search" size={20} color="#6B7280" />
-        <TextInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search museums..."
-          placeholderTextColor="#9CA3AF"
-          className="flex-1 ml-3 text-gray-900 text-base"
-          autoFocus={true}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")} className="ml-2">
-            <Ionicons name="close-circle" size={20} color="#6B7280" />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+  const clearSearchButton = userSearchedCoordinates ? (
+    <TouchableOpacity
+      onPress={handleClearLocationSearch}
+      className="justify-center items-center p-2"
+    >
+      <Ionicons
+        name="return-up-back"
+        size={24}
+        color={isDark ? "white" : "black"}
+      />
+    </TouchableOpacity>
+  ) : null;
+
+  const citySearchBarComponent = isSearchBarVisible ? (
+    <CitySearchBar
+      onLocationSelect={handleLocationSearchSelect}
+      onClose={handleSearchBarClose}
+    />
   ) : null;
 
   return (
@@ -118,35 +158,27 @@ const DiscoveryMapView = () => {
       <BlurNavigationHeader
         title={"Explore"}
         leftComponent={<BackButton onPress={() => router.back()} />}
-        rightComponent={rightComponent}
-        bottomComponent={searchBarComponent}
-        height={showSearchBar ? 165 : 100}
+        rightComponent={searchToggleButton}
+        secondRightComponent={clearSearchButton}
+        bottomComponent={citySearchBarComponent}
         blurType={isDark ? "dark" : "light"}
       />
       <MapView
+        ref={mapRef}
         initialRegion={{
-          latitude: coords?.latitude || 39.9526,
-          longitude: coords?.longitude || -75.1652,
+          latitude: coordinatesForMuseumQuery?.latitude || 39.9526,
+          longitude: coordinatesForMuseumQuery?.longitude || -75.1652,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-        region={
-          coords
-            ? {
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }
-            : undefined
-        }
+        onRegionChangeComplete={handleMapRegionChangeComplete}
         showsUserLocation={true}
         style={{
           width: "100%",
           height: "100%",
         }}
       >
-        {filteredMuseums.map((museum, index) => (
+        {nearbyMuseums.map((museum, index) => (
           <Marker
             key={museum.placeId || index}
             coordinate={{
@@ -161,12 +193,12 @@ const DiscoveryMapView = () => {
                 ? "purple"
                 : "gray"
             }
-            onPress={() => handleMarkerPress(museum.placeId)}
+            onPress={() => handleMuseumMarkerPress(museum.placeId)}
           />
         ))}
       </MapView>
 
-      {loading && (
+      {isLoadingData && (
         <View className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/20 p-4 rounded-full">
           <ActivityIndicator color="white" />
         </View>

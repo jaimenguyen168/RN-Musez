@@ -65,7 +65,7 @@ const MuseumListView = ({
         contentContainerStyle={{
           paddingHorizontal: 8,
           paddingBottom: 16,
-          paddingTop: 112,
+          paddingTop: 116,
         }}
         ItemSeparatorComponent={() => <View className="h-2" />}
       />

@@ -53,7 +53,7 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
       keyExtractor={(item) => item._id}
       numColumns={4}
       contentContainerStyle={{
-        paddingTop: 170,
+        paddingTop: 180,
         paddingHorizontal: 16,
         paddingBottom: 32,
       }}

@@ -76,7 +76,7 @@ const TabsPicker = ({
   };
 
   return (
-    <View className="mb-4 w-full">
+    <View className="w-full">
       <View
         className="bg-surface rounded-full shadow-sm overflow-hidden"
         style={{ position: "relative", padding: 4 }}

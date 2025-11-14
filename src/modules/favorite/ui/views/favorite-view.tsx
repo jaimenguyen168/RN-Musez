@@ -186,7 +186,6 @@ const FavoriteView = () => {
     <View className="flex-1 bg-app relative">
       <BlurNavigationHeader
         title="Favorite"
-        height={160}
         rightComponent={rightComponent}
         bottomComponent={
           <TabsPicker
