@@ -11,6 +11,7 @@ import React, { useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { StatusBar } from "expo-status-bar";
+import { Image } from "expo-image";
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -46,7 +47,7 @@ const ParallaxScrollView = ({
   headerHeight = HEADER_HEIGHT,
   headerControls,
   headerTitle,
-  scrollViewClassName = "bg-app",
+  scrollViewClassName = "bg-white dark:bg-gray-900",
   // New props for animated header
   animatedTitle = "Musez",
   scrollThreshold = 120,
@@ -137,7 +138,10 @@ const ParallaxScrollView = ({
   );
 
   return (
-    <View className="flex-1 bg-app" style={{ backgroundColor }}>
+    <View
+      className="flex-1 bg-white dark:bg-gray-900"
+      style={{ backgroundColor }}
+    >
       {showStatusBar && <StatusBar style={statusBarStyle} />}
 
       {/* Animated Top Title Bar with Blur */}
@@ -195,7 +199,7 @@ const ParallaxScrollView = ({
         </BlurView>
       </Animated.View>
 
-      <View className="flex-1 bg-app">
+      <View className="flex-1 bg-white dark:bg-gray-900">
         {/* Header Container - moves with scroll */}
         <Animated.View
           className="absolute top-0 left-0 right-0 z-10"
@@ -211,19 +215,26 @@ const ParallaxScrollView = ({
             }}
           >
             {headerImage && (
-              <Animated.Image
-                source={{ uri: headerImage }}
-                className="absolute top-0 left-0"
+              <Animated.View
                 style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
                   width: width,
-                  height: imageScale.interpolate({
-                    inputRange: [1, 1.5],
-                    outputRange: [headerHeight, headerHeight * 1.5],
-                  }),
+                  height: headerHeight,
                   transform: [{ scale: imageScale }],
                 }}
-                resizeMode="cover"
-              />
+              >
+                <Image
+                  source={{ uri: headerImage }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+              </Animated.View>
             )}
 
             {/* Enhanced Gradient overlay for better text readability */}
@@ -291,7 +302,7 @@ const ParallaxScrollView = ({
           bounces={true}
         >
           {/* Content Container */}
-          <View className="bg-app rounded-t-3xl -mt-5 min-h-[800px]">
+          <View className="bg-white dark:bg-gray-900 rounded-t-3xl -mt-5 min-h-[800px]">
             {children}
           </View>
         </Animated.ScrollView>

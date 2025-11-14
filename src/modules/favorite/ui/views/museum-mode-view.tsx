@@ -142,7 +142,7 @@ const MuseumModeView = ({
       }}
       contentContainerStyle={{
         flexGrow: 1,
-        paddingTop: 170,
+        paddingTop: 180,
         paddingBottom: 32,
       }}
       showsVerticalScrollIndicator={false}

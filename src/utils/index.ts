@@ -24,12 +24,15 @@ export function snakeToCamel<T = any>(obj: any): T {
   return obj;
 }
 
-export const getPhotoUrl = (museum: Museum | MuseumDetails) => {
-  if (museum.photos && museum.photos.length > 0) {
-    const photoReference = museum.photos[0].photoReference;
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoReference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+export const getPhotoUrl = (
+  photoReference: string | null,
+  maxWidth: number = 400,
+): string => {
+  if (!photoReference) {
+    return "";
   }
-  return null;
+
+  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
 };
 
 export function stringToSlug(str: string): string {

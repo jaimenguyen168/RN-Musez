@@ -5,13 +5,13 @@ import {
   Text,
   TextInput,
   FlatList,
-  Image,
   TouchableOpacity,
   Pressable,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Museum } from "@/types/museum";
 import { getPhotoUrl } from "@/utils";
@@ -71,7 +71,7 @@ const AddCollectionModal = ({
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
     const isSelected = selectedMuseums.has(item.placeId);
-    const imageUrl = getPhotoUrl(item);
+    const imageUrl = getPhotoUrl(item.photos?.[0].photoReference || null);
 
     return (
       <View style={{ width: "33.33%" }} className="p-1">
@@ -88,8 +88,12 @@ const AddCollectionModal = ({
             {imageUrl ? (
               <Image
                 source={{ uri: imageUrl }}
-                className="w-full h-full"
-                resizeMode="cover"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
             ) : (
               <View className="w-full h-full bg-divider justify-center items-center">

@@ -2,7 +2,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Dimensions,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
@@ -20,8 +19,6 @@ import { useRouter } from "expo-router";
 import { useSignInFormValidation } from "@/modules/auth/schemas/validator";
 import AppButton from "@/components/AppButton";
 import Divider from "@/components/Divider";
-
-const { width: screenWidth } = Dimensions.get("window");
 
 const SignInView = () => {
   const router = useRouter();
@@ -151,7 +148,6 @@ const SignInView = () => {
             options={tabOptions}
             selectedValue={getDisplayValue(selectedTab)}
             onSelectionChange={handleTabChange}
-            width={screenWidth - 44}
           />
 
           {/* Input Fields */}

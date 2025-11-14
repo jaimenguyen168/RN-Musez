@@ -3,10 +3,10 @@ import {
   View,
   Text,
   ScrollView,
-  Image,
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMuseumDetailsQuery } from "@/hooks/useMuseumDetailsQuery";
@@ -20,6 +20,7 @@ import ContactMuseum from "@/modules/museums/ui/components/ContactMuseum";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useTheme } from "@/provider/ThemeProvider";
+import { getPhotoUrl } from "@/utils";
 
 interface MuseumDetailsViewProps {
   museumId: string;
@@ -46,10 +47,6 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
     await toggleSavedMuseum({
       museumId: museumId,
     });
-  };
-
-  const getPhotoUrl = (photoReference: string, maxWidth: number = 800) => {
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
   };
 
   const handleImagePress = (index: number) => {
@@ -177,8 +174,12 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
                   >
                     <Image
                       source={{ uri: getPhotoUrl(photo.photoReference, 200) }}
-                      className="w-24 h-24"
-                      resizeMode="cover"
+                      style={{
+                        width: 84,
+                        height: 84,
+                      }}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
                     />
                   </TouchableOpacity>
                 ))}

@@ -41,7 +41,8 @@ export const useMuseumsQuery = (
     queryKey: ["museums", params?.latitude, params?.longitude],
     queryFn: () => fetchMuseumsApi(params!),
     enabled: !!params?.latitude && !!params?.longitude,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 20 * 60 * 1000, // 20 minutes
     ...options,
   });
 };

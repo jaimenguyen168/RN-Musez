@@ -1,8 +1,10 @@
 import React from "react";
-import { FlatList, TouchableOpacity, Image, Dimensions } from "react-native";
+import { FlatList, TouchableOpacity, Dimensions } from "react-native";
+import { Image } from "expo-image";
 import { useQuery } from "convex/react";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import { api } from "../../../../../convex/_generated/api";
+import { useTheme } from "@/provider/ThemeProvider";
 
 type ArtworkDoc = Doc<"artworks">;
 
@@ -11,33 +13,35 @@ interface ArtworkModeViewProps {
 }
 
 const { width: screenWidth } = Dimensions.get("window");
-const GRID_SPACING = 8;
-const GRID_COLUMNS = 4;
-const IMAGE_SIZE =
-  (screenWidth - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
+const HORIZONTAL_PADDING = 32;
+const MARGIN_PER_ITEM = 8;
+const COLUMNS = 4;
+
+const availableWidth = screenWidth - HORIZONTAL_PADDING;
+const totalMarginWidth = MARGIN_PER_ITEM * COLUMNS;
+const itemWidth = (availableWidth - totalMarginWidth) / COLUMNS;
 
 const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
+  const { isDark } = useTheme();
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
   const renderArtworkItem = ({ item }: { item: ArtworkDoc }) => (
     <TouchableOpacity
       onPress={() => onArtworkPress(item)}
-      style={{
-        width: IMAGE_SIZE,
-        height: IMAGE_SIZE,
-        marginRight: GRID_SPACING,
-        marginBottom: GRID_SPACING,
-      }}
+      className="aspect-square m-1"
+      style={{ width: itemWidth }}
     >
       <Image
         source={{ uri: item.imageUri }}
         style={{
-          width: IMAGE_SIZE,
-          height: IMAGE_SIZE,
+          width: "100%",
+          height: "100%",
           borderRadius: 8,
+          borderWidth: 1,
+          borderColor: isDark ? "#9CA3AF" : "#D1D5DB",
         }}
-        resizeMode="cover"
-        className="border-gray-300 dark:border-gray-400 border rounded-lg"
+        contentFit="cover"
+        cachePolicy="memory-disk"
       />
     </TouchableOpacity>
   );
@@ -47,9 +51,9 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
       data={savedArtworks || []}
       renderItem={renderArtworkItem}
       keyExtractor={(item) => item._id}
-      numColumns={GRID_COLUMNS}
+      numColumns={4}
       contentContainerStyle={{
-        paddingTop: 170,
+        paddingTop: 180,
         paddingHorizontal: 16,
         paddingBottom: 32,
       }}
@@ -58,4 +62,5 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
     />
   );
 };
+
 export default ArtworkModeView;
