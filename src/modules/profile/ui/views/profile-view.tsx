@@ -17,13 +17,14 @@ import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/provider/ThemeProvider";
 import { useRevenueCat } from "@/provider/RevenueCatProvider";
-import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { usePaywall } from "@/hooks/usePaywall";
 
 const ProfileView = () => {
   const router = useRouter();
   const { signOut } = useAuth();
   const { setTheme, isDark } = useTheme();
   const { isProUser, logOut } = useRevenueCat();
+  const { presentPaywall } = usePaywall();
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -66,22 +67,16 @@ const ProfileView = () => {
   };
 
   const handleSubscriptionPress = async () => {
-    // router.push("/users/subscriptions");
-    const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall({
-      displayCloseButton: true,
-    });
-
-    console.log("Paywall result", paywallResult);
-
-    switch (paywallResult) {
-      case PAYWALL_RESULT.PURCHASED:
-      case PAYWALL_RESULT.RESTORED:
-        return true;
-      case PAYWALL_RESULT.NOT_PRESENTED:
-      case PAYWALL_RESULT.ERROR:
-      case PAYWALL_RESULT.CANCELLED:
-      default:
-        return false;
+    if (isProUser) {
+      console.log("User is already Pro");
+    } else {
+      // For free users, show paywall
+      await presentPaywall({
+        showSuccessAlert: true,
+        onSuccess: () => {
+          console.log("User upgraded to Pro!");
+        },
+      });
     }
   };
 
@@ -136,7 +131,9 @@ const ProfileView = () => {
               <View className="bg-green-500 rounded-full p-2 mr-3">
                 <Ionicons name="checkmark-circle" size={16} color="white" />
               </View>
-              <Text className="text-lg font-semibold text-main">View Plan</Text>
+              <Text className="text-lg font-semibold text-main">
+                Manage Plan
+              </Text>
             </View>
             <Text className="text-xl font-bold text-green-500">Pro</Text>
           </TouchableOpacity>
@@ -150,7 +147,7 @@ const ProfileView = () => {
                 <Ionicons name="diamond" size={16} color="white" />
               </View>
               <Text className="text-lg font-semibold text-main">
-                Explorer Plan
+                Upgrade to Pro
               </Text>
             </View>
             <Text className="text-xl font-bold text-primary">Free</Text>

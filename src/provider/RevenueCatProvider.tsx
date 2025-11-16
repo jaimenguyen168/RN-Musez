@@ -28,7 +28,7 @@ export const RevenueCatProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user?.id) {
-      init(user.id);
+      init(user.id).then((r) => console.log(r));
     }
   }, [user?.id]);
 
