@@ -17,8 +17,6 @@ const MuseumRowList = ({
   onCardPress,
   onShowAll,
 }: MuseumRowListProps) => {
-  const { isDark } = useTheme();
-
   if (museums.length === 0) {
     return null;
   }
