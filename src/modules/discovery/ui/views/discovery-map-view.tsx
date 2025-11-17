@@ -8,11 +8,15 @@ import BackButton from "@/components/BackButton";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useRevenueCat } from "@/provider/RevenueCatProvider";
+import { usePaywall } from "@/hooks/usePaywall";
 import CitySearchBar from "@/modules/discovery/ui/components/CitySearchBar";
 
 const DiscoveryMapView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
+  const { isProUser } = useRevenueCat();
+  const { presentPaywall } = usePaywall();
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const mapRef = useRef<MapView>(null);
 
@@ -52,6 +56,11 @@ const DiscoveryMapView = () => {
   });
 
   const handleMapRegionChangeComplete = (newRegion: Region) => {
+    // Only allow map dragging to fetch new museums for Pro users
+    if (!isProUser) {
+      return;
+    }
+
     setMuseumFetchCoordinates({
       latitude: newRegion.latitude,
       longitude: newRegion.longitude,
@@ -76,7 +85,35 @@ const DiscoveryMapView = () => {
     router.push(`/museums/${museumId}`);
   };
 
-  const handleSearchToggle = () => {
+  const handleSearchToggle = async () => {
+    if (!isProUser) {
+      Alert.alert(
+        "Pro Feature",
+        "Searching other locations is only available for Pro users. Upgrade to Pro to unlock unlimited museum search worldwide.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Upgrade to Pro",
+            style: "destructive",
+            onPress: async () => {
+              await presentPaywall({
+                showSuccessAlert: true,
+                onSuccess: () => {
+                  console.log("User upgraded to Pro!");
+                  // After successful upgrade, show the search bar
+                  setIsSearchBarVisible(true);
+                },
+              });
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     setIsSearchBarVisible(!isSearchBarVisible);
   };
 
