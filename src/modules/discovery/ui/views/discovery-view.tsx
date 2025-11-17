@@ -12,6 +12,7 @@ import { useMuseumListStore } from "@/stores/museumListStore";
 import { useTheme } from "@/provider/ThemeProvider";
 import MuseumGridList from "@/modules/discovery/ui/components/MuseumGridList";
 import MuseumInfoList from "@/modules/discovery/ui/components/MuseumInfoList";
+import ProfileMenuDropdown from "@/modules/profile/ui/components/ProfileMenuDropdown";
 
 const DiscoveryView = () => {
   const router = useRouter();
@@ -35,7 +36,6 @@ const DiscoveryView = () => {
     data: museums = [],
     isLoading: museumsLoading,
     error: museumsError,
-    refetch: refetchMuseums,
   } = useMuseumsQuery(museumsParams, {
     retry: 2,
     retryDelay: 1000,
@@ -148,6 +148,7 @@ const DiscoveryView = () => {
     <DiscoveryHeader
       place={address || "Unknown Location"}
       onLocationPress={handleLocationPress}
+      rightComponent={<ProfileMenuDropdown imageSize={36} />}
     />
   );
 
