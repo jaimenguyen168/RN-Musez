@@ -1,12 +1,12 @@
 import React, { useRef } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  Alert,
+  Animated,
   Image,
   Switch,
-  Animated,
-  Alert,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -16,17 +16,19 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useRevenueCat } from "@/provider/RevenueCatProvider";
+import { usePaywall } from "@/hooks/usePaywall";
 
 const ProfileView = () => {
   const router = useRouter();
   const { signOut } = useAuth();
   const { setTheme, isDark } = useTheme();
+  const { isProUser } = useRevenueCat();
+  const { presentPaywall } = usePaywall();
+
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const user = useQuery(api.function.users.getCurrentUser);
-
-  const coverImageUrl =
-    "https://images.unsplash.com/photo-1491156855053-9cdff72c7f85?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2428";
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -64,9 +66,25 @@ const ProfileView = () => {
     setTheme(isDark ? "light" : "dark");
   };
 
+  const handleSubscriptionPress = async () => {
+    if (isProUser) {
+      console.log("User is already Pro");
+    } else {
+      // For free users, show paywall
+      await presentPaywall({
+        showSuccessAlert: true,
+        onSuccess: () => {
+          console.log("User upgraded to Pro!");
+        },
+      });
+    }
+  };
+
   if (!user) {
     return null;
   }
+
+  console.log("Is Pro", isProUser);
 
   const EditButton = (
     <TouchableOpacity
@@ -104,15 +122,37 @@ const ProfileView = () => {
         </View>
 
         {/* Tier and Points */}
-        <View className="flex-row items-center justify-between rounded-2xl p-4 bg-primary-600/20 dark:bg-primary-600/30">
-          <View className="flex-row items-center">
-            <View className="bg-primary rounded-full p-2 mr-3">
-              <Ionicons name="diamond" size={16} color="white" />
+        {isProUser ? (
+          <TouchableOpacity
+            onPress={handleSubscriptionPress}
+            className="flex-row items-center justify-between rounded-2xl p-4 bg-green-600/20 dark:bg-green-600/30"
+          >
+            <View className="flex-row items-center">
+              <View className="bg-green-500 rounded-full p-2 mr-3">
+                <Ionicons name="checkmark-circle" size={16} color="white" />
+              </View>
+              <Text className="text-lg font-semibold text-main">
+                Manage Plan
+              </Text>
             </View>
-            <Text className="text-lg font-semibold text-main">Tier Gold</Text>
-          </View>
-          <Text className="text-xl font-bold text-primary">500 Points</Text>
-        </View>
+            <Text className="text-xl font-bold text-green-500">Pro</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleSubscriptionPress}
+            className="flex-row items-center justify-between rounded-2xl p-4 bg-primary-600/20 dark:bg-primary-600/30"
+          >
+            <View className="flex-row items-center">
+              <View className="bg-primary rounded-full p-2 mr-3">
+                <Ionicons name="diamond" size={16} color="white" />
+              </View>
+              <Text className="text-lg font-semibold text-main">
+                Upgrade to Pro
+              </Text>
+            </View>
+            <Text className="text-xl font-bold text-primary">Free</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -129,7 +169,7 @@ const ProfileView = () => {
 
   return (
     <ParallaxScrollView
-      headerImage={coverImageUrl}
+      headerImage={user?.coverImageUrl}
       headerTitle={HeaderTitle}
       animatedTitle={user.username}
       rightControl={EditButton}
@@ -154,8 +194,8 @@ const ProfileView = () => {
 
           <SettingsItem
             icon="globe-outline"
-            title="Language"
-            onPress={() => {}}
+            title="Languages"
+            onPress={() => router.push("/users/languages")}
           />
 
           <SettingsItem
@@ -185,13 +225,13 @@ const ProfileView = () => {
           <SettingsItem
             icon="shield-checkmark-outline"
             title="Legal & Policies"
-            onPress={() => {}}
+            onPress={() => router.push("/users/legal-policies")}
           />
 
           <SettingsItem
             icon="help-circle-outline"
             title="Help & Support"
-            onPress={() => {}}
+            onPress={() => router.push("/users/help-support")}
           />
 
           <TouchableOpacity

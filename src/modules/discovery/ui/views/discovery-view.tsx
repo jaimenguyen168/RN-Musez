@@ -10,6 +10,8 @@ import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 import { calculateRawDistance } from "@/utils/distance";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useTheme } from "@/provider/ThemeProvider";
+import MuseumGridList from "@/modules/discovery/ui/components/MuseumGridList";
+import MuseumInfoList from "@/modules/discovery/ui/components/MuseumInfoList";
 
 const DiscoveryView = () => {
   const router = useRouter();
@@ -64,12 +66,6 @@ const DiscoveryView = () => {
     router.push("/museums");
   };
 
-  const handleRefresh = async () => {
-    if (coords) {
-      await refetchMuseums();
-    }
-  };
-
   const sortedMuseums = useMemo(() => {
     if (!coords || !museums.length) return museums;
 
@@ -95,6 +91,26 @@ const DiscoveryView = () => {
       .map(({ rawDistance, ...museum }) => museum);
   }, [coords, museums]);
 
+  const bestReviewedMuseums = useMemo(() => {
+    if (!museums.length) return [];
+
+    return museums
+      .filter((museum) => museum.rating && museum.rating > 0)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      .slice(0, 4);
+  }, [museums]);
+
+  const mostVisitedMuseums = useMemo(() => {
+    if (!museums.length) return [];
+
+    return museums
+      .filter(
+        (museum) => museum.userRatingsTotal && museum.userRatingsTotal > 0,
+      )
+      .sort((a, b) => (b.userRatingsTotal || 0) - (a.userRatingsTotal || 0))
+      .slice(0, 5);
+  }, [museums]);
+
   const renderMainContent = () => {
     if (museumsLoading || isLocationLoading) {
       return (
@@ -105,12 +121,24 @@ const DiscoveryView = () => {
     }
 
     return (
-      <View className="flex-1 mt-4">
+      <View className="flex-1 mt-4 bg-app">
         <MuseumRowList
           title="Nearby"
           museums={sortedMuseums.slice(0, 5)}
           onCardPress={(id) => handleGoToMuseum(id)}
           onShowAll={handleShowAll}
+        />
+
+        <MuseumGridList
+          title="Best Reviewed"
+          museums={bestReviewedMuseums}
+          onCardPress={(id) => handleGoToMuseum(id)}
+        />
+
+        <MuseumInfoList
+          title="Most Visited"
+          museums={mostVisitedMuseums}
+          onCardPress={(id) => handleGoToMuseum(id)}
         />
       </View>
     );
@@ -120,8 +148,6 @@ const DiscoveryView = () => {
     <DiscoveryHeader
       place={address || "Unknown Location"}
       onLocationPress={handleLocationPress}
-      onChatPress={() => {}}
-      onBellPress={() => {}}
     />
   );
 
@@ -132,7 +158,7 @@ const DiscoveryView = () => {
       scrollThreshold={80}
       blurIntensity={80}
       blurType={isDark ? "dark" : "light"}
-      backgroundColor={isDark ? "#111827" : "white"}
+      backgroundColor={isDark ? "#111827" : "#f9fafb"}
       titleStyle={`text-xl font-bold tracking-wide ${isDark ? "text-white" : "text-black"}`}
     >
       {renderMainContent()}

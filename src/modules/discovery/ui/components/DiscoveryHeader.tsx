@@ -8,15 +8,15 @@ import { useTheme } from "@/provider/ThemeProvider";
 interface DiscoveryHeaderProps {
   place: string;
   onLocationPress: () => void;
-  onChatPress: () => void;
-  onBellPress: () => void;
+  rightComponent?: React.ReactNode;
+  secondRightComponent?: React.ReactNode;
 }
 
 const DiscoveryHeader = ({
   place,
   onLocationPress,
-  onChatPress,
-  onBellPress,
+  rightComponent,
+  secondRightComponent,
 }: DiscoveryHeaderProps) => {
   const { isDark } = useTheme();
 
@@ -54,29 +54,10 @@ const DiscoveryHeader = ({
         </View>
       </TouchableOpacity>
 
-      {/* Right side - Action buttons */}
-      <View className="flex-row items-center">
-        <TouchableOpacity
-          onPress={onChatPress}
-          className="size-12 rounded-lg flex items-center justify-center mr-3"
-        >
-          <Ionicons
-            name="chatbubble-ellipses"
-            size={32}
-            color={isDark ? "#9CA3AF" : Colors.DarkGrey}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={onBellPress}
-          className="size-12 rounded-lg flex items-center justify-center"
-        >
-          <Ionicons
-            name="notifications"
-            size={32}
-            color={isDark ? "#9CA3AF" : Colors.DarkGrey}
-          />
-        </TouchableOpacity>
+      {/* Right side - Custom components only */}
+      <View className="flex-row items-center gap-2">
+        {secondRightComponent && <View>{secondRightComponent}</View>}
+        {rightComponent && <View>{rightComponent}</View>}
       </View>
     </View>
   );
