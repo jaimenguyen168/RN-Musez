@@ -23,7 +23,7 @@ const ProfileView = () => {
   const router = useRouter();
   const { signOut } = useAuth();
   const { setTheme, isDark } = useTheme();
-  const { isProUser, logOut } = useRevenueCat();
+  const { isProUser } = useRevenueCat();
   const { presentPaywall } = usePaywall();
 
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -194,8 +194,8 @@ const ProfileView = () => {
 
           <SettingsItem
             icon="globe-outline"
-            title="Language"
-            onPress={() => {}}
+            title="Languages"
+            onPress={() => router.push("/users/languages")}
           />
 
           <SettingsItem
@@ -225,13 +225,13 @@ const ProfileView = () => {
           <SettingsItem
             icon="shield-checkmark-outline"
             title="Legal & Policies"
-            onPress={() => {}}
+            onPress={() => router.push("/users/legal-policies")}
           />
 
           <SettingsItem
             icon="help-circle-outline"
             title="Help & Support"
-            onPress={logOut}
+            onPress={() => router.push("/users/help-support")}
           />
 
           <TouchableOpacity
