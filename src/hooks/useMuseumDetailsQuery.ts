@@ -1,46 +1,50 @@
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useQuery as useConvexQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { MuseumDetails } from "@/types/museum";
 
-export interface FetchMuseumDetailsParams {
-  museumId: string;
-}
+export const useMuseumDetailsQuery = (museumId: string | null) => {
+  // museumId from the route may be URL-encoded (e.g. "way%2F1234") — decode it
+  const osmId = museumId ? decodeURIComponent(museumId) : null;
 
-export interface MuseumDetailsResponse {
-  success: boolean;
-  data: MuseumDetails;
-  error?: string;
-}
-
-const fetchMuseumDetailsApi = async ({
-  museumId,
-}: FetchMuseumDetailsParams): Promise<MuseumDetails> => {
-  const response = await fetch(
-    `${process.env.EXPO_PUBLIC_BASE_URL}/api/museum-details?place_id=${museumId}`,
+  const museum = useConvexQuery(
+    api.function.museumLocations.getMuseumByOsmId,
+    osmId ? { osmId } : "skip",
   );
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  if (museum === undefined) {
+    return { data: null, isLoading: true, error: null };
   }
 
-  const data: MuseumDetailsResponse = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to fetch museum details");
+  if (museum === null) {
+    return { data: null, isLoading: false, error: new Error("Museum not found") };
   }
 
-  return data.data;
-};
+  // Map DB shape → MuseumDetails type used by the detail view
+  const data: MuseumDetails = {
+    placeId: museum.osmId,
+    name: museum.name,
+    formattedAddress: [museum.address, museum.city, museum.country]
+      .filter(Boolean)
+      .join(", "),
+    formattedPhoneNumber: museum.phone,
+    website: museum.website,
+    openingHours: museum.openingHours
+      ? { openNow: false, weekdayText: [museum.openingHours] }
+      : undefined,
+    geometry: {
+      location: { lat: museum.lat, lng: museum.lng },
+      viewport: {
+        northeast: { lat: museum.lat + 0.01, lng: museum.lng + 0.01 },
+        southwest: { lat: museum.lat - 0.01, lng: museum.lng - 0.01 },
+      },
+    },
+    types: ["museum"],
+    businessStatus: "OPERATIONAL",
+    // Reuse the stored Wikimedia image as the header photo
+    photos: museum.imageUrl
+      ? [{ photoReference: museum.imageUrl, height: 600, width: 800, htmlAttributions: [] }]
+      : undefined,
+  };
 
-export const useMuseumDetailsQuery = (
-  museumId: string | null,
-  options?: Omit<UseQueryOptions<MuseumDetails, Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery({
-    queryKey: ["museum-details", museumId],
-    queryFn: () => fetchMuseumDetailsApi({ museumId: museumId! }),
-    enabled: !!museumId,
-    staleTime: 10 * 60 * 1000, // 10 minutes - museum details change less frequently
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
-    ...options,
-  });
+  return { data, isLoading: false, error: null };
 };

@@ -1,7 +1,15 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthenticatedUser } from "../utils";
-import { stringToSlug } from "@/utils";
+
+function stringToSlug(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export const createCollection = mutation({
   args: {
@@ -47,7 +55,7 @@ export const createCollection = mutation({
       };
     }
 
-    const insertPromises = args.museumIds.map((museumId, index) =>
+    const insertPromises = args.museumIds.map((museumId) =>
       ctx.db.insert("museumCategories", {
         userId: user._id,
         museumId,

@@ -14,7 +14,6 @@ import {
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Museum } from "@/types/museum";
-import { getPhotoUrl } from "@/utils";
 import { useTheme } from "@/provider/ThemeProvider";
 
 interface AddCollectionModalProps {
@@ -71,7 +70,12 @@ const AddCollectionModal = ({
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
     const isSelected = selectedMuseums.has(item.placeId);
-    const imageUrl = getPhotoUrl(item.photos?.[0].photoReference || null);
+    const photoRef = item.imageUrl ?? item.photos?.[0]?.photoReference;
+    const imageUrl = photoRef
+      ? photoRef.startsWith("http")
+        ? photoRef
+        : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}`
+      : null;
 
     return (
       <View style={{ width: "33.33%" }} className="p-1">

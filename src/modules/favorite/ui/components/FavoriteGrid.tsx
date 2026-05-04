@@ -3,7 +3,15 @@ import { Image } from "expo-image";
 import React from "react";
 import { Museum } from "@/types/museum";
 import { Ionicons } from "@expo/vector-icons";
-import { getPhotoUrl } from "@/utils";
+
+const resolvePhotoUrl = (museum: Museum | null): string | null => {
+  if (!museum) return null;
+  const ref = museum.imageUrl ?? museum.photos?.[0]?.photoReference;
+  if (!ref) return null;
+  return ref.startsWith("http")
+    ? ref
+    : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${ref}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}`;
+};
 
 const { width } = Dimensions.get("window");
 const CARD_MARGIN = 16;
@@ -58,18 +66,10 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
                 key={index}
                 className={`flex-1 mr-0.5 ${index === 0 ? "mb-0.5" : "mt-0.5"}`}
               >
-                {museums[index] ? (
+                {resolvePhotoUrl(museums[index]) ? (
                   <Image
-                    source={{
-                      uri:
-                        getPhotoUrl(
-                          museums[index]?.photos?.[0].photoReference || null,
-                        ) || "",
-                    }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                    }}
+                    source={{ uri: resolvePhotoUrl(museums[index]) as string }}
+                    style={{ width: "100%", height: "100%" }}
                     contentFit="cover"
                     cachePolicy="memory-disk"
                   />
@@ -89,17 +89,10 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
                 key={index}
                 className={`flex-1 ml-0.5 ${index === 1 ? "mb-0.5" : "mt-0.5"}`}
               >
-                {museums[index] ? (
+                {resolvePhotoUrl(museums[index]) ? (
                   <Image
-                    source={
-                      getPhotoUrl(
-                        museums[index].photos?.[0].photoReference || null,
-                      ) || ""
-                    }
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                    }}
+                    source={{ uri: resolvePhotoUrl(museums[index]) as string }}
+                    style={{ width: "100%", height: "100%" }}
                     contentFit="cover"
                     cachePolicy="memory-disk"
                   />

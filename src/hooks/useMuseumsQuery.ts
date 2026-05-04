@@ -1,48 +1,76 @@
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useAction, useQuery as useConvexQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Museum } from "@/types/museum";
+import { useMuseumImageBackfill } from "./useMuseumImageBackfill";
 
 export interface FetchMuseumsParams {
   latitude: number;
   longitude: number;
 }
 
-export interface MuseumsResponse {
-  success: boolean;
-  data: Museum[];
-  error?: string;
-}
-
-const fetchMuseumsApi = async ({
-  latitude,
-  longitude,
-}: FetchMuseumsParams): Promise<Museum[]> => {
-  const response = await fetch(
-    `${process.env.EXPO_PUBLIC_BASE_URL}/api/museums?lat=${latitude}&lng=${longitude}`,
+export const useMuseumsQuery = (params: FetchMuseumsParams | null) => {
+  const [error, setError] = useState<Error | null>(null);
+  const fetchAndCache = useAction(
+    api.function.museumLocations.fetchMuseumsNearLocation,
   );
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+  // Trigger the Convex action: fetches from Overpass + Wikimedia, saves to DB.
+  // No-ops if cached data is still fresh (7 day TTL).
+  useEffect(() => {
+    if (!params) return;
+    setError(null);
+    fetchAndCache({ lat: params.latitude, lng: params.longitude }).catch(
+      (err) => {
+        console.error("[useMuseumsQuery] fetch action failed:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      },
+    );
+  }, [params?.latitude, params?.longitude]);
 
-  const data: MuseumsResponse = await response.json();
+  // Reactively read from DB — updates automatically when the action writes
+  const rawMuseums = useConvexQuery(
+    api.function.museumLocations.getMuseumsNearLocation,
+    params ? { lat: params.latitude, lng: params.longitude } : "skip",
+  );
 
-  if (!data.success) {
-    throw new Error(data.error || "Failed to fetch museums");
-  }
+  // Batch-fetch rating summaries for all museums in view
+  const museumIds = (rawMuseums ?? []).map((m) => m.osmId);
+  const ratingSummaries = useConvexQuery(
+    api.function.reviews.getMuseumsRatingSummaries,
+    museumIds.length > 0 ? { museumIds } : "skip",
+  );
 
-  return data.data;
-};
-
-export const useMuseumsQuery = (
-  params: FetchMuseumsParams | null,
-  options?: Omit<UseQueryOptions<Museum[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery({
-    queryKey: ["museums", params?.latitude, params?.longitude],
-    queryFn: () => fetchMuseumsApi(params!),
-    enabled: !!params?.latitude && !!params?.longitude,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 20 * 60 * 1000, // 20 minutes
-    ...options,
+  // Map DB shape → Museum type used across the app
+  const museums: Museum[] = (rawMuseums ?? []).map((m) => {
+    const summary = ratingSummaries?.[m.osmId];
+    return {
+      placeId: m.osmId,
+      name: m.name,
+      vicinity: m.address,
+      formattedAddress: m.address,
+      website: m.website,
+      formattedPhoneNumber: m.phone,
+      imageUrl: m.imageUrl,
+      rating: summary?.avgRating ?? undefined,
+      userRatingsTotal: summary?.totalReviews ?? 0,
+      openingHours: m.openingHours
+        ? { openNow: false, weekdayText: [m.openingHours] }
+        : undefined,
+      geometry: {
+        location: { lat: m.lat, lng: m.lng },
+      },
+      types: ["museum"],
+    };
   });
+
+  // Backfill: fetch Wikimedia images client-side for any museums missing one,
+  // and save them back to Convex. UI updates reactively as images are saved.
+  useMuseumImageBackfill(museums);
+
+  return {
+    data: museums,
+    isLoading: rawMuseums === undefined,
+    error,
+  };
 };

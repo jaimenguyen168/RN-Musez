@@ -1,10 +1,14 @@
 export interface Museum {
-  placeId: string;
+  placeId: string;  // OSM: "node/12345" | Google: "ChIJ..."
   name: string;
   rating?: number;
   userRatingsTotal?: number;
   vicinity?: string;
   formattedAddress?: string;
+  // Overpass-sourced fields (may be undefined for legacy Google data)
+  website?: string;
+  formattedPhoneNumber?: string;
+  imageUrl?: string; // Wikimedia image, stored in DB on first fetch
   photos?: {
     photoReference: string;
     height: number;
@@ -12,6 +16,7 @@ export interface Museum {
   }[];
   openingHours?: {
     openNow: boolean;
+    weekdayText?: string[];  // Overpass raw opening_hours string goes here
   };
   currentOpeningHours?: {
     openNow: boolean;
