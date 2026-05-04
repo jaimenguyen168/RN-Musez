@@ -11,7 +11,9 @@
 import type * as auth from "../auth.js";
 import type * as function_artworks from "../function/artworks.js";
 import type * as function_museumCategories from "../function/museumCategories.js";
+import type * as function_museumLocations from "../function/museumLocations.js";
 import type * as function_museums from "../function/museums.js";
+import type * as function_reviews from "../function/reviews.js";
 import type * as function_users from "../function/users.js";
 import type * as http from "../http.js";
 import type * as schema_artworks from "../schema/artworks.js";
@@ -30,7 +32,9 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "function/artworks": typeof function_artworks;
   "function/museumCategories": typeof function_museumCategories;
+  "function/museumLocations": typeof function_museumLocations;
   "function/museums": typeof function_museums;
+  "function/reviews": typeof function_reviews;
   "function/users": typeof function_users;
   http: typeof http;
   "schema/artworks": typeof schema_artworks;

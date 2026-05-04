@@ -1,57 +1,52 @@
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Museum } from "@/types/museum";
 
 export interface FetchMuseumsByIdsParams {
   museumIds: string[];
 }
 
-export interface MuseumsByIdsResponse {
-  success: boolean;
-  data: Museum[];
-  total: number;
-  error?: string;
-}
-
-const fetchMuseumsByIdsApi = async ({
-  museumIds,
-}: FetchMuseumsByIdsParams): Promise<Museum[]> => {
-  if (!museumIds || museumIds.length === 0) {
-    return [];
-  }
-
-  const response = await fetch(
-    `${process.env.EXPO_PUBLIC_BASE_URL}/api/museum-ids`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ placeIds: museumIds }),
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const data: MuseumsByIdsResponse = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to fetch museums");
-  }
-
-  return data.data;
-};
-
 export const useMuseumsFavorites = (
   params: FetchMuseumsByIdsParams | null,
-  options?: Omit<UseQueryOptions<Museum[], Error>, "queryKey" | "queryFn">,
 ) => {
-  return useQuery({
-    queryKey: ["museums", "favorites", params?.museumIds],
-    queryFn: () => fetchMuseumsByIdsApi(params!),
-    enabled: !!params?.museumIds && params.museumIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-    ...options,
-  });
+  const osmIds = params?.museumIds ?? [];
+
+  const results = useQuery(
+    api.function.museumLocations.getMuseumsByOsmIds,
+    osmIds.length > 0 ? { osmIds } : "skip",
+  );
+
+  if (osmIds.length === 0) {
+    return { data: [] as Museum[], isLoading: false, error: null };
+  }
+
+  if (results === undefined) {
+    return { data: [] as Museum[], isLoading: true, error: null };
+  }
+
+  const museums: Museum[] = (results as NonNullable<typeof results>).map((m) => ({
+    placeId: m.osmId,
+    name: m.name,
+    formattedAddress: [m.address, m.city, m.country].filter(Boolean).join(", "),
+    formattedPhoneNumber: m.phone,
+    website: m.website,
+    imageUrl: m.imageUrl,
+    openingHours: m.openingHours
+      ? { openNow: false, weekdayText: [m.openingHours] }
+      : undefined,
+    geometry: {
+      location: { lat: m.lat, lng: m.lng },
+      viewport: {
+        northeast: { lat: m.lat + 0.01, lng: m.lng + 0.01 },
+        southwest: { lat: m.lat - 0.01, lng: m.lng - 0.01 },
+      },
+    },
+    types: ["museum"],
+    businessStatus: "OPERATIONAL",
+    photos: m.imageUrl
+      ? [{ photoReference: m.imageUrl, height: 600, width: 800, htmlAttributions: [] }]
+      : undefined,
+  }));
+
+  return { data: museums, isLoading: false, error: null };
 };

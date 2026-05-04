@@ -31,7 +31,7 @@ const CollectionView = () => {
   });
 
   const handleCardPress = (museumId: string) => {
-    router.push(`/museums/${museumId}`);
+    router.push(`/museums/${encodeURIComponent(museumId)}`);
   };
 
   const handleBackPress = () => {

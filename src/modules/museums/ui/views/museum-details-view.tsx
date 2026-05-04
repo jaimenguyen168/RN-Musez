@@ -84,8 +84,12 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
       ? museumDetails.photos[selectedImageIndex]
       : null;
 
+  // photoReference is either a full URL (Wikimedia) or a Google photo ref
+  const resolvePhotoUrl = (ref: string, maxWidth = 400) =>
+    ref.startsWith("http") ? ref : getPhotoUrl(ref, maxWidth);
+
   const headerImageUrl = currentPhoto
-    ? getPhotoUrl(currentPhoto.photoReference)
+    ? resolvePhotoUrl(currentPhoto.photoReference)
     : undefined;
 
   const BackButton = (
@@ -173,7 +177,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
                     }}
                   >
                     <Image
-                      source={{ uri: getPhotoUrl(photo.photoReference, 200) }}
+                      source={{ uri: resolvePhotoUrl(photo.photoReference, 200) }}
                       style={{
                         width: 84,
                         height: 84,

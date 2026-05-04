@@ -4,7 +4,6 @@ import { Museum } from "@/types/museum";
 import { useTheme } from "@/provider/ThemeProvider";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { getPhotoUrl } from "@/utils";
 
 interface MuseumGridListProps {
   title: string;
@@ -55,7 +54,13 @@ interface MuseumGridCardProps {
 const MuseumGridCard = ({ museum, onCardPress }: MuseumGridCardProps) => {
   const { isDark } = useTheme();
 
-  const photoUrl = getPhotoUrl(museum?.photos?.[0].photoReference || null);
+  // Prefer stored Wikimedia imageUrl, fall back to first photos entry
+  const photoRef = museum.imageUrl ?? museum?.photos?.[0]?.photoReference;
+  const photoUrl = photoRef
+    ? photoRef.startsWith("http")
+      ? photoRef
+      : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}`
+    : null;
 
   return (
     <TouchableOpacity

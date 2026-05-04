@@ -25,91 +25,70 @@ const DiscoveryView = () => {
   } = useLocationManager(true);
 
   const museumsParams = coords
-    ? {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-      }
+    ? { latitude: coords.latitude, longitude: coords.longitude }
     : null;
+
   const { setMuseumList } = useMuseumListStore();
 
   const {
     data: museums = [],
     isLoading: museumsLoading,
     error: museumsError,
-  } = useMuseumsQuery(museumsParams, {
-    retry: 2,
-    retryDelay: 1000,
-  });
+  } = useMuseumsQuery(museumsParams);
 
   useEffect(() => {
-    if (museumsError) {
-      Alert.alert("Error", museumsError.message);
-    }
+    if (museumsError) Alert.alert("Error", museumsError.message);
   }, [museumsError]);
 
   useEffect(() => {
-    if (locationError) {
-      Alert.alert("Location Error", "Unable to get your location");
-    }
+    if (locationError) Alert.alert("Location Error", "Unable to get your location");
   }, [locationError]);
 
-  const handleLocationPress = () => {
-    router.push("/discovery/map");
-  };
-
-  const handleGoToMuseum = (id: string) => {
-    router.push(`/museums/${id}`);
-  };
-
+  const handleLocationPress = () => router.push("/discovery/map");
+  const handleGoToMuseum = (id: string) =>
+    router.push(`/museums/${encodeURIComponent(id)}`);
   const handleShowAll = () => {
     setMuseumList("Nearby", sortedMuseums);
     router.push("/museums");
   };
 
+  // All museums sorted by distance
   const sortedMuseums = useMemo(() => {
     if (!coords || !museums.length) return museums;
-
     return museums
       .map((museum) => {
         const museumCoords = museum.geometry?.location
-          ? {
-              latitude: museum.geometry.location.lat,
-              longitude: museum.geometry.location.lng,
-            }
+          ? { latitude: museum.geometry.location.lat, longitude: museum.geometry.location.lng }
           : null;
-
-        const rawDistance = museumCoords
-          ? calculateRawDistance(coords, museumCoords)
-          : Infinity;
-
-        return {
-          ...museum,
-          rawDistance,
-        };
+        const rawDistance = museumCoords ? calculateRawDistance(coords, museumCoords) : Infinity;
+        return { ...museum, rawDistance };
       })
       .sort((a, b) => a.rawDistance - b.rawDistance)
       .map(({ rawDistance, ...museum }) => museum);
   }, [coords, museums]);
 
-  const bestReviewedMuseums = useMemo(() => {
-    if (!museums.length) return [];
+  // Nearby: first 4 with a Wikimedia image stored in DB
+  const nearbyMuseums = useMemo(
+    () => sortedMuseums.filter((m) => !!m.imageUrl).slice(0, 4),
+    [sortedMuseums],
+  );
 
-    return museums
-      .filter((museum) => museum.rating && museum.rating > 0)
-      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+  // "Featured" — next 4 museums with images, skipping those already shown in Nearby
+  const featuredMuseums = useMemo(() => {
+    const nearbyIds = new Set(nearbyMuseums.map((m) => m.placeId));
+    return sortedMuseums
+      .filter((m) => !!m.imageUrl && !nearbyIds.has(m.placeId))
       .slice(0, 4);
-  }, [museums]);
+  }, [sortedMuseums, nearbyMuseums]);
 
-  const mostVisitedMuseums = useMemo(() => {
-    if (!museums.length) return [];
-
-    return museums
-      .filter(
-        (museum) => museum.userRatingsTotal && museum.userRatingsTotal > 0,
-      )
-      .sort((a, b) => (b.userRatingsTotal || 0) - (a.userRatingsTotal || 0))
-      .slice(0, 5);
-  }, [museums]);
+  // "Explore More" — next 5 by distance (with or without image), skipping Nearby + Featured
+  const exploreMoreMuseums = useMemo(() => {
+    const shownIds = new Set([
+      ...nearbyMuseums.map((m) => m.placeId),
+      ...featuredMuseums.map((m) => m.placeId),
+    ]);
+    return sortedMuseums.filter((m) => !shownIds.has(m.placeId)).slice(0, 5);
+  }, [sortedMuseums, nearbyMuseums, featuredMuseums]);
 
   const renderMainContent = () => {
     if (museumsLoading || isLocationLoading) {
@@ -124,20 +103,20 @@ const DiscoveryView = () => {
       <View className="flex-1 mt-4 bg-app">
         <MuseumRowList
           title="Nearby"
-          museums={sortedMuseums.slice(0, 5)}
+          museums={nearbyMuseums}
           onCardPress={(id) => handleGoToMuseum(id)}
           onShowAll={handleShowAll}
         />
 
         <MuseumGridList
-          title="Best Reviewed"
-          museums={bestReviewedMuseums}
+          title="Featured"
+          museums={featuredMuseums}
           onCardPress={(id) => handleGoToMuseum(id)}
         />
 
         <MuseumInfoList
-          title="Most Visited"
-          museums={mostVisitedMuseums}
+          title="Explore More"
+          museums={exploreMoreMuseums}
           onCardPress={(id) => handleGoToMuseum(id)}
         />
       </View>

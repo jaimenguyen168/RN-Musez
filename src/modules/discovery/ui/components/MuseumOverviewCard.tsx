@@ -5,7 +5,6 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
-import { getPhotoUrl } from "@/utils";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { calculateAndFormatDistance, DistanceUnit } from "@/utils/distance";
 import { useTheme } from "@/provider/ThemeProvider";
@@ -27,32 +26,25 @@ const MuseumOverviewCard = ({
   const isSaved = useQuery(api.function.museums.isMuseumSaved, {
     museumId: museum.placeId,
   });
-
   const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
 
   const formattedDistance = useMemo(() => {
     if (!coords || !museum.geometry?.location) return null;
-
     const museumCoords = {
       latitude: museum.geometry.location.lat,
       longitude: museum.geometry.location.lng,
     };
-
-    const distanceUnit: DistanceUnit = "imperial";
-
-    return calculateAndFormatDistance(coords, museumCoords, distanceUnit);
+    return calculateAndFormatDistance(coords, museumCoords, "imperial" as DistanceUnit);
   }, [coords, museum.geometry?.location]);
 
   const onFavoritePress = async () => {
-    await toggleSavedMuseum({
-      museumId: museum.placeId,
-    });
+    await toggleSavedMuseum({ museumId: museum.placeId });
   };
 
-  const photoUrl = getPhotoUrl(museum?.photos?.[0].photoReference || null);
+  // Image comes straight from the DB — no client-side fetching needed
+  const photoUrl = museum.imageUrl;
 
-  const isOpen =
-    museum.openingHours?.openNow ?? museum.currentOpeningHours?.openNow;
+  const isOpen = museum.openingHours?.openNow ?? museum.currentOpeningHours?.openNow;
 
   if (variant === "compact") {
     return (
@@ -63,18 +55,13 @@ const MuseumOverviewCard = ({
         <View className="relative">
           {photoUrl ? (
             <Image
-              source={{
-                uri: photoUrl,
-              }}
-              style={{
-                width: "100%",
-                height: 160,
-              }}
+              source={{ uri: photoUrl }}
+              style={{ width: "100%", height: 160 }}
               contentFit="cover"
               cachePolicy="memory-disk"
             />
           ) : (
-            <View className="w-full h-56 bg-surface items-center justify-center">
+            <View className="w-full h-40 bg-surface items-center justify-center">
               <Ionicons
                 name="image-outline"
                 size={48}
@@ -114,9 +101,7 @@ const MuseumOverviewCard = ({
                   size={20}
                   color={isDark ? "#9CA3AF" : "#6B7280"}
                 />
-                <Text className="text-base text-secondary">
-                  {formattedDistance}
-                </Text>
+                <Text className="text-base text-secondary">{formattedDistance}</Text>
               </View>
             )}
           </View>
@@ -148,10 +133,7 @@ const MuseumOverviewCard = ({
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
+              style={{ width: "100%", height: "100%" }}
               contentFit="cover"
               cachePolicy="memory-disk"
             />
@@ -192,9 +174,7 @@ const MuseumOverviewCard = ({
                 size={16}
                 color={isDark ? "#9CA3AF" : "#6B7280"}
               />
-              <Text className="text-sm text-secondary ml-1">
-                {formattedDistance}
-              </Text>
+              <Text className="text-sm text-secondary ml-1">{formattedDistance}</Text>
             </View>
           )}
 

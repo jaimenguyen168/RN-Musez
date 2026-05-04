@@ -50,10 +50,7 @@ const DiscoveryMapView = () => {
     data: nearbyMuseums = [],
     isLoading: museumsLoading,
     error: museumsError,
-  } = useMuseumsQuery(museumsQueryParameters, {
-    retry: 2,
-    retryDelay: 1000,
-  });
+  } = useMuseumsQuery(museumsQueryParameters);
 
   const handleMapRegionChangeComplete = (newRegion: Region) => {
     // Only allow map dragging to fetch new museums for Pro users
@@ -82,7 +79,7 @@ const DiscoveryMapView = () => {
   const isLoadingData = isLocationLoading || museumsLoading;
 
   const handleMuseumMarkerPress = (museumId: string) => {
-    router.push(`/museums/${museumId}`);
+    router.push(`/museums/${encodeURIComponent(museumId)}`);
   };
 
   const handleSearchToggle = async () => {
