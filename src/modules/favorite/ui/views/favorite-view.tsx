@@ -4,18 +4,21 @@ import {
   View,
   Alert,
   TouchableOpacity,
+  StyleSheet,
 } from "react-native";
 import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/colors";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CategorySection } from "@/modules/favorite/ui/components/FavoriteGrid";
 import FavoriteMuseumsEmpty from "@/modules/favorite/ui/components/FavoriteMuseumsEmpty";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionModal";
 import { Museum } from "@/types/museum";
-import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
@@ -29,6 +32,7 @@ type ArtworkDoc = Doc<"artworks">;
 const FavoriteView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const { artwork } = useLocalSearchParams<{ artwork?: string }>();
   const [viewMode, setViewMode] = useState<ViewMode>(
     artwork === "true" ? "artwork" : "museum",
@@ -40,174 +44,117 @@ const FavoriteView = () => {
   const [museums, setMuseums] = useState<Museum[]>([]);
 
   const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds);
-  const categorizedMuseumIds = useQuery(
-    api.function.museumCategories.getMuseumsByCategories,
-  );
+  const categorizedMuseumIds = useQuery(api.function.museumCategories.getMuseumsByCategories);
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
   const viewModeOptions: [string, string] = ["Museums", "Artworks"];
 
-  const createCollectionMutation = useMutation(
-    api.function.museumCategories.createCollection,
-  );
+  const createCollectionMutation = useMutation(api.function.museumCategories.createCollection);
 
-  const getDisplayValue = (mode: ViewMode): string => {
-    return mode === "museum" ? "Museums" : "Artworks";
-  };
+  const bg = isDark ? "#111827" : "#FAFAFA";
+  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
+  const textMain = isDark ? "#F9FAFB" : "#111827";
+  const textSub = isDark ? "#9CA3AF" : "#6B7280";
+  const borderColor = isDark ? "#374151" : "#E5E7EB";
 
-  const getInternalValue = (display: string): ViewMode => {
-    return display === "Museums" ? "museum" : "artwork";
-  };
+  const getDisplayValue = (mode: ViewMode) => mode === "museum" ? "Museums" : "Artworks";
+  const getInternalValue = (display: string): ViewMode => display === "Museums" ? "museum" : "artwork";
 
-  const handleDiscoveryPress = () => {
-    router.push("/discovery");
-  };
-
-  const handleSnapPress = () => {
-    router.push("/snap");
-  };
-
+  const handleDiscoveryPress = () => router.push("/discovery");
+  const handleSnapPress = () => router.push("/snap");
   const handleCategoryPress = (category: CategorySection) => {
     setMuseumList(category.title, category.museums);
     router.push("/collections");
   };
+  const handleArtworkPress = (artwork: ArtworkDoc) => router.push(`/artworks/${artwork._id}`);
+  const handleMuseumsLoaded = (loadedMuseums: Museum[]) => setMuseums(loadedMuseums);
 
-  const handleArtworkPress = (artwork: ArtworkDoc) => {
-    router.push(`/artworks/${artwork._id}`);
-  };
-
-  const handleAddFavoriteCollectionPress = () => {
-    setIsModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleCreateCollection = async (
-    name: string,
-    selectedMuseums: Museum[],
-  ) => {
+  const handleCreateCollection = async (name: string, selectedMuseums: Museum[]) => {
     try {
       setIsCreatingCollection(true);
-
-      const museumIds = selectedMuseums.map((museum) => museum.placeId);
-
       const result = await createCollectionMutation({
         collectionName: name,
-        museumIds: museumIds,
+        museumIds: selectedMuseums.map((m) => m.placeId),
       });
-
       if (result.success) {
-        Alert.alert(
-          "Success",
-          `Collection "${result.categoryDisplayName}" created successfully with ${result.museumsAdded} museums.`,
-          [{ text: "OK" }],
-        );
+        Alert.alert("Success", `Collection "${result.categoryDisplayName}" created with ${result.museumsAdded} museums.`);
         setIsModalVisible(false);
       } else {
-        Alert.alert("Error", result.message || "Failed to create collection", [
-          { text: "OK" },
-        ]);
+        Alert.alert("Error", result.message || "Failed to create collection");
       }
-    } catch (error) {
-      console.error("Error creating collection:", error);
-      Alert.alert(
-        "Error",
-        "An unexpected error occurred while creating the collection.",
-        [{ text: "OK" }],
-      );
+    } catch {
+      Alert.alert("Error", "An unexpected error occurred.");
     } finally {
       setIsCreatingCollection(false);
     }
   };
 
-  // Callback to receive museums from MuseumModeView
-  const handleMuseumsLoaded = (loadedMuseums: Museum[]) => {
-    setMuseums(loadedMuseums);
-  };
-
   const isLoading = !savedMuseumIds && !categorizedMuseumIds;
-
   const isEmpty =
     viewMode === "museum"
       ? (!savedMuseumIds || savedMuseumIds.length === 0) &&
-        (!categorizedMuseumIds ||
-          Object.keys(categorizedMuseumIds).length === 0)
+        (!categorizedMuseumIds || Object.keys(categorizedMuseumIds).length === 0)
       : !savedArtworks || savedArtworks.length === 0;
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center bg-app">
-        <ActivityIndicator size="large" color="#6366F1" />
-        <Text className="mt-2 text-secondary">Loading saved items...</Text>
+      <View style={[styles.center, { backgroundColor: bg }]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <ActivityIndicator size="large" color={Colors.Primary} />
       </View>
     );
   }
-
-  if (isEmpty) {
-    return (
-      <View className="flex-1 bg-app px-6 py-32">
-        <BlurNavigationHeader
-          title="Favorite"
-          height={160}
-          statusBarStyle={isDark ? "light" : "dark"}
-          blurType={isDark ? "dark" : "light"}
-          bottomComponent={
-            <TabsPicker
-              options={viewModeOptions}
-              selectedValue={getDisplayValue(viewMode)}
-              onSelectionChange={(value) =>
-                setViewMode(getInternalValue(value))
-              }
-            />
-          }
-        />
-        {viewMode === "museum" ? (
-          <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
-        ) : (
-          <FavoriteArtworksEmpty onSnapPress={handleSnapPress} />
-        )}
-      </View>
-    );
-  }
-
-  const rightComponent =
-    viewMode === "museum" ? (
-      <TouchableOpacity
-        onPress={handleAddFavoriteCollectionPress}
-        className="justify-center items-center p-2"
-      >
-        <Ionicons name="add" size={24} color={isDark ? "#FFFFFF" : "#000000"} />
-      </TouchableOpacity>
-    ) : null;
 
   return (
-    <View className="flex-1 bg-app relative">
-      <BlurNavigationHeader
-        title="Favorite"
-        rightComponent={rightComponent}
-        bottomComponent={
+    <View style={[styles.screen, { backgroundColor: bg }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: bg }]}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerText}>
+            <Text style={[styles.title, { color: textMain }]}>Favorites</Text>
+            <Text style={[styles.subtitle, { color: textSub }]}>
+              Your saved museums & artworks
+            </Text>
+          </View>
+          {viewMode === "museum" && (
+            <TouchableOpacity
+              onPress={() => setIsModalVisible(true)}
+              style={[styles.addBtn, { backgroundColor: isDark ? "#1F2937" : "#FFFFFF", borderColor }]}
+            >
+              <Ionicons name="add" size={20} color={Colors.Primary} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.tabs}>
           <TabsPicker
             options={viewModeOptions}
             selectedValue={getDisplayValue(viewMode)}
-            onSelectionChange={(value) => setViewMode(getInternalValue(value))}
+            onSelectionChange={(val) => setViewMode(getInternalValue(val))}
           />
-        }
-        statusBarStyle={isDark ? "light" : "dark"}
-        blurType={isDark ? "dark" : "light"}
-      />
+        </View>
+      </View>
 
-      {viewMode === "museum" ? (
+      {/* ── Content ────────────────────────────────────────────────────────── */}
+      {isEmpty ? (
+        <View style={styles.emptyContainer}>
+          {viewMode === "museum" ? (
+            <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
+          ) : (
+            <FavoriteArtworksEmpty onSnapPress={handleSnapPress} />
+          )}
+        </View>
+      ) : viewMode === "museum" ? (
         <>
           <MuseumModeView
             onCategoryPress={handleCategoryPress}
             onMuseumsLoaded={handleMuseumsLoaded}
           />
-
           <AddCollectionModal
             visible={isModalVisible}
-            onClose={closeModal}
+            onClose={() => setIsModalVisible(false)}
             museums={museums}
             onCreateCollection={handleCreateCollection}
             isCreating={isCreatingCollection}
@@ -219,5 +166,32 @@ const FavoriteView = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  header: { paddingHorizontal: 24, paddingBottom: 14 },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  headerText: { gap: 3 },
+  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
+  subtitle: { fontSize: 14 },
+  addBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+  },
+  tabs: { width: "100%" },
+  emptyContainer: { flex: 1 },
+});
 
 export default FavoriteView;

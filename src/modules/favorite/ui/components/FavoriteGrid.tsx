@@ -1,8 +1,10 @@
-import { View, Text, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, Dimensions, StyleSheet } from "react-native";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Museum } from "@/types/museum";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/provider/ThemeProvider";
 
 const resolvePhotoUrl = (museum: Museum | null): string | null => {
   if (!museum) return null;
@@ -14,8 +16,9 @@ const resolvePhotoUrl = (museum: Museum | null): string | null => {
 };
 
 const { width } = Dimensions.get("window");
-const CARD_MARGIN = 16;
-const CARD_WIDTH = (width - CARD_MARGIN * 3) / 2;
+const GAP = 10;
+const SIDE = 16;
+const CARD_WIDTH = (width - SIDE * 2 - GAP) / 2;
 
 export interface CategorySection {
   title: string;
@@ -30,105 +33,140 @@ interface FavoriteGridProps {
 }
 
 const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
-  const getGridMuseums = (): (Museum | null)[] => {
-    const museums: (Museum | null)[] = category.museums.slice(0, 4);
+  const { isDark } = useTheme();
+  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
+  const textMain = isDark ? "#F9FAFB" : "#111827";
+  const textSub = isDark ? "#9CA3AF" : "#6B7280";
 
-    while (museums.length < 4) {
-      museums.push(null);
-    }
-
-    return museums;
-  };
-
-  const museums = getGridMuseums();
+  const museums: (Museum | null)[] = [
+    ...category.museums.slice(0, 4),
+    ...Array(Math.max(0, 4 - category.museums.length)).fill(null),
+  ];
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="bg-card rounded-3xl overflow-hidden"
-      style={{
-        width: CARD_WIDTH,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-      }}
+      activeOpacity={0.85}
+      style={[styles.card, { backgroundColor: cardBg, width: CARD_WIDTH }]}
     >
-      {/* Image Grid */}
-      <View style={{ height: 160 }}>
-        <View className="flex-row h-full">
-          {/* Left Column */}
-          <View className="flex-1">
-            {[0, 2].map((index) => (
-              <View
-                key={index}
-                className={`flex-1 mr-0.5 ${index === 0 ? "mb-0.5" : "mt-0.5"}`}
-              >
-                {resolvePhotoUrl(museums[index]) ? (
-                  <Image
-                    source={{ uri: resolvePhotoUrl(museums[index]) as string }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
+      {/* 2×2 image mosaic */}
+      <View style={styles.mosaic}>
+        <View style={styles.mosaicCol}>
+          {[0, 2].map((i) => {
+            const url = resolvePhotoUrl(museums[i]);
+            return (
+              <View key={i} style={[styles.mosaicCell, i === 0 ? { marginBottom: 2 } : { marginTop: 2 }]}>
+                {url ? (
+                  <Image source={{ uri: url }} style={styles.mosaicImg} contentFit="cover" cachePolicy="memory-disk" />
                 ) : (
-                  <View className="w-full h-full bg-surface items-center justify-center">
-                    <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                  <View style={[styles.mosaicPlaceholder, { backgroundColor: isDark ? "#374151" : "#F3F4F6" }]}>
+                    <Ionicons name="image-outline" size={20} color="#9CA3AF" />
                   </View>
                 )}
               </View>
-            ))}
-          </View>
-
-          {/* Right Column */}
-          <View className="flex-1">
-            {[1, 3].map((index) => (
-              <View
-                key={index}
-                className={`flex-1 ml-0.5 ${index === 1 ? "mb-0.5" : "mt-0.5"}`}
-              >
-                {resolvePhotoUrl(museums[index]) ? (
-                  <Image
-                    source={{ uri: resolvePhotoUrl(museums[index]) as string }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
+            );
+          })}
+        </View>
+        <View style={styles.mosaicCol}>
+          {[1, 3].map((i) => {
+            const url = resolvePhotoUrl(museums[i]);
+            return (
+              <View key={i} style={[styles.mosaicCell, i === 1 ? { marginBottom: 2 } : { marginTop: 2 }]}>
+                {url ? (
+                  <Image source={{ uri: url }} style={styles.mosaicImg} contentFit="cover" cachePolicy="memory-disk" />
                 ) : (
-                  <View className="w-full h-full bg-surface items-center justify-center">
-                    <Ionicons
-                      name="image-outline"
-                      size={index === 1 ? 24 : 20}
-                      color="#9CA3AF"
-                    />
+                  <View style={[styles.mosaicPlaceholder, { backgroundColor: isDark ? "#374151" : "#F3F4F6" }]}>
+                    <Ionicons name="image-outline" size={20} color="#9CA3AF" />
                   </View>
                 )}
               </View>
-            ))}
-          </View>
+            );
+          })}
         </View>
 
-        {/* Overlay for extra count */}
+        {/* Gradient overlay at bottom */}
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.35)"]}
+          style={styles.mosaicGradient}
+        />
+
+        {/* Extra count badge */}
         {category.count > 4 && (
-          <View className="absolute bottom-2 right-2 bg-black/60 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-semibold">
-              +{category.count - 4}
-            </Text>
+          <View style={styles.countBadge}>
+            <Text style={styles.countBadgeText}>+{category.count - 4}</Text>
           </View>
         )}
       </View>
 
-      {/* Card Content */}
-      <View className="p-4">
-        <Text className="text-lg font-bold text-main mb-1">
-          {category.title}
-        </Text>
-        <Text className="text-secondary text-sm">{category.count} Saved</Text>
+      {/* Card footer */}
+      <View style={styles.footer}>
+        <View style={styles.footerLeft}>
+          <Text style={[styles.footerTitle, { color: textMain }]} numberOfLines={1}>
+            {category.title}
+          </Text>
+          <Text style={[styles.footerCount, { color: textSub }]}>
+            {category.count} {category.count === 1 ? "museum" : "museums"}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={isDark ? "#4B5563" : "#D1D5DB"} />
       </View>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 18,
+    overflow: "hidden",
+    marginBottom: GAP,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  mosaic: {
+    height: 160,
+    flexDirection: "row",
+    position: "relative",
+  },
+  mosaicCol: { flex: 1 },
+  mosaicCell: { flex: 1 },
+  mosaicImg: { width: "100%", height: "100%" },
+  mosaicPlaceholder: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mosaicGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  countBadge: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  countBadgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
+
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  footerLeft: { flex: 1, gap: 2 },
+  footerTitle: { fontSize: 14, fontWeight: "700" },
+  footerCount: { fontSize: 12 },
+});
 
 export default FavoriteGrid;

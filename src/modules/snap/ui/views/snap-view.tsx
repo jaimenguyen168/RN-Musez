@@ -1,26 +1,33 @@
+import React, { useState } from "react";
 import {
   View,
   Text,
   Alert,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
+  StyleSheet,
+  Dimensions,
 } from "react-native";
-import React, { useState } from "react";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useArtworkStore } from "@/stores/artworkStore";
 import { analyzeArtwork } from "@/services/geminiService";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 import { Artwork } from "@/types/artwork";
-import AppButton from "@/components/AppButton";
 import ImagePicker, { ImageAsset } from "@/components/ImagePicker";
-import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import { useTheme } from "@/provider/ThemeProvider";
 import { useRevenueCat } from "@/provider/RevenueCatProvider";
+import { Colors } from "@/constants/colors";
 import RevenueCatUI from "react-native-purchases-ui";
 import { useCredits } from "@/modules/snap/hooks/useCredits";
 import { usePaywall } from "@/hooks/usePaywall";
+
+const { width: SW, height: SH } = Dimensions.get("window");
+const IMAGE_HEIGHT = SH * 0.54;
+const PRIMARY = Colors.Primary; // #FF9900
 
 const SnapView = () => {
   const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
@@ -29,30 +36,26 @@ const SnapView = () => {
   const { setCurrentArtwork } = useArtworkStore();
   const { isDark } = useTheme();
   const { isProUser } = useRevenueCat();
-  const { presentUpgradePrompt, presentPaywall } = usePaywall();
+  const { presentUpgradePrompt } = usePaywall();
+  const insets = useSafeAreaInsets();
 
-  const {
-    credits,
-    loading: creditsLoading,
-    consumeCredit,
-    hasCredits,
-    getTimeUntilReset,
-  } = useCredits(isProUser || false);
+  const { credits, loading: creditsLoading, consumeCredit, hasCredits, getTimeUntilReset } =
+    useCredits(isProUser || false);
 
-  const handleImageSelected = (image: ImageAsset) => {
-    setSelectedImage(image);
-  };
+  const bg = isDark ? "#111827" : "#FAFAFA";
+  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
+  const textMain = isDark ? "#F9FAFB" : "#111827";
+  const textSub = isDark ? "#9CA3AF" : "#6B7280";
+  const borderColor = isDark ? "#374151" : "#E5E7EB";
 
-  const handleImageError = (error: string) => {
+  const handleImageSelected = (image: ImageAsset) => setSelectedImage(image);
+  const handleImageError = (error: string) =>
     Alert.alert("Error", `Failed to select image: ${error}`);
-  };
+  const resetImage = () => setSelectedImage(null);
 
   const showUpgradePrompt = () => {
     const resetTime = getTimeUntilReset();
-    const hoursUntilReset = Math.ceil(
-      (resetTime.getTime() - Date.now()) / (1000 * 60 * 60),
-    );
-
+    const hoursUntilReset = Math.ceil((resetTime.getTime() - Date.now()) / (1000 * 60 * 60));
     presentUpgradePrompt({
       title: "No Credits Remaining",
       message: `You've used all your daily credits. They'll reset in ${hoursUntilReset} hours, or upgrade to Pro for unlimited access.`,
@@ -63,254 +66,309 @@ const SnapView = () => {
 
   const handleGenerate = async () => {
     if (!selectedImage) return;
-
-    // Check credits before proceeding
-    if (!hasCredits()) {
-      showUpgradePrompt();
-      return;
-    }
-
+    if (!hasCredits()) { showUpgradePrompt(); return; }
     setLoading(true);
     try {
       const creditUsed = await consumeCredit();
-      if (!creditUsed) {
-        showUpgradePrompt();
-        return;
-      }
-
+      if (!creditUsed) { showUpgradePrompt(); return; }
       const result = await analyzeArtwork(selectedImage.uri);
-
-      const artworkData: Artwork = {
-        ...result,
-        imageUri: selectedImage.uri,
-      };
-
+      const artworkData: Artwork = { ...result, imageUri: selectedImage.uri };
       setCurrentArtwork(artworkData);
       router.push(`/artworks/new`);
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to analyze artwork. Please try again.");
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const resetImage = () => {
-    setSelectedImage(null);
-  };
-
   if (creditsLoading) {
     return (
-      <View className="flex-1 bg-app justify-center items-center">
-        <ActivityIndicator size="large" color={Colors.Primary} />
+      <View style={[styles.center, { backgroundColor: bg }]}>
+        <ActivityIndicator size="large" color={PRIMARY} />
       </View>
     );
   }
 
-  const CreditsDisplay = () => {
-    if (isProUser) return null;
-
+  // ── Credits pill ──────────────────────────────────────────────────────────
+  const CreditsPill = () => {
+    if (isProUser) {
+      return (
+        <View style={[styles.pill, { backgroundColor: isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED" }]}>
+          <Ionicons name="infinite" size={13} color={PRIMARY} />
+          <Text style={[styles.pillText, { color: PRIMARY }]}>Pro · Unlimited</Text>
+        </View>
+      );
+    }
+    const empty = credits === 0;
     return (
-      <View className="bg-card border border-soft rounded-2xl p-4 mb-6 w-full">
-        <View className="flex-row items-center justify-between gap-2">
-          <View className="flex-row items-center">
-            <Ionicons name="diamond" size={20} color={Colors.Primary} />
-            <Text className="text-main font-semibold ml-2">Daily Credits</Text>
-          </View>
-          <Text className="text-primary font-bold text-lg">{credits}/5</Text>
+      <View style={[styles.pill, {
+        backgroundColor: empty
+          ? isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)"
+          : isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED",
+      }]}>
+        <Ionicons name="diamond" size={12} color={empty ? "#EF4444" : PRIMARY} />
+        <Text style={[styles.pillText, { color: empty ? "#EF4444" : PRIMARY }]}>
+          {credits}/5 credits
+        </Text>
+      </View>
+    );
+  };
+
+  // ── Empty state ───────────────────────────────────────────────────────────
+  if (!selectedImage) {
+    return (
+      <View style={[styles.screen, { backgroundColor: bg }]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+
+        <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+          <Text style={[styles.topTitle, { color: textMain }]}>Snap</Text>
+          <Text style={[styles.topSubtitle, { color: textSub }]}>AI-powered art identification</Text>
         </View>
 
-        {credits === 0 ? (
-          <View className="mt-3 pt-3 border-t border-soft">
-            <Text className="text-secondary text-sm mb-2">
-              Credits reset at midnight
+        <View style={styles.emptyBody}>
+          <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8}>
+            {({ selectImage }) => (
+              <TouchableOpacity
+                onPress={hasCredits() ? selectImage : showUpgradePrompt}
+                activeOpacity={0.8}
+                style={styles.viewfinder}
+              >
+                {/* Corner brackets */}
+                <View style={[styles.corner, { top: 0, left: 0, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderColor: PRIMARY }]} />
+                <View style={[styles.corner, { top: 0, right: 0, borderTopWidth: 2.5, borderRightWidth: 2.5, borderColor: PRIMARY }]} />
+                <View style={[styles.corner, { bottom: 0, left: 0, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderColor: PRIMARY }]} />
+                <View style={[styles.corner, { bottom: 0, right: 0, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderColor: PRIMARY }]} />
+
+                <View style={[styles.scanIconBg, { backgroundColor: isDark ? "rgba(255,153,0,0.12)" : "#FFF7ED" }]}>
+                  <Ionicons name="scan-outline" size={48} color={PRIMARY} />
+                </View>
+                <Text style={[styles.viewfinderHint, { color: textSub }]}>Tap to choose artwork</Text>
+              </TouchableOpacity>
+            )}
+          </ImagePicker>
+
+          <View style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: textMain }]}>Discover Any Artwork</Text>
+            <Text style={[styles.emptySubtitle, { color: textSub }]}>
+              Photograph any painting, sculpture,{"\n"}or artwork for instant AI insights
             </Text>
+          </View>
+
+          <CreditsPill />
+        </View>
+
+        {credits === 0 && !isProUser && (
+          <View style={[styles.upgradeBar, { backgroundColor: cardBg, borderTopColor: borderColor, paddingBottom: insets.bottom + 12 }]}>
             <TouchableOpacity
-              onPress={async () => {
-                await RevenueCatUI.presentPaywall({
-                  displayCloseButton: true,
-                });
-              }}
-              className="bg-primary-600/10 border border-primary-600/20 rounded-lg p-3"
+              onPress={async () => { await RevenueCatUI.presentPaywall({ displayCloseButton: true }); }}
+              style={[styles.upgradeBtn, { backgroundColor: PRIMARY }]}
+              activeOpacity={0.85}
             >
-              <Text className="text-primary text-center font-medium">
-                Upgrade to Pro for unlimited credits
-              </Text>
+              <Ionicons name="star" size={15} color="#fff" />
+              <Text style={styles.upgradeBtnText}>Upgrade to Pro for unlimited scans</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          credits <= 2 && (
-            <View className="mt-3 pt-3 border-t border-soft">
-              <TouchableOpacity
-                onPress={() => presentPaywall({ showSuccessAlert: true })}
-                className="bg-primary-600/10 border border-primary-600/20 rounded-lg p-3"
-              >
-                <Text className="text-primary text-center font-medium">
-                  Running low? Upgrade to Pro for unlimited credits
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )
         )}
       </View>
     );
-  };
-
-  if (!selectedImage) {
-    return (
-      <View className="flex-1 bg-app">
-        <BlurNavigationHeader
-          title=""
-          statusBarStyle={isDark ? "light" : "dark"}
-          blurType={isDark ? "dark" : "light"}
-        />
-
-        <View className="flex-1 justify-center items-center px-6">
-          {/* Header */}
-          <View className="items-center mb-9">
-            <View className="w-32 h-32 bg-primary-600/40 rounded-full items-center justify-center mb-6">
-              <Ionicons name="camera" size={64} color={Colors.Primary} />
-            </View>
-            <Text className="text-2xl font-bold text-main mb-3 text-center">
-              Art Overview
-            </Text>
-            <Text className="text-secondary text-center text-lg leading-7 max-w-sm">
-              Upload an artwork and get insights{"\n"}powered by AI
-            </Text>
-          </View>
-
-          <View className="w-full px-6 gap-6">
-            <ImagePicker
-              onImageSelected={handleImageSelected}
-              onError={handleImageError}
-              quality={0.8}
-            >
-              {({ selectImage }) => (
-                <AppButton
-                  onPress={selectImage}
-                  className="flex-row items-center justify-center"
-                  disabled={!hasCredits()}
-                >
-                  <MaterialCommunityIcons
-                    name="image-search"
-                    size={24}
-                    color="white"
-                  />
-                  <Text className="text-white text-lg font-semibold ml-3">
-                    {hasCredits() ? "Choose Image" : "No Credits"}
-                  </Text>
-                </AppButton>
-              )}
-            </ImagePicker>
-
-            <CreditsDisplay />
-          </View>
-        </View>
-      </View>
-    );
   }
 
+  // ── Image selected state ──────────────────────────────────────────────────
   return (
-    <View className="flex-1 bg-app">
-      {/*<BlurNavigationHeader*/}
-      {/*  title=""*/}
-      {/*  statusBarStyle={isDark ? "light" : "dark"}*/}
-      {/*  blurType={isDark ? "dark" : "light"}*/}
-      {/*/>*/}
+    <View style={[styles.screen, { backgroundColor: bg }]}>
+      <StatusBar style="light" />
 
-      <View className="flex-1 justify-center items-center px-6">
-        {/* Back Button (disabled) just because the weird navigation error  */}
+      <View style={{ width: SW, height: IMAGE_HEIGHT }}>
+        <Image
+          source={{ uri: selectedImage.uri }}
+          style={{ width: "100%", height: "100%" }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+        <LinearGradient
+          colors={["rgba(0,0,0,0.5)", "transparent"]}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140 }}
+        />
+        <LinearGradient
+          colors={["transparent", bg]}
+          start={{ x: 0, y: 0.3 }}
+          end={{ x: 0, y: 1 }}
+          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: IMAGE_HEIGHT * 0.55 }}
+        />
         <TouchableOpacity
           onPress={resetImage}
-          disabled
-          className="absolute top-12 left-4 rounded-full p-3"
-        />
+          style={[styles.backBtn, { top: insets.top + 10 }]}
+        >
+          <Ionicons name="chevron-back" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
-        {/* Selected Image */}
-        <View className="items-center mb-8 w-full px-8">
-          <View className="bg-card p-4 rounded-3xl shadow-lg mb-6 border border-soft">
-            <Image
-              source={{ uri: selectedImage.uri }}
-              className="w-80 h-80 rounded-2xl"
-              resizeMode="cover"
-            />
-          </View>
+      <View style={[styles.actionSheet, { paddingBottom: insets.bottom + 8 }]}>
+        <Text style={[styles.actionTitle, { color: textMain }]}>Ready to analyze</Text>
+        <Text style={[styles.actionSubtitle, { color: textSub }]}>
+          AI will identify the artwork and provide detailed insights
+        </Text>
 
-          <Text className="text-2xl font-bold text-main mb-2">Great shot!</Text>
-          <Text className="text-secondary text-center mb-6 max-w-sm">
-            Get detailed insights about this artwork
-          </Text>
+        <CreditsPill />
 
-          {/* Buttons */}
-          <View className="w-full gap-4 mb-4">
-            <AppButton
-              onPress={handleGenerate}
-              disabled={loading || !hasCredits()}
-              loading={loading}
-              className="flex-row items-center justify-center"
-            >
-              {loading ? (
-                <>
-                  <ActivityIndicator color="white" size="small" />
-                  <Text className="text-white text-lg font-semibold ml-3">
-                    Generating...
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons name="sparkles-sharp" size={24} color="white" />
-                  <Text className="text-white text-lg font-semibold ml-3">
-                    {hasCredits() ? "Generate" : "No Credits"}
-                  </Text>
-                </>
-              )}
-            </AppButton>
+        <TouchableOpacity
+          onPress={handleGenerate}
+          disabled={loading || !hasCredits()}
+          activeOpacity={0.85}
+          style={[styles.generateBtn, { opacity: loading || !hasCredits() ? 0.65 : 1 }]}
+        >
+          <LinearGradient
+            colors={[Colors.Secondary, PRIMARY, "#E08800"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.generateGradient}
+          >
+            {loading ? (
+              <>
+                <ActivityIndicator color="#fff" size="small" />
+                <Text style={styles.generateText}>Analyzing...</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={20} color="#fff" />
+                <Text style={styles.generateText}>
+                  {hasCredits() ? "Analyze Artwork" : "No Credits"}
+                </Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
 
-            {/* Secondary actions in a row */}
-            <View className="flex-row gap-3">
-              <ImagePicker
-                onImageSelected={handleImageSelected}
-                onError={handleImageError}
-                quality={0.8}
-              >
-                {({ selectImage }) => (
-                  <AppButton
-                    variant="outline"
-                    className="flex-row flex-1 items-center justify-center"
-                    onPress={selectImage}
-                    disabled={loading}
-                  >
-                    <Ionicons
-                      name="camera"
-                      size={20}
-                      color={isDark ? "#9CA3AF" : "#6B7280"}
-                    />
-                    <Text className="text-secondary font-medium ml-2">
-                      New Photo
-                    </Text>
-                  </AppButton>
-                )}
-              </ImagePicker>
-
-              <AppButton
-                variant="outline"
-                onPress={resetImage}
+        <View style={styles.secondaryRow}>
+          <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8}>
+            {({ selectImage }) => (
+              <TouchableOpacity
+                onPress={selectImage}
                 disabled={loading}
+                style={[styles.secondaryBtn, { flex: 1, backgroundColor: cardBg, borderColor }]}
               >
-                <Ionicons
-                  name="close"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-              </AppButton>
-            </View>
-          </View>
+                <Ionicons name="images-outline" size={18} color={textSub} />
+                <Text style={[styles.secondaryBtnText, { color: textSub }]}>New Photo</Text>
+              </TouchableOpacity>
+            )}
+          </ImagePicker>
 
-          <CreditsDisplay />
+          <TouchableOpacity
+            onPress={resetImage}
+            disabled={loading}
+            style={[styles.secondaryBtn, { width: 54, backgroundColor: cardBg, borderColor }]}
+          >
+            <Ionicons name="trash-outline" size={18} color={isDark ? "#9CA3AF" : "#EF4444"} />
+          </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  topBar: { paddingHorizontal: 24, paddingBottom: 4 },
+  topTitle: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
+  topSubtitle: { fontSize: 14, marginTop: 2 },
+
+  emptyBody: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    gap: 32,
+  },
+
+  viewfinder: {
+    width: 230,
+    height: 230,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
+  },
+  corner: {
+    position: "absolute",
+    width: 26,
+    height: 26,
+    borderRadius: 3,
+  },
+  scanIconBg: {
+    width: 90,
+    height: 90,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewfinderHint: { fontSize: 13, fontWeight: "500" },
+
+  emptyText: { alignItems: "center", gap: 8 },
+  emptyTitle: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
+  emptySubtitle: { fontSize: 14, textAlign: "center", lineHeight: 22 },
+
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  pillText: { fontSize: 13, fontWeight: "600" },
+
+  upgradeBar: { paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1 },
+  upgradeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 14,
+    paddingVertical: 14,
+  },
+  upgradeBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+
+  backBtn: {
+    position: "absolute",
+    left: 16,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    borderRadius: 22,
+    padding: 8,
+  },
+
+  actionSheet: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    gap: 12,
+    justifyContent: "center",
+  },
+  actionTitle: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
+  actionSubtitle: { fontSize: 14, lineHeight: 20, marginTop: -4 },
+
+  generateBtn: { borderRadius: 16, overflow: "hidden", marginTop: 2 },
+  generateGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+  },
+  generateText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+
+  secondaryRow: { flexDirection: "row", gap: 10 },
+  secondaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 13,
+  },
+  secondaryBtnText: { fontSize: 14, fontWeight: "600" },
+});
 
 export default SnapView;

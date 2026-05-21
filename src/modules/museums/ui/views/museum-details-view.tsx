@@ -68,11 +68,11 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
     userAvatar: r.userAvatar,
   }));
 
-  const bg = isDark ? "#111827" : "#F3F4F6";
+  const bg = isDark ? "#111827" : "#FAFAFA";
   const cardBg = isDark ? "#1F2937" : "#FFFFFF";
   const textMain = isDark ? "#F9FAFB" : "#111827";
   const textSub = isDark ? "#9CA3AF" : "#6B7280";
-  const borderColor = isDark ? "#374151" : "#F3F4F6";
+  const borderColor = isDark ? "#374151" : "#E5E7EB";
   const isOpen = museumDetails?.openingHours?.openNow;
 
   if (loading) {
@@ -132,7 +132,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
         animatedTitle={museumDetails.name}
         leftControl={BackBtn}
         rightControl={FavBtn}
-        scrollViewClassName={isDark ? "bg-gray-900" : "bg-gray-100"}
+        scrollViewClassName={isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}
         backgroundColor={bg}
         scrollThreshold={120}
         showStatusBar

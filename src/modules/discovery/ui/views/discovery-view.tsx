@@ -138,7 +138,7 @@ const DiscoveryView = () => {
       scrollThreshold={80}
       blurIntensity={80}
       blurType={isDark ? "dark" : "light"}
-      backgroundColor={isDark ? "#111827" : "#f9fafb"}
+      backgroundColor={isDark ? "#111827" : "#FAFAFA"}
       titleStyle={`text-xl font-bold tracking-wide ${isDark ? "text-white" : "text-black"}`}
     >
       {renderMainContent()}

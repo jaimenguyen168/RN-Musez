@@ -1,8 +1,7 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/provider/ThemeProvider";
 
 interface DiscoveryHeaderProps {
@@ -19,48 +18,43 @@ const DiscoveryHeader = ({
   secondRightComponent,
 }: DiscoveryHeaderProps) => {
   const { isDark } = useTheme();
+  const textMain = isDark ? "#F9FAFB" : "#111827";
+  const textSub = isDark ? "#9CA3AF" : "#6B7280";
 
   return (
-    <View className="px-6 py-4 flex-row items-center justify-between">
-      <TouchableOpacity
-        onPress={onLocationPress}
-        className="flex-row items-center flex-1 mr-8"
-      >
-        <LinearGradient
-          colors={[Colors.Primary, Colors.Secondary]}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-          }}
-        >
-          <Ionicons name="location" size={18} color="white" />
-        </LinearGradient>
-        <View className="flex-1">
-          <Text className="text-secondary tracking-wider font-light">
-            Discover museums in
+    <View style={styles.container}>
+      <View style={styles.left}>
+        <Text style={[styles.title, { color: textMain }]}>Musez</Text>
+        <TouchableOpacity onPress={onLocationPress} style={styles.locationRow} activeOpacity={0.7}>
+          <Ionicons name="location-sharp" size={13} color={Colors.Primary} />
+          <Text style={[styles.locationText, { color: textSub }]} numberOfLines={1}>
+            {place}
           </Text>
-          <View className="flex-row items-center">
-            <Text className="text-2xl font-semibold line-clamp-1 tracking-wide text-main">
-              {place}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+          <Ionicons name="chevron-forward" size={12} color={textSub} />
+        </TouchableOpacity>
+      </View>
 
-      {/* Right side - Custom components only */}
-      <View className="flex-row items-center gap-2">
-        {secondRightComponent && <View>{secondRightComponent}</View>}
-        {rightComponent && <View>{rightComponent}</View>}
+      <View style={styles.right}>
+        {secondRightComponent}
+        {rightComponent}
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  left: { flex: 1, gap: 3 },
+  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  locationText: { fontSize: 13, fontWeight: "500", flexShrink: 1 },
+  right: { flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
+});
 
 export default DiscoveryHeader;

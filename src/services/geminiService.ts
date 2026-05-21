@@ -6,7 +6,7 @@ export const analyzeArtwork = async (
   imageUri: string,
 ): Promise<ArtworkInsights> => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     // Convert image to base64
     const response = await fetch(imageUri);
