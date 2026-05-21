@@ -17,6 +17,7 @@ interface ReviewsProps {
   title?: string;
   iconColor?: string;
   cardWidth?: number;
+  compact?: boolean; // removes top padding when a custom header sits above
 }
 
 const Reviews = ({
@@ -26,11 +27,12 @@ const Reviews = ({
   title = "Recent Reviews",
   iconColor = "#6366F1",
   cardWidth = 320,
+  compact = false,
 }: ReviewsProps) => {
   const displayReviews = (reviews ?? []).slice(0, maxReviews);
 
   return (
-    <View className="p-6">
+    <View style={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: compact ? 0 : 20 }}>
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="chatbubbles" size={20} color={iconColor} />

@@ -12,6 +12,7 @@ interface FixedMapLinkingProps {
   markerColor?: string;
   height?: number;
   showTitle?: boolean;
+  compact?: boolean;
 }
 
 const FixedMapLinking = ({
@@ -22,6 +23,7 @@ const FixedMapLinking = ({
   markerColor = "#6366F1",
   height = 192,
   showTitle = true,
+  compact = false,
 }: FixedMapLinkingProps) => {
   const openInMaps = (lat: number, lng: number, placeName: string) => {
     const label = encodeURIComponent(placeName);
@@ -77,7 +79,7 @@ const FixedMapLinking = ({
   };
 
   return (
-    <View className="p-6">
+    <View style={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: compact ? 0 : 20 }}>
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="location" size={20} color="#6366F1" />
@@ -85,7 +87,7 @@ const FixedMapLinking = ({
         </View>
       )}
 
-      <Text className="text-secondary mb-4 leading-relaxed">{address}</Text>
+      <Text className="text-secondary mb-3 leading-relaxed">{address}</Text>
 
       {/* Map View */}
       <TouchableOpacity

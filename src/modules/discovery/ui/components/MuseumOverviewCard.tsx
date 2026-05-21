@@ -1,8 +1,9 @@
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, Pressable, TouchableOpacity, StyleSheet } from "react-native";
 import React, { useMemo } from "react";
 import { Museum } from "@/types/museum";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { useLocationManager } from "@/hooks/useLocationManager";
@@ -14,6 +15,22 @@ interface MuseumOverviewCardProps {
   variant?: "compact" | "detailed";
   onCardPress?: () => void;
 }
+
+const SHADOW = {
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.12,
+  shadowRadius: 16,
+  elevation: 8,
+};
+
+const SHADOW_SM = {
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.07,
+  shadowRadius: 8,
+  elevation: 3,
+};
 
 const MuseumOverviewCard = ({
   museum,
@@ -30,181 +47,344 @@ const MuseumOverviewCard = ({
 
   const formattedDistance = useMemo(() => {
     if (!coords || !museum.geometry?.location) return null;
-    const museumCoords = {
-      latitude: museum.geometry.location.lat,
-      longitude: museum.geometry.location.lng,
-    };
-    return calculateAndFormatDistance(coords, museumCoords, "imperial" as DistanceUnit);
+    return calculateAndFormatDistance(
+      coords,
+      { latitude: museum.geometry.location.lat, longitude: museum.geometry.location.lng },
+      "imperial" as DistanceUnit,
+    );
   }, [coords, museum.geometry?.location]);
 
   const onFavoritePress = async () => {
     await toggleSavedMuseum({ museumId: museum.placeId });
   };
 
-  // Image comes straight from the DB — no client-side fetching needed
   const photoUrl = museum.imageUrl;
-
   const isOpen = museum.openingHours?.openNow ?? museum.currentOpeningHours?.openNow;
 
+  // ── Compact: full-bleed hero card ────────────────────────────────────────────
   if (variant === "compact") {
     return (
       <TouchableOpacity
         onPress={onCardPress}
-        className="bg-card flex-1 rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
+        activeOpacity={0.92}
+        style={[styles.compactCard, SHADOW]}
       >
-        <View className="relative">
+        {/* Image */}
+        <View style={styles.compactImageContainer}>
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
-              style={{ width: "100%", height: 160 }}
+              style={StyleSheet.absoluteFillObject}
               contentFit="cover"
               cachePolicy="memory-disk"
             />
           ) : (
-            <View className="w-full h-40 bg-surface items-center justify-center">
-              <Ionicons
-                name="image-outline"
-                size={48}
-                color={isDark ? "#6B7280" : "#9CA3AF"}
-              />
+            <View style={[StyleSheet.absoluteFillObject, styles.imagePlaceholder]}>
+              <Ionicons name="image-outline" size={40} color="#6B7280" />
             </View>
           )}
-          <TouchableOpacity
-            onPress={onFavoritePress}
-            className="absolute top-4 right-4 bg-surface rounded-full p-2"
-          >
-            <Ionicons
-              name={isSaved ? "heart" : "heart-outline"}
-              size={24}
-              color={isSaved ? "#EC4899" : isDark ? "#9CA3AF" : "#6B7280"}
-            />
-          </TouchableOpacity>
-        </View>
 
-        <View className="p-4 flex-1">
-          <Text className="text-lg font-bold text-main mb-1 line-clamp-1">
-            {museum.name}
-          </Text>
-          <Text className="text-sm text-secondary mb-3">
-            {museum.vicinity || museum.formattedAddress}
-          </Text>
+          {/* Gradient overlay */}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.18)", "rgba(0,0,0,0.72)"]}
+            start={{ x: 0, y: 0.35 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
 
-          <View className="flex-row items-center mt-auto">
-            <Ionicons name="star" size={20} color="#F59E0B" />
-            <Text className="text-base font-semibold text-main ml-1 mr-3">
-              {museum.rating?.toFixed(1) ?? "0.0"}
-            </Text>
-            {formattedDistance && (
-              <View className="flex-row items-center gap-1">
-                <MaterialIcons
-                  name="directions"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-                <Text className="text-base text-secondary">{formattedDistance}</Text>
-              </View>
-            )}
-          </View>
-
-          {isOpen !== undefined && (
-            <View className="mt-2 flex-row items-center">
-              <View
-                className={`w-2 h-2 rounded-full mr-2 ${isOpen ? "bg-green-500" : "bg-red-500"}`}
-              />
-              <Text
-                className={`text-sm font-medium ${isOpen ? "text-green-600" : "text-red-600"}`}
-              >
-                {isOpen ? "Open now" : "Closed"}
+          {/* Top row: rating + favorite */}
+          <View style={styles.compactTopRow}>
+            <View style={styles.ratingChip}>
+              <Ionicons name="star" size={11} color="#F59E0B" />
+              <Text style={styles.ratingChipText}>
+                {museum.rating?.toFixed(1) ?? "0.0"}
               </Text>
             </View>
-          )}
+
+            <TouchableOpacity onPress={onFavoritePress} style={styles.favoriteChip}>
+              <Ionicons
+                name={isSaved ? "heart" : "heart-outline"}
+                size={17}
+                color={isSaved ? "#FB7185" : "white"}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Bottom: name + meta */}
+          <View style={styles.compactBottom}>
+            <Text style={styles.compactName} numberOfLines={1}>
+              {museum.name}
+            </Text>
+            <View style={styles.compactMeta}>
+              {formattedDistance && (
+                <View style={styles.metaRow}>
+                  <Ionicons name="location-sharp" size={11} color="rgba(255,255,255,0.75)" />
+                  <Text style={styles.metaText}>{formattedDistance}</Text>
+                </View>
+              )}
+              {isOpen !== undefined && (
+                <View
+                  style={[
+                    styles.statusPill,
+                    { backgroundColor: isOpen ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.8)" },
+                  ]}
+                >
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>{isOpen ? "Open" : "Closed"}</Text>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
       </TouchableOpacity>
     );
   }
 
+  // ── Detailed: horizontal list card ───────────────────────────────────────────
   return (
     <Pressable
       onPress={onCardPress}
-      className="bg-card rounded-2xl overflow-hidden shadow-sm mb-4 mx-4"
+      style={[styles.detailedCard, SHADOW_SM, { backgroundColor: isDark ? "#1F2937" : "#FFFFFF" }]}
     >
-      <View className="flex-row h-48">
-        <View className="w-32">
-          {photoUrl ? (
-            <Image
-              source={{ uri: photoUrl }}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-            />
-          ) : (
-            <View className="w-full h-full bg-surface items-center justify-center">
-              <Ionicons
-                name="image-outline"
-                size={32}
-                color={isDark ? "#6B7280" : "#9CA3AF"}
-              />
-            </View>
+      {/* Image */}
+      <View style={styles.detailedImageContainer}>
+        {photoUrl ? (
+          <Image
+            source={{ uri: photoUrl }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+          />
+        ) : (
+          <View style={[{ width: "100%", height: "100%" }, styles.imagePlaceholder]}>
+            <Ionicons name="image-outline" size={28} color="#9CA3AF" />
+          </View>
+        )}
+      </View>
+
+      {/* Content */}
+      <View style={styles.detailedContent}>
+        <Text
+          style={[styles.detailedName, { color: isDark ? "#F9FAFB" : "#111827" }]}
+          numberOfLines={2}
+        >
+          {museum.name}
+        </Text>
+        <Text
+          style={[styles.detailedAddress, { color: isDark ? "#9CA3AF" : "#6B7280" }]}
+          numberOfLines={1}
+        >
+          {museum.vicinity || museum.formattedAddress}
+        </Text>
+
+        <View style={styles.detailedMeta}>
+          <Ionicons name="star" size={12} color="#F59E0B" />
+          <Text style={[styles.detailedRating, { color: isDark ? "#F9FAFB" : "#111827" }]}>
+            {museum.rating?.toFixed(1) ?? "0.0"}
+          </Text>
+          <Text style={[styles.detailedReviews, { color: isDark ? "#9CA3AF" : "#6B7280" }]}>
+            ({museum.userRatingsTotal ?? 0})
+          </Text>
+          {formattedDistance && (
+            <>
+              <Text style={[styles.dot, { color: isDark ? "#6B7280" : "#D1D5DB" }]}>·</Text>
+              <Ionicons name="location-outline" size={12} color={isDark ? "#9CA3AF" : "#6B7280"} />
+              <Text style={[styles.detailedReviews, { color: isDark ? "#9CA3AF" : "#6B7280" }]}>
+                {formattedDistance}
+              </Text>
+            </>
           )}
         </View>
 
-        <View className="flex-1 p-4 pr-12">
-          <Text className="text-lg font-bold text-main mb-1" numberOfLines={2}>
-            {museum.name}
-          </Text>
-          <Text className="text-sm text-secondary mb-2" numberOfLines={1}>
-            {museum.vicinity || museum.formattedAddress}
-          </Text>
-
-          <View className="flex-row items-center mb-2">
-            <Ionicons name="star" size={16} color="#F59E0B" />
-            <Text className="text-sm font-semibold text-main ml-1">
-              {museum.rating?.toFixed(1) ?? "0.0"}
-            </Text>
-            <Text className="text-xs text-secondary ml-1">
-              ({museum.userRatingsTotal ?? 0} Review
-              {(museum.userRatingsTotal ?? 0) !== 1 ? "s" : ""})
+        {isOpen !== undefined && (
+          <View style={styles.detailedStatusRow}>
+            <View
+              style={[
+                styles.detailedStatusDot,
+                { backgroundColor: isOpen ? "#10B981" : "#EF4444" },
+              ]}
+            />
+            <Text
+              style={[
+                styles.detailedStatusText,
+                { color: isOpen ? (isDark ? "#34D399" : "#059669") : (isDark ? "#F87171" : "#DC2626") },
+              ]}
+            >
+              {isOpen ? "Open now" : "Closed"}
             </Text>
           </View>
-
-          {formattedDistance && (
-            <View className="flex-row items-center mb-2">
-              <Ionicons
-                name="location-outline"
-                size={16}
-                color={isDark ? "#9CA3AF" : "#6B7280"}
-              />
-              <Text className="text-sm text-secondary ml-1">{formattedDistance}</Text>
-            </View>
-          )}
-
-          {isOpen !== undefined && (
-            <View className="flex-row items-center mt-auto">
-              <View
-                className={`w-2 h-2 rounded-full mr-2 ${isOpen ? "bg-green-500" : "bg-red-500"}`}
-              />
-              <Text
-                className={`text-xs font-medium ${isOpen ? "text-green-600" : "text-red-600"}`}
-              >
-                {isOpen ? "Open now" : "Closed"}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <Pressable
-          onPress={onFavoritePress}
-          className="absolute top-3 right-3 bg-surface rounded-full p-2"
-        >
-          <Ionicons
-            name={isSaved ? "heart" : "heart-outline"}
-            size={20}
-            color={isSaved ? "#EC4899" : isDark ? "#9CA3AF" : "#6B7280"}
-          />
-        </Pressable>
+        )}
       </View>
+
+      {/* Favorite */}
+      <Pressable onPress={onFavoritePress} style={styles.detailedFavorite} hitSlop={8}>
+        <Ionicons
+          name={isSaved ? "heart" : "heart-outline"}
+          size={18}
+          color={isSaved ? "#FB7185" : isDark ? "#6B7280" : "#D1D5DB"}
+        />
+      </Pressable>
     </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  // Compact
+  compactCard: {
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  compactImageContainer: {
+    height: 240,
+    backgroundColor: "#E5E7EB",
+  },
+  imagePlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+  },
+  compactTopRow: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  ratingChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.38)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    gap: 3,
+  },
+  ratingChipText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  favoriteChip: {
+    backgroundColor: "rgba(0,0,0,0.35)",
+    padding: 7,
+    borderRadius: 20,
+  },
+  compactBottom: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 14,
+  },
+  compactName: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 6,
+    letterSpacing: 0.1,
+  },
+  compactMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  metaText: {
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 12,
+  },
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    gap: 4,
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "white",
+  },
+  statusText: {
+    color: "white",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  // Detailed
+  detailedCard: {
+    flexDirection: "row",
+    borderRadius: 16,
+    overflow: "hidden",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    height: 100,
+  },
+  detailedImageContainer: {
+    width: 96,
+    height: "100%",
+    backgroundColor: "#E5E7EB",
+  },
+  detailedContent: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: "center",
+  },
+  detailedName: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 2,
+    letterSpacing: 0.1,
+  },
+  detailedAddress: {
+    fontSize: 11,
+    marginBottom: 6,
+  },
+  detailedMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  detailedRating: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 2,
+  },
+  detailedReviews: {
+    fontSize: 11,
+  },
+  dot: {
+    fontSize: 12,
+    marginHorizontal: 1,
+  },
+  detailedStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+    gap: 4,
+  },
+  detailedStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  detailedStatusText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  detailedFavorite: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+});
 
 export default MuseumOverviewCard;

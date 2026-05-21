@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
 import { Museum } from "@/types/museum";
 import { useTheme } from "@/provider/ThemeProvider";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface MuseumGridListProps {
   title: string;
@@ -11,34 +12,25 @@ interface MuseumGridListProps {
   onCardPress: (museumId: string) => void;
 }
 
-const MuseumGridList = ({
-  title,
-  museums,
-  onCardPress,
-}: MuseumGridListProps) => {
-  if (museums.length === 0) {
-    return null;
-  }
+const MuseumGridList = ({ title, museums, onCardPress }: MuseumGridListProps) => {
+  const { isDark } = useTheme();
+  if (museums.length === 0) return null;
 
   return (
-    <View className="mb-6">
-      {/* Header */}
-      <View className="flex-row justify-between items-center px-6 mb-4">
-        <Text className="text-xl font-bold text-main">{title}</Text>
+    <View style={{ marginBottom: 24 }}>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: isDark ? "#F9FAFB" : "#111827" }]}>{title}</Text>
       </View>
 
-      {/* Grid Layout */}
-      <View className="px-6">
-        <View className="flex-row flex-wrap justify-between">
-          {museums.map((museum, index) => (
-            <View key={museum.placeId} className="w-[48%] mb-4">
-              <MuseumGridCard
-                museum={museum}
-                onCardPress={() => onCardPress(museum.placeId)}
-              />
-            </View>
-          ))}
-        </View>
+      <View style={styles.grid}>
+        {museums.map((museum) => (
+          <View key={museum.placeId} style={styles.gridItem}>
+            <MuseumGridCard
+              museum={museum}
+              onCardPress={() => onCardPress(museum.placeId)}
+            />
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -53,8 +45,6 @@ interface MuseumGridCardProps {
 
 const MuseumGridCard = ({ museum, onCardPress }: MuseumGridCardProps) => {
   const { isDark } = useTheme();
-
-  // Prefer stored Wikimedia imageUrl, fall back to first photos entry
   const photoRef = museum.imageUrl ?? museum?.photos?.[0]?.photoReference;
   const photoUrl = photoRef
     ? photoRef.startsWith("http")
@@ -65,47 +55,114 @@ const MuseumGridCard = ({ museum, onCardPress }: MuseumGridCardProps) => {
   return (
     <TouchableOpacity
       onPress={onCardPress}
-      className="bg-card rounded-2xl overflow-hidden shadow-sm flex-1"
-      activeOpacity={0.7}
+      activeOpacity={0.9}
+      style={[styles.card, { shadowColor: isDark ? "#000" : "#374151" }]}
     >
-      {/* Image */}
-      <View className="relative">
+      {/* Image fills entire card */}
+      <View style={StyleSheet.absoluteFillObject}>
         {photoUrl ? (
           <Image
-            source={{
-              uri: photoUrl,
-            }}
-            style={{
-              width: "100%",
-              height: 120,
-            }}
+            source={{ uri: photoUrl }}
+            style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             cachePolicy="memory-disk"
           />
         ) : (
-          <View className="w-full h-[120px] bg-surface items-center justify-center">
-            <Ionicons
-              name="image-outline"
-              size={32}
-              color={isDark ? "#6B7280" : "#9CA3AF"}
-            />
+          <View style={[{ width: "100%", height: "100%" }, styles.placeholder]}>
+            <Ionicons name="image-outline" size={32} color="#9CA3AF" />
           </View>
         )}
       </View>
 
-      {/* Content */}
-      <View className="p-3 flex-1">
-        <Text className="text-sm font-bold text-main mb-2" numberOfLines={2}>
+      {/* Gradient */}
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.16)", "rgba(0,0,0,0.68)"]}
+        start={{ x: 0, y: 0.4 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Rating chip top-right */}
+      <View style={styles.ratingChip}>
+        <Ionicons name="star" size={10} color="#F59E0B" />
+        <Text style={styles.ratingText}>{museum.rating?.toFixed(1) ?? "0.0"}</Text>
+      </View>
+
+      {/* Name at bottom */}
+      <View style={styles.bottomContent}>
+        <Text style={styles.name} numberOfLines={2}>
           {museum.name}
         </Text>
-
-        <View className="flex-row items-center mt-auto">
-          <Ionicons name="star" size={16} color="#F59E0B" />
-          <Text className="text-sm font-semibold text-main ml-1">
-            {museum.rating?.toFixed(1) ?? "0.0"}
-          </Text>
-        </View>
       </View>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  gridItem: {
+    width: "48%",
+  },
+  card: {
+    borderRadius: 16,
+    overflow: "hidden",
+    height: 172,
+    backgroundColor: "#E5E7EB",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  placeholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+  },
+  ratingChip: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  ratingText: {
+    color: "white",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  bottomContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+  },
+  name: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.1,
+  },
+});
