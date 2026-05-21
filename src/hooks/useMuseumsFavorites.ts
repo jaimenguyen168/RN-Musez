@@ -1,6 +1,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Museum } from "@/types/museum";
+import { isOpenNow } from "@/utils/openingHours";
 
 export interface FetchMuseumsByIdsParams {
   museumIds: string[];
@@ -32,7 +33,7 @@ export const useMuseumsFavorites = (
     website: m.website,
     imageUrl: m.imageUrl,
     openingHours: m.openingHours
-      ? { openNow: false, weekdayText: [m.openingHours] }
+      ? { openNow: isOpenNow(m.openingHours), weekdayText: [m.openingHours] }
       : undefined,
     geometry: {
       location: { lat: m.lat, lng: m.lng },

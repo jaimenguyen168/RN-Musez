@@ -102,7 +102,7 @@ const MuseumGridCard = ({ museum, onCardPress }: MuseumGridCardProps) => {
         <View className="flex-row items-center mt-auto">
           <Ionicons name="star" size={16} color="#F59E0B" />
           <Text className="text-sm font-semibold text-main ml-1">
-            {museum.rating ? museum.rating.toFixed(1) : "N/A"}
+            {museum.rating?.toFixed(1) ?? "0.0"}
           </Text>
         </View>
       </View>

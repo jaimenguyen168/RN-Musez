@@ -15,6 +15,7 @@ import FixedMapLinking from "@/modules/museums/ui/components/FixedMapLinking";
 import OpeningHours from "@/modules/museums/ui/components/OpeningHours";
 import AboutMuseum from "@/modules/museums/ui/components/AboutMuseum";
 import Reviews from "@/modules/museums/ui/components/Reviews";
+import ReviewModal from "@/modules/museums/ui/components/ReviewModal";
 import Divider from "@/components/Divider";
 import ContactMuseum from "@/modules/museums/ui/components/ContactMuseum";
 import { useMutation, useQuery } from "convex/react";
@@ -30,6 +31,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   const router = useRouter();
   const { isDark } = useTheme();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
 
   const {
     data: museumDetails,
@@ -42,6 +44,37 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   });
 
   const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
+
+  const osmId = museumId ? decodeURIComponent(museumId) : null;
+  const convexReviews = useQuery(
+    api.function.reviews.getMuseumReviews,
+    osmId ? { museumId: osmId } : "skip",
+  );
+  const userReview = useQuery(
+    api.function.reviews.getUserReviewForMuseum,
+    osmId ? { museumId: osmId } : "skip",
+  );
+
+  const totalReviews = convexReviews?.length ?? 0;
+  const avgRating =
+    totalReviews > 0
+      ? Math.round(
+          (convexReviews!.reduce((sum, r) => sum + r.rating, 0) / totalReviews) * 10,
+        ) / 10
+      : null;
+
+  const mappedReviews = (convexReviews ?? []).map((r) => ({
+    authorName: r.userName,
+    rating: r.rating,
+    text: r.comment ?? "",
+    relativeTimeDescription: r.dateVisited
+      ? `Visited ${r.dateVisited}`
+      : new Date(r._creationTime).toLocaleDateString(undefined, {
+          month: "short",
+          year: "numeric",
+        }),
+    userAvatar: r.userAvatar,
+  }));
 
   const onFavoritePress = async () => {
     await toggleSavedMuseum({
@@ -137,6 +170,7 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   );
 
   return (
+    <>
     <ParallaxScrollView
       headerImage={headerImageUrl}
       headerControls={HeaderControls}
@@ -201,17 +235,15 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
             </Text>
 
             <View className="flex-row items-center justify-between mb-4">
-              {museumDetails.rating && (
-                <View className="flex-row items-center bg-amber-50 dark:bg-amber-900/20 py-2 px-3 rounded-full">
-                  <Ionicons name="star" size={18} color="#F59E0B" />
-                  <Text className="text-lg font-bold ml-1 text-amber-700 dark:text-amber-300">
-                    {museumDetails.rating}
-                  </Text>
-                  <Text className="text-secondary ml-1 text-sm">
-                    ({museumDetails.userRatingsTotal})
-                  </Text>
-                </View>
-              )}
+              <View className="flex-row items-center bg-amber-50 dark:bg-amber-900/20 py-2 px-3 rounded-full">
+                <Ionicons name="star" size={18} color="#F59E0B" />
+                <Text className="text-lg font-bold ml-1 text-amber-700 dark:text-amber-300">
+                  {avgRating?.toFixed(1) ?? "0.0"}
+                </Text>
+                <Text className="text-secondary ml-1 text-sm">
+                  ({totalReviews})
+                </Text>
+              </View>
 
               {museumDetails.openingHours && (
                 <View className="flex-row items-center">
@@ -278,12 +310,35 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
           )}
 
           {/* Reviews */}
-          {museumDetails.reviews && museumDetails.reviews.length > 0 && (
-            <>
-              <Divider />
-              <Reviews reviews={museumDetails.reviews} maxReviews={5} />
-            </>
-          )}
+          <>
+            <Divider />
+            <View className="px-6 pt-6 pb-2 flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <Ionicons name="chatbubbles" size={20} color="#6366F1" />
+                <Text className="text-lg font-semibold ml-2 text-main">
+                  Reviews
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setReviewModalVisible(true)}
+                className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-full"
+              >
+                <Ionicons
+                  name={userReview ? "create-outline" : "add"}
+                  size={16}
+                  color="#6366F1"
+                />
+                <Text className="text-indigo-600 dark:text-indigo-400 text-sm font-medium ml-1">
+                  {userReview ? "Edit" : "Review"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Reviews
+              reviews={mappedReviews}
+              maxReviews={5}
+              showTitle={false}
+            />
+          </>
 
           <Divider />
 
@@ -315,6 +370,16 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
         <View className="h-8" />
       </View>
     </ParallaxScrollView>
+
+    {osmId && (
+      <ReviewModal
+        visible={reviewModalVisible}
+        onClose={() => setReviewModalVisible(false)}
+        museumId={osmId}
+        museumName={museumDetails.name}
+      />
+    )}
+    </>
   );
 };
 

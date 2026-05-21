@@ -92,7 +92,7 @@ const MuseumOverviewCard = ({
           <View className="flex-row items-center mt-auto">
             <Ionicons name="star" size={20} color="#F59E0B" />
             <Text className="text-base font-semibold text-main ml-1 mr-3">
-              {museum.rating ? museum.rating.toFixed(1) : "N/A"}
+              {museum.rating?.toFixed(1) ?? "0.0"}
             </Text>
             {formattedDistance && (
               <View className="flex-row items-center gap-1">
@@ -159,11 +159,11 @@ const MuseumOverviewCard = ({
           <View className="flex-row items-center mb-2">
             <Ionicons name="star" size={16} color="#F59E0B" />
             <Text className="text-sm font-semibold text-main ml-1">
-              {museum.rating ? museum.rating.toFixed(1) : "N/A"}
+              {museum.rating?.toFixed(1) ?? "0.0"}
             </Text>
             <Text className="text-xs text-secondary ml-1">
-              ({museum.userRatingsTotal || 0} Review
-              {museum.userRatingsTotal !== 1 ? "s" : ""})
+              ({museum.userRatingsTotal ?? 0} Review
+              {(museum.userRatingsTotal ?? 0) !== 1 ? "s" : ""})
             </Text>
           </View>
 

@@ -1,4 +1,5 @@
 import { Museum } from "@/types/museum";
+import { isOpenNow } from "@/utils/openingHours";
 
 const SEARCH_RADIUS_M = 10000;
 
@@ -100,7 +101,7 @@ async function fetchMuseumsFromOverpass(
             website: tags["website"] ?? tags["contact:website"] ?? undefined,
             formattedPhoneNumber: tags["phone"] ?? tags["contact:phone"] ?? undefined,
             openingHours: tags["opening_hours"]
-              ? { openNow: false, weekdayText: [tags["opening_hours"]] }
+              ? { openNow: isOpenNow(tags["opening_hours"]), weekdayText: [tags["opening_hours"]] }
               : undefined,
             geometry: {
               location: { lat, lng },
