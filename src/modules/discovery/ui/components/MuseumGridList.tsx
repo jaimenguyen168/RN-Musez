@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import { Museum } from "@/types/museum";
 import { useTheme } from "@/provider/ThemeProvider";
-import { Image } from "expo-image";
+
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -17,18 +17,14 @@ const MuseumGridList = ({ title, museums, onCardPress }: MuseumGridListProps) =>
   if (museums.length === 0) return null;
 
   return (
-    <View style={{ marginBottom: 24 }}>
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: isDark ? "#F9FAFB" : "#111827" }]}>{title}</Text>
+    <View className="mb-6">
+      <View className="flex-row justify-between items-center px-6 mb-3.5">
+        <Text className={`text-[18px] font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`}>{title}</Text>
       </View>
-
-      <View style={styles.grid}>
+      <View className="flex-row flex-wrap px-4 gap-2.5">
         {museums.map((museum) => (
-          <View key={museum.placeId} style={styles.gridItem}>
-            <MuseumGridCard
-              museum={museum}
-              onCardPress={() => onCardPress(museum.placeId)}
-            />
+          <View key={museum.placeId} className="w-[48%]">
+            <MuseumGridCard museum={museum} onCardPress={() => onCardPress(museum.placeId)} />
           </View>
         ))}
       </View>
@@ -56,113 +52,41 @@ const MuseumGridCard = ({ museum, onCardPress }: MuseumGridCardProps) => {
     <TouchableOpacity
       onPress={onCardPress}
       activeOpacity={0.9}
-      style={[styles.card, { shadowColor: isDark ? "#000" : "#374151" }]}
+      className="rounded-2xl overflow-hidden h-[172px] bg-gray-200"
+      style={{ shadowColor: isDark ? "#000" : "#374151", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}
     >
-      {/* Image fills entire card */}
-      <View style={StyleSheet.absoluteFillObject}>
+      <View className="absolute inset-0">
         {photoUrl ? (
           <Image
             source={{ uri: photoUrl }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
+            className="w-full h-full"
+            resizeMode="cover"
           />
         ) : (
-          <View style={[{ width: "100%", height: "100%" }, styles.placeholder]}>
+          <View className="w-full h-full items-center justify-center bg-gray-100">
             <Ionicons name="image-outline" size={32} color="#9CA3AF" />
           </View>
         )}
       </View>
 
-      {/* Gradient */}
       <LinearGradient
         colors={["transparent", "rgba(0,0,0,0.16)", "rgba(0,0,0,0.68)"]}
         start={{ x: 0, y: 0.4 }}
         end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={{ position: "absolute", inset: 0 }}
+        className="absolute inset-0"
       />
 
-      {/* Rating chip top-right */}
-      <View style={styles.ratingChip}>
+      <View className="absolute top-2.5 right-2.5 flex-row items-center gap-0.5 bg-black/40 px-1.5 py-0.5 rounded-full">
         <Ionicons name="star" size={10} color="#F59E0B" />
-        <Text style={styles.ratingText}>{museum.rating?.toFixed(1) ?? "0.0"}</Text>
+        <Text className="text-white text-[11px] font-semibold">{museum.rating?.toFixed(1) ?? "0.0"}</Text>
       </View>
 
-      {/* Name at bottom */}
-      <View style={styles.bottomContent}>
-        <Text style={styles.name} numberOfLines={2}>
+      <View className="absolute bottom-0 left-0 right-0 p-2.5">
+        <Text className="text-white text-xs font-bold tracking-wide" numberOfLines={2}>
           {museum.name}
         </Text>
       </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  gridItem: {
-    width: "48%",
-  },
-  card: {
-    borderRadius: 16,
-    overflow: "hidden",
-    height: 172,
-    backgroundColor: "#E5E7EB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  placeholder: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F3F4F6",
-  },
-  ratingChip: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  ratingText: {
-    color: "white",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  bottomContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 10,
-  },
-  name: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.1,
-  },
-});

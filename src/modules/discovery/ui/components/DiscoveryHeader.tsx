@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
@@ -18,43 +18,30 @@ const DiscoveryHeader = ({
   secondRightComponent,
 }: DiscoveryHeaderProps) => {
   const { isDark } = useTheme();
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
 
   return (
-    <View style={styles.container}>
-      <View style={styles.left}>
-        <Text style={[styles.title, { color: textMain }]}>Musez</Text>
-        <TouchableOpacity onPress={onLocationPress} style={styles.locationRow} activeOpacity={0.7}>
+    <View className="flex-row items-center justify-between px-6 py-3">
+      <View className="flex-1 gap-0.5">
+        <Text className={`text-[28px] font-extrabold -tracking-[0.5px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>
+          Musez
+        </Text>
+        <TouchableOpacity onPress={onLocationPress} className="flex-row items-center gap-1" activeOpacity={0.7}>
           <Ionicons name="location-sharp" size={13} color={Colors.Primary} />
-          <Text style={[styles.locationText, { color: textSub }]} numberOfLines={1}>
+          <Text
+            className={`text-[13px] font-medium shrink ${isDark ? "text-gray-400" : "text-gray-500"}`}
+            numberOfLines={1}
+          >
             {place}
           </Text>
-          <Ionicons name="chevron-forward" size={12} color={textSub} />
+          <Ionicons name="chevron-forward" size={12} color={isDark ? "#9CA3AF" : "#6B7280"} />
         </TouchableOpacity>
       </View>
-
-      <View style={styles.right}>
+      <View className="flex-row items-center gap-2 ml-3">
         {secondRightComponent}
         {rightComponent}
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
-  left: { flex: 1, gap: 3 },
-  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
-  locationRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  locationText: { fontSize: 13, fontWeight: "500", flexShrink: 1 },
-  right: { flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
-});
 
 export default DiscoveryHeader;

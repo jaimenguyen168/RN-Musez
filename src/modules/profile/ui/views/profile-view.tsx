@@ -71,7 +71,7 @@ const ProfileView = () => {
       console.log("User is already Pro");
     } else {
       // For free users, show paywall
-      await presentPaywall({
+      presentPaywall({
         showSuccessAlert: true,
         onSuccess: () => {
           console.log("User upgraded to Pro!");

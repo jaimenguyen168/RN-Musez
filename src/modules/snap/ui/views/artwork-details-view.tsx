@@ -6,10 +6,10 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  StyleSheet,
   Dimensions,
+  Image,
 } from "react-native";
-import { Image } from "expo-image";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,18 +32,18 @@ interface ArtworkDetailsViewProps {
   showButton?: boolean;
 }
 
-const CONFIDENCE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  high: { text: "#059669", bg: "rgba(5,150,105,0.1)", border: "rgba(5,150,105,0.25)" },
-  medium: { text: "#D97706", bg: "rgba(217,119,6,0.1)", border: "rgba(217,119,6,0.25)" },
-  low: { text: "#DC2626", bg: "rgba(220,38,38,0.1)", border: "rgba(220,38,38,0.25)" },
+const CONFIDENCE: Record<string, { text: string; bg: string; border: string; iconColor: string }> = {
+  high: { text: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", iconColor: "#059669" },
+  medium: { text: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", iconColor: "#D97706" },
+  low: { text: "text-red-600", bg: "bg-red-50", border: "border-red-200", iconColor: "#DC2626" },
 };
 
 const SECTIONS = [
-  { key: "description", label: "Description", icon: "document-text-outline", color: PRIMARY },
-  { key: "location", label: "Location", icon: "location-outline", color: "#10B981" },
-  { key: "significance", label: "Historical Significance", icon: "star-outline", color: "#F59E0B" },
-  { key: "culturalContext", label: "Cultural Context", icon: "library-outline", color: "#8B5CF6" },
-  { key: "funFact", label: "Fun Fact", icon: "bulb-outline", color: "#F97316" },
+  { key: "description", label: "Description", icon: "document-text-outline", iconBg: "bg-orange-50", iconColor: PRIMARY },
+  { key: "location", label: "Location", icon: "location-outline", iconBg: "bg-emerald-50", iconColor: "#10B981" },
+  { key: "significance", label: "Historical Significance", icon: "star-outline", iconBg: "bg-amber-50", iconColor: "#F59E0B" },
+  { key: "culturalContext", label: "Cultural Context", icon: "library-outline", iconBg: "bg-purple-50", iconColor: "#8B5CF6" },
+  { key: "funFact", label: "Fun Fact", icon: "bulb-outline", iconBg: "bg-orange-50", iconColor: "#F97316" },
 ] as const;
 
 const ArtworkDetailsView = ({
@@ -57,13 +57,6 @@ const ArtworkDetailsView = ({
   const [isSaving, setIsSaving] = useState(false);
   const createArtwork = useMutation(api.function.artworks.createArtwork);
   const { uploadImageToConvex } = useImageUpload();
-
-  const bg = isDark ? "#111827" : "#FAFAFA";
-  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
-  const borderColor = isDark ? "#374151" : "#E5E7EB";
-  const chipBg = isDark ? "#374151" : "#F3F4F6";
 
   const handleSaveArtwork = async () => {
     if (!artwork) return;
@@ -92,45 +85,36 @@ const ArtworkDetailsView = ({
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: bg }]}>
+      <View className={`flex-1 justify-center items-center gap-3 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <ActivityIndicator size="large" color={PRIMARY} />
-        <Text style={[styles.loadingText, { color: textSub }]}>Loading artwork details...</Text>
+        <Text className={isDark ? "text-gray-400 text-sm" : "text-gray-500 text-sm"}>Loading artwork details...</Text>
       </View>
     );
   }
 
   if (!artwork) {
     return (
-      <View style={[styles.center, { backgroundColor: bg }]}>
+      <View className={`flex-1 justify-center items-center px-8 gap-3 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <Ionicons name="image-outline" size={64} color={textSub} />
-        <Text style={[styles.notFoundTitle, { color: textMain }]}>Artwork Not Found</Text>
-        <Text style={[styles.notFoundSub, { color: textSub }]}>
+        <Ionicons name="image-outline" size={64} color={isDark ? "#6B7280" : "#9CA3AF"} />
+        <Text className={`text-xl font-bold text-center ${isDark ? "text-gray-50" : "text-gray-900"}`}>Artwork Not Found</Text>
+        <Text className={`text-sm text-center leading-6 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
           The artwork you're looking for could not be found.
         </Text>
-        <TouchableOpacity
-          style={[styles.goBackBtn, { backgroundColor: PRIMARY }]}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.goBackBtnText}>Go Back</Text>
+        <TouchableOpacity className="bg-primary mt-1 px-6 py-3 rounded-xl" onPress={() => router.back()}>
+          <Text className="text-white font-semibold text-[15px]">Go Back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   const confidence = artwork.confidence;
-  const confColors = confidence ? CONFIDENCE_COLORS[confidence] : null;
-
-  const metaFields = [
-    artwork.period,
-    artwork.style,
-    artwork.medium,
-    artwork.dateCreated,
-  ].filter(Boolean) as string[];
+  const conf = confidence ? CONFIDENCE[confidence] : null;
+  const metaFields = [artwork.period, artwork.style, artwork.medium, artwork.dateCreated].filter(Boolean) as string[];
 
   return (
-    <View style={[styles.screen, { backgroundColor: bg }]}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
       <StatusBar style="light" />
 
       <ScrollView showsVerticalScrollIndicator={false} bounces>
@@ -139,95 +123,96 @@ const ArtworkDetailsView = ({
         <View style={{ width: SW, height: IMAGE_HEIGHT }}>
           <Image
             source={{ uri: artwork.imageUri }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
+            className="w-full h-full"
+            resizeMode="cover"
           />
           <LinearGradient
             colors={["rgba(0,0,0,0.55)", "transparent"]}
             style={{ position: "absolute", top: 0, left: 0, right: 0, height: 130 }}
           />
           <LinearGradient
-            colors={["transparent", bg]}
+            colors={["transparent", isDark ? "#111827" : "#FAFAFA"]}
             start={{ x: 0, y: 0.3 }}
             end={{ x: 0, y: 1 }}
             style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: IMAGE_HEIGHT * 0.5 }}
           />
           <TouchableOpacity
             onPress={() => router.back()}
-            style={[styles.heroBtn, { top: insets.top + 10, left: 16 }]}
+            className="absolute left-4 rounded-full p-2.5"
+            style={{ top: insets.top + 10, backgroundColor: "rgba(0,0,0,0.35)" }}
           >
             <Ionicons name="chevron-back" size={22} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push("/snap")}
-            style={[styles.heroBtn, { top: insets.top + 10, right: 16 }]}
+            className="absolute right-4 rounded-full p-2.5"
+            style={{ top: insets.top + 10, backgroundColor: "rgba(0,0,0,0.35)" }}
           >
             <Ionicons name="camera-outline" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
 
         {/* ── Content ────────────────────────────────────────────────────── */}
-        <View style={[styles.content, { backgroundColor: bg }]}>
+        <View className="px-5 pt-2 gap-3">
 
           {/* Title + artist */}
-          <View style={styles.titleBlock}>
-            <Text style={[styles.title, { color: textMain }]}>
+          <View className="gap-1">
+            <Text className={`text-[26px] font-extrabold leading-8 -tracking-[0.4px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>
               {artwork.title || "Unidentified Artwork"}
             </Text>
             {artwork.artist && (
-              <Text style={[styles.artist, { color: textSub }]}>by {artwork.artist}</Text>
+              <Text className={`text-base font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                by {artwork.artist}
+              </Text>
             )}
           </View>
 
           {/* Metadata chips */}
           {metaFields.length > 0 && (
-            <View style={styles.chips}>
+            <View className="flex-row flex-wrap gap-2">
               {metaFields.map((label, i) => (
-                <View key={i} style={[styles.chip, { backgroundColor: chipBg }]}>
-                  <Text style={[styles.chipText, { color: textSub }]}>{label}</Text>
+                <View key={i} className={`px-3 py-1.5 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
+                  <Text className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</Text>
                 </View>
               ))}
             </View>
           )}
 
           {/* Confidence badge */}
-          {confidence && confColors && (
-            <View style={[styles.confidenceBadge, { backgroundColor: confColors.bg, borderColor: confColors.border }]}>
-              <Ionicons name="analytics-outline" size={16} color={confColors.text} />
-              <Text style={[styles.confidenceLabel, { color: textSub }]}>Analysis Confidence</Text>
-              <Text style={[styles.confidenceValue, { color: confColors.text }]}>
-                {confidence.toUpperCase()}
-              </Text>
+          {confidence && conf && (
+            <View className={`flex-row items-center gap-2 px-3.5 py-2.5 rounded-xl border ${conf.bg} ${conf.border}`}>
+              <Ionicons name="analytics-outline" size={16} color={conf.iconColor} />
+              <Text className={`flex-1 text-[13px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>Analysis Confidence</Text>
+              <Text className={`text-[13px] font-bold ${conf.text}`}>{confidence.toUpperCase()}</Text>
             </View>
           )}
 
           {/* Error card */}
           {artwork.error && (
-            <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
-              <View style={styles.sectionRow}>
-                <View style={[styles.iconBg, { backgroundColor: "rgba(220,38,38,0.12)" }]}>
+            <View className={`rounded-2xl border p-4 gap-2.5 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+              <View className="flex-row items-center gap-2.5">
+                <View className="w-[34px] h-[34px] rounded-[10px] bg-red-50 items-center justify-center">
                   <Ionicons name="warning-outline" size={18} color="#DC2626" />
                 </View>
-                <Text style={[styles.sectionTitle, { color: textMain }]}>Analysis Error</Text>
+                <Text className={`text-[15px] font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`}>Analysis Error</Text>
               </View>
-              <Text style={[styles.sectionBody, { color: "#DC2626" }]}>{artwork.error}</Text>
+              <Text className="text-sm text-red-500 leading-[22px]">{artwork.error}</Text>
             </View>
           )}
 
           {/* Content sections */}
-          {!artwork.error && SECTIONS.map(({ key, label, icon, color }) => {
+          {!artwork.error && SECTIONS.map(({ key, label, icon, iconBg, iconColor }) => {
             const value = artwork[key as keyof Artwork] as string | undefined;
             if (!value) return null;
             return (
-              <View key={key} style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
-                <View style={styles.sectionRow}>
-                  <View style={[styles.iconBg, { backgroundColor: `${color}1A` }]}>
-                    <Ionicons name={icon as any} size={18} color={color} />
+              <View key={key} className={`rounded-2xl border p-4 gap-2.5 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+                <View className="flex-row items-center gap-2.5">
+                  <View className={`w-[34px] h-[34px] rounded-[10px] items-center justify-center ${iconBg}`}>
+                    <Ionicons name={icon as any} size={18} color={iconColor} />
                   </View>
-                  <Text style={[styles.sectionTitle, { color: textMain }]}>{label}</Text>
+                  <Text className={`text-[15px] font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`}>{label}</Text>
                 </View>
-                <Text style={[styles.sectionBody, { color: textSub }]}>{value}</Text>
+                <Text className={`text-sm leading-[22px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>{value}</Text>
               </View>
             );
           })}
@@ -238,95 +223,22 @@ const ArtworkDetailsView = ({
               onPress={handleSaveArtwork}
               disabled={isSaving}
               activeOpacity={0.85}
-              style={[styles.saveBtn, { backgroundColor: PRIMARY, opacity: isSaving ? 0.65 : 1 }]}
+              className={`bg-primary flex-row items-center justify-center gap-2.5 py-4 rounded-2xl mt-1 ${isSaving ? "opacity-60" : "opacity-100"}`}
             >
               {isSaving ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Ionicons name="heart" size={20} color="#fff" />
               )}
-              <Text style={styles.saveBtnText}>{isSaving ? "Saving..." : "Save Artwork"}</Text>
+              <Text className="text-white text-base font-bold">{isSaving ? "Saving..." : "Save Artwork"}</Text>
             </TouchableOpacity>
           )}
 
-          <View style={{ height: 32 }} />
+          <View className="h-8" />
         </View>
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  loadingText: { marginTop: 4, fontSize: 14 },
-  notFoundTitle: { fontSize: 20, fontWeight: "700", textAlign: "center" },
-  notFoundSub: { fontSize: 14, textAlign: "center", lineHeight: 22 },
-  goBackBtn: { marginTop: 4, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  goBackBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
-
-  heroBtn: {
-    position: "absolute",
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderRadius: 22,
-    padding: 9,
-  },
-
-  content: { paddingHorizontal: 20, paddingTop: 8, gap: 12 },
-
-  titleBlock: { gap: 4 },
-  title: { fontSize: 26, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },
-  artist: { fontSize: 16, fontWeight: "500" },
-
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  chipText: { fontSize: 12, fontWeight: "500" },
-
-  confidenceBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  confidenceLabel: { flex: 1, fontSize: 13 },
-  confidenceValue: { fontSize: 13, fontWeight: "700" },
-
-  sectionCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    gap: 10,
-  },
-  sectionRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  iconBg: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sectionTitle: { fontSize: 15, fontWeight: "700" },
-  sectionBody: { fontSize: 14, lineHeight: 22 },
-
-  saveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginTop: 4,
-  },
-  saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-});
 
 export default ArtworkDetailsView;

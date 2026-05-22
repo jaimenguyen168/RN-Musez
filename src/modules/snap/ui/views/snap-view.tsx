@@ -1,14 +1,6 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  Alert,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
-import { Image } from "expo-image";
+import { View, Text, Alert, TouchableOpacity, ActivityIndicator, Dimensions, Image } from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -21,13 +13,12 @@ import ImagePicker, { ImageAsset } from "@/components/ImagePicker";
 import { useTheme } from "@/provider/ThemeProvider";
 import { useRevenueCat } from "@/provider/RevenueCatProvider";
 import { Colors } from "@/constants/colors";
-import RevenueCatUI from "react-native-purchases-ui";
 import { useCredits } from "@/modules/snap/hooks/useCredits";
 import { usePaywall } from "@/hooks/usePaywall";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 const IMAGE_HEIGHT = SH * 0.54;
-const PRIMARY = Colors.Primary; // #FF9900
+const PRIMARY = Colors.Primary;
 
 const SnapView = () => {
   const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
@@ -36,21 +27,14 @@ const SnapView = () => {
   const { setCurrentArtwork } = useArtworkStore();
   const { isDark } = useTheme();
   const { isProUser } = useRevenueCat();
-  const { presentUpgradePrompt } = usePaywall();
+  const { presentPaywall, presentUpgradePrompt } = usePaywall();
   const insets = useSafeAreaInsets();
 
   const { credits, loading: creditsLoading, consumeCredit, hasCredits, getTimeUntilReset } =
     useCredits(isProUser || false);
 
-  const bg = isDark ? "#111827" : "#FAFAFA";
-  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
-  const borderColor = isDark ? "#374151" : "#E5E7EB";
-
   const handleImageSelected = (image: ImageAsset) => setSelectedImage(image);
-  const handleImageError = (error: string) =>
-    Alert.alert("Error", `Failed to select image: ${error}`);
+  const handleImageError = (error: string) => Alert.alert("Error", `Failed to select image: ${error}`);
   const resetImage = () => setSelectedImage(null);
 
   const showUpgradePrompt = () => {
@@ -74,7 +58,7 @@ const SnapView = () => {
       const result = await analyzeArtwork(selectedImage.uri);
       const artworkData: Artwork = { ...result, imageUri: selectedImage.uri };
       setCurrentArtwork(artworkData);
-      router.push(`/artworks/new`);
+      router.push("/artworks/new");
     } catch {
       Alert.alert("Error", "Failed to analyze artwork. Please try again.");
     } finally {
@@ -84,73 +68,81 @@ const SnapView = () => {
 
   if (creditsLoading) {
     return (
-      <View style={[styles.center, { backgroundColor: bg }]}>
+      <View className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
         <ActivityIndicator size="large" color={PRIMARY} />
       </View>
     );
   }
 
-  // ── Credits pill ──────────────────────────────────────────────────────────
+  // ── Credits pill ─────────────────────────────────────────────────────────────
   const CreditsPill = () => {
     if (isProUser) {
       return (
-        <View style={[styles.pill, { backgroundColor: isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED" }]}>
+        <View
+          className="flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full"
+          style={{ backgroundColor: isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED" }}
+        >
           <Ionicons name="infinite" size={13} color={PRIMARY} />
-          <Text style={[styles.pillText, { color: PRIMARY }]}>Pro · Unlimited</Text>
+          <Text className="text-[13px] font-semibold" style={{ color: PRIMARY }}>Pro · Unlimited</Text>
         </View>
       );
     }
     const empty = credits === 0;
     return (
-      <View style={[styles.pill, {
-        backgroundColor: empty
-          ? isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)"
-          : isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED",
-      }]}>
+      <View
+        className="flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full"
+        style={{
+          backgroundColor: empty
+            ? isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)"
+            : isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED",
+        }}
+      >
         <Ionicons name="diamond" size={12} color={empty ? "#EF4444" : PRIMARY} />
-        <Text style={[styles.pillText, { color: empty ? "#EF4444" : PRIMARY }]}>
+        <Text className="text-[13px] font-semibold" style={{ color: empty ? "#EF4444" : PRIMARY }}>
           {credits}/5 credits
         </Text>
       </View>
     );
   };
 
-  // ── Empty state ───────────────────────────────────────────────────────────
+  // ── Empty state ───────────────────────────────────────────────────────────────
   if (!selectedImage) {
     return (
-      <View style={[styles.screen, { backgroundColor: bg }]}>
+      <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
         <StatusBar style={isDark ? "light" : "dark"} />
 
-        <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-          <Text style={[styles.topTitle, { color: textMain }]}>Snap</Text>
-          <Text style={[styles.topSubtitle, { color: textSub }]}>AI-powered art identification</Text>
+        <View className="px-6 pb-1" style={{ paddingTop: insets.top + 8 }}>
+          <Text className={`text-[28px] font-extrabold -tracking-[0.5px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>Snap</Text>
+          <Text className={`text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>AI-powered art identification</Text>
         </View>
 
-        <View style={styles.emptyBody}>
+        <View className="flex-1 items-center justify-center px-8 gap-8">
           <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8}>
             {({ selectImage }) => (
               <TouchableOpacity
                 onPress={hasCredits() ? selectImage : showUpgradePrompt}
                 activeOpacity={0.8}
-                style={styles.viewfinder}
+                className="w-[230px] h-[230px] items-center justify-center gap-3.5"
               >
-                {/* Corner brackets */}
-                <View style={[styles.corner, { top: 0, left: 0, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderColor: PRIMARY }]} />
-                <View style={[styles.corner, { top: 0, right: 0, borderTopWidth: 2.5, borderRightWidth: 2.5, borderColor: PRIMARY }]} />
-                <View style={[styles.corner, { bottom: 0, left: 0, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderColor: PRIMARY }]} />
-                <View style={[styles.corner, { bottom: 0, right: 0, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderColor: PRIMARY }]} />
+                <View style={{ position: "absolute", top: 0, left: 0, width: 26, height: 26, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
+                <View style={{ position: "absolute", top: 0, right: 0, width: 26, height: 26, borderTopWidth: 2.5, borderRightWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
+                <View style={{ position: "absolute", bottom: 0, left: 0, width: 26, height: 26, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
+                <View style={{ position: "absolute", bottom: 0, right: 0, width: 26, height: 26, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
 
-                <View style={[styles.scanIconBg, { backgroundColor: isDark ? "rgba(255,153,0,0.12)" : "#FFF7ED" }]}>
+                <View
+                  className="w-[90px] h-[90px] rounded-[26px] items-center justify-center"
+                  style={{ backgroundColor: isDark ? "rgba(255,153,0,0.12)" : "#FFF7ED" }}
+                >
                   <Ionicons name="scan-outline" size={48} color={PRIMARY} />
                 </View>
-                <Text style={[styles.viewfinderHint, { color: textSub }]}>Tap to choose artwork</Text>
+                <Text className={`text-[13px] font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>Tap to choose artwork</Text>
               </TouchableOpacity>
             )}
           </ImagePicker>
 
-          <View style={styles.emptyText}>
-            <Text style={[styles.emptyTitle, { color: textMain }]}>Discover Any Artwork</Text>
-            <Text style={[styles.emptySubtitle, { color: textSub }]}>
+          <View className="items-center gap-2">
+            <Text className={`text-[22px] font-bold -tracking-[0.3px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>Discover Any Artwork</Text>
+            <Text className={`text-sm text-center leading-[22px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               Photograph any painting, sculpture,{"\n"}or artwork for instant AI insights
             </Text>
           </View>
@@ -159,14 +151,17 @@ const SnapView = () => {
         </View>
 
         {credits === 0 && !isProUser && (
-          <View style={[styles.upgradeBar, { backgroundColor: cardBg, borderTopColor: borderColor, paddingBottom: insets.bottom + 12 }]}>
+          <View
+            className={`px-6 pt-4 border-t ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+            style={{ paddingBottom: insets.bottom + 12 }}
+          >
             <TouchableOpacity
-              onPress={async () => { await RevenueCatUI.presentPaywall({ displayCloseButton: true }); }}
-              style={[styles.upgradeBtn, { backgroundColor: PRIMARY }]}
+              onPress={() => presentPaywall({ showSuccessAlert: true })}
+              className="flex-row items-center justify-center gap-2 rounded-[14px] py-3.5 bg-primary"
               activeOpacity={0.85}
             >
               <Ionicons name="star" size={15} color="#fff" />
-              <Text style={styles.upgradeBtnText}>Upgrade to Pro for unlimited scans</Text>
+              <Text className="text-white font-semibold text-sm">Upgrade to Pro for unlimited scans</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -174,39 +169,39 @@ const SnapView = () => {
     );
   }
 
-  // ── Image selected state ──────────────────────────────────────────────────
+  // ── Image selected ────────────────────────────────────────────────────────────
   return (
-    <View style={[styles.screen, { backgroundColor: bg }]}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
       <StatusBar style="light" />
 
       <View style={{ width: SW, height: IMAGE_HEIGHT }}>
         <Image
           source={{ uri: selectedImage.uri }}
-          style={{ width: "100%", height: "100%" }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
+          className="w-full h-full"
+          resizeMode="cover"
         />
         <LinearGradient
           colors={["rgba(0,0,0,0.5)", "transparent"]}
           style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140 }}
         />
         <LinearGradient
-          colors={["transparent", bg]}
+          colors={["transparent", isDark ? "#111827" : "#FAFAFA"]}
           start={{ x: 0, y: 0.3 }}
           end={{ x: 0, y: 1 }}
           style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: IMAGE_HEIGHT * 0.55 }}
         />
         <TouchableOpacity
           onPress={resetImage}
-          style={[styles.backBtn, { top: insets.top + 10 }]}
+          className="absolute left-4 rounded-full p-2"
+          style={{ top: insets.top + 10, backgroundColor: "rgba(0,0,0,0.35)" }}
         >
           <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.actionSheet, { paddingBottom: insets.bottom + 8 }]}>
-        <Text style={[styles.actionTitle, { color: textMain }]}>Ready to analyze</Text>
-        <Text style={[styles.actionSubtitle, { color: textSub }]}>
+      <View className="flex-1 px-6 pt-4 gap-3 justify-center" style={{ paddingBottom: insets.bottom + 8 }}>
+        <Text className={`text-[22px] font-bold -tracking-[0.3px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>Ready to analyze</Text>
+        <Text className={`text-sm leading-5 -mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
           AI will identify the artwork and provide detailed insights
         </Text>
 
@@ -216,23 +211,23 @@ const SnapView = () => {
           onPress={handleGenerate}
           disabled={loading || !hasCredits()}
           activeOpacity={0.85}
-          style={[styles.generateBtn, { opacity: loading || !hasCredits() ? 0.65 : 1 }]}
+          className={`rounded-2xl overflow-hidden mt-0.5 ${loading || !hasCredits() ? "opacity-65" : "opacity-100"}`}
         >
           <LinearGradient
             colors={[Colors.Secondary, PRIMARY, "#E08800"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.generateGradient}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 16 }}
           >
             {loading ? (
               <>
                 <ActivityIndicator color="#fff" size="small" />
-                <Text style={styles.generateText}>Analyzing...</Text>
+                <Text className="text-white text-[17px] font-bold">Analyzing...</Text>
               </>
             ) : (
               <>
                 <Ionicons name="sparkles" size={20} color="#fff" />
-                <Text style={styles.generateText}>
+                <Text className="text-white text-[17px] font-bold">
                   {hasCredits() ? "Analyze Artwork" : "No Credits"}
                 </Text>
               </>
@@ -240,16 +235,16 @@ const SnapView = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.secondaryRow}>
+        <View className="flex-row gap-2.5">
           <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8}>
             {({ selectImage }) => (
               <TouchableOpacity
                 onPress={selectImage}
                 disabled={loading}
-                style={[styles.secondaryBtn, { flex: 1, backgroundColor: cardBg, borderColor }]}
+                className={`flex-1 flex-row items-center justify-center gap-2 border rounded-[14px] py-3 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
               >
-                <Ionicons name="images-outline" size={18} color={textSub} />
-                <Text style={[styles.secondaryBtnText, { color: textSub }]}>New Photo</Text>
+                <Ionicons name="images-outline" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                <Text className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}>New Photo</Text>
               </TouchableOpacity>
             )}
           </ImagePicker>
@@ -257,7 +252,7 @@ const SnapView = () => {
           <TouchableOpacity
             onPress={resetImage}
             disabled={loading}
-            style={[styles.secondaryBtn, { width: 54, backgroundColor: cardBg, borderColor }]}
+            className={`w-[54px] items-center justify-center border rounded-[14px] py-3 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
           >
             <Ionicons name="trash-outline" size={18} color={isDark ? "#9CA3AF" : "#EF4444"} />
           </TouchableOpacity>
@@ -266,109 +261,5 @@ const SnapView = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  topBar: { paddingHorizontal: 24, paddingBottom: 4 },
-  topTitle: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
-  topSubtitle: { fontSize: 14, marginTop: 2 },
-
-  emptyBody: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 32,
-    gap: 32,
-  },
-
-  viewfinder: {
-    width: 230,
-    height: 230,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 14,
-  },
-  corner: {
-    position: "absolute",
-    width: 26,
-    height: 26,
-    borderRadius: 3,
-  },
-  scanIconBg: {
-    width: 90,
-    height: 90,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  viewfinderHint: { fontSize: 13, fontWeight: "500" },
-
-  emptyText: { alignItems: "center", gap: 8 },
-  emptyTitle: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
-  emptySubtitle: { fontSize: 14, textAlign: "center", lineHeight: 22 },
-
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  pillText: { fontSize: 13, fontWeight: "600" },
-
-  upgradeBar: { paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1 },
-  upgradeBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderRadius: 14,
-    paddingVertical: 14,
-  },
-  upgradeBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
-
-  backBtn: {
-    position: "absolute",
-    left: 16,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderRadius: 22,
-    padding: 8,
-  },
-
-  actionSheet: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    gap: 12,
-    justifyContent: "center",
-  },
-  actionTitle: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
-  actionSubtitle: { fontSize: 14, lineHeight: 20, marginTop: -4 },
-
-  generateBtn: { borderRadius: 16, overflow: "hidden", marginTop: 2 },
-  generateGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 16,
-  },
-  generateText: { color: "#fff", fontSize: 17, fontWeight: "700" },
-
-  secondaryRow: { flexDirection: "row", gap: 10 },
-  secondaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 13,
-  },
-  secondaryBtnText: { fontSize: 14, fontWeight: "600" },
-});
 
 export default SnapView;

@@ -1,11 +1,4 @@
-import {
-  ActivityIndicator,
-  Text,
-  View,
-  Alert,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { ActivityIndicator, Text, View, Alert, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
@@ -34,9 +27,7 @@ const FavoriteView = () => {
   const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { artwork } = useLocalSearchParams<{ artwork?: string }>();
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    artwork === "true" ? "artwork" : "museum",
-  );
+  const [viewMode, setViewMode] = useState<ViewMode>(artwork === "true" ? "artwork" : "museum");
 
   const { setMuseumList } = useMuseumListStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -48,14 +39,7 @@ const FavoriteView = () => {
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
   const viewModeOptions: [string, string] = ["Museums", "Artworks"];
-
   const createCollectionMutation = useMutation(api.function.museumCategories.createCollection);
-
-  const bg = isDark ? "#111827" : "#FAFAFA";
-  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
-  const borderColor = isDark ? "#374151" : "#E5E7EB";
 
   const getDisplayValue = (mode: ViewMode) => mode === "museum" ? "Museums" : "Artworks";
   const getInternalValue = (display: string): ViewMode => display === "Museums" ? "museum" : "artwork";
@@ -98,7 +82,7 @@ const FavoriteView = () => {
 
   if (isLoading) {
     return (
-      <View style={[styles.center, { backgroundColor: bg }]}>
+      <View className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <ActivityIndicator size="large" color={Colors.Primary} />
       </View>
@@ -106,40 +90,43 @@ const FavoriteView = () => {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: bg }]}>
+    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: bg }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerText}>
-            <Text style={[styles.title, { color: textMain }]}>Favorites</Text>
-            <Text style={[styles.subtitle, { color: textSub }]}>
+      {/* ── Header ───────────────────────────────────────────────────────────── */}
+      <View
+        className={`px-6 pb-3.5 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-start justify-between mb-4">
+          <View className="gap-0.5">
+            <Text className={`text-[28px] font-extrabold -tracking-[0.5px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>
+              Favorites
+            </Text>
+            <Text className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               Your saved museums & artworks
             </Text>
           </View>
           {viewMode === "museum" && (
             <TouchableOpacity
               onPress={() => setIsModalVisible(true)}
-              style={[styles.addBtn, { backgroundColor: isDark ? "#1F2937" : "#FFFFFF", borderColor }]}
+              className={`w-9 h-9 rounded-[10px] border items-center justify-center mt-1 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
             >
               <Ionicons name="add" size={20} color={Colors.Primary} />
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={styles.tabs}>
-          <TabsPicker
-            options={viewModeOptions}
-            selectedValue={getDisplayValue(viewMode)}
-            onSelectionChange={(val) => setViewMode(getInternalValue(val))}
-          />
-        </View>
+        <TabsPicker
+          options={viewModeOptions}
+          selectedValue={getDisplayValue(viewMode)}
+          onSelectionChange={(val) => setViewMode(getInternalValue(val))}
+        />
       </View>
 
-      {/* ── Content ────────────────────────────────────────────────────────── */}
+      {/* ── Content ──────────────────────────────────────────────────────────── */}
       {isEmpty ? (
-        <View style={styles.emptyContainer}>
+        <View className="flex-1">
           {viewMode === "museum" ? (
             <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
           ) : (
@@ -166,32 +153,5 @@ const FavoriteView = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  header: { paddingHorizontal: 24, paddingBottom: 14 },
-  headerTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  headerText: { gap: 3 },
-  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
-  subtitle: { fontSize: 14 },
-  addBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 4,
-  },
-  tabs: { width: "100%" },
-  emptyContainer: { flex: 1 },
-});
 
 export default FavoriteView;

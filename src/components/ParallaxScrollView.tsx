@@ -6,12 +6,13 @@ import {
   ViewStyle,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Image,
 } from "react-native";
 import React, { useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { StatusBar } from "expo-status-bar";
-import { Image } from "expo-image";
+
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -231,8 +232,7 @@ const ParallaxScrollView = ({
                     width: "100%",
                     height: "100%",
                   }}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
+                  resizeMode="cover"
                 />
               </Animated.View>
             )}

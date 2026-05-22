@@ -5,10 +5,9 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
-  StyleSheet,
   Linking,
+  Image,
 } from "react-native";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMuseumDetailsQuery } from "@/hooks/useMuseumDetailsQuery";
@@ -22,12 +21,6 @@ import { api } from "../../../../../convex/_generated/api";
 import { useTheme } from "@/provider/ThemeProvider";
 import { getPhotoUrl } from "@/utils";
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const PAD = 20;   // universal horizontal padding inside cards
-const CARD_MX = 16; // card margin from screen edges
-const CARD_GAP = 10; // vertical gap between cards
-const CARD_RADIUS = 18;
-
 interface MuseumDetailsViewProps {
   museumId: string;
 }
@@ -38,7 +31,11 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
 
-  const { data: museumDetails, isLoading: loading, error } = useMuseumDetailsQuery(museumId);
+  const {
+    data: museumDetails,
+    isLoading: loading,
+    error,
+  } = useMuseumDetailsQuery(museumId);
   const isSaved = useQuery(api.function.museums.isMuseumSaved, { museumId });
   const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
 
@@ -55,7 +52,10 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   const totalReviews = convexReviews?.length ?? 0;
   const avgRating =
     totalReviews > 0
-      ? Math.round((convexReviews!.reduce((s, r) => s + r.rating, 0) / totalReviews) * 10) / 10
+      ? Math.round(
+          (convexReviews!.reduce((s, r) => s + r.rating, 0) / totalReviews) *
+            10,
+        ) / 10
       : null;
 
   const mappedReviews = (convexReviews ?? []).map((r) => ({
@@ -64,28 +64,31 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
     text: r.comment ?? "",
     relativeTimeDescription: r.dateVisited
       ? `Visited ${r.dateVisited}`
-      : new Date(r._creationTime).toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+      : new Date(r._creationTime).toLocaleDateString(undefined, {
+          month: "short",
+          year: "numeric",
+        }),
     userAvatar: r.userAvatar,
   }));
 
   const bg = isDark ? "#111827" : "#FAFAFA";
-  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
-  const borderColor = isDark ? "#374151" : "#E5E7EB";
   const isOpen = museumDetails?.openingHours?.openNow;
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: bg }]}>
+      <View
+        className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}
+      >
         <ActivityIndicator size="large" color="#6366F1" />
       </View>
     );
   }
   if (error || !museumDetails) {
     return (
-      <View style={[styles.center, { backgroundColor: bg }]}>
-        <Text style={{ color: "#EF4444", fontSize: 14 }}>
+      <View
+        className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}
+      >
+        <Text className="text-red-500 text-sm">
           {error?.message ?? "Museum not found"}
         </Text>
       </View>
@@ -93,37 +96,69 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   }
 
   const hasPhotos = !!museumDetails.photos?.length;
-  const currentPhoto = hasPhotos ? museumDetails.photos![selectedImageIndex] : null;
+  const currentPhoto = hasPhotos
+    ? museumDetails.photos![selectedImageIndex]
+    : null;
   const resolvePhotoUrl = (ref: string, w = 400) =>
     ref.startsWith("http") ? ref : getPhotoUrl(ref, w);
-  const headerImageUrl = currentPhoto ? resolvePhotoUrl(currentPhoto.photoReference) : undefined;
+  const headerImageUrl = currentPhoto
+    ? resolvePhotoUrl(currentPhoto.photoReference)
+    : undefined;
 
-  // ── Header buttons ─────────────────────────────────────────────────────────
-  const BackBtn = (
-    <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-      <Ionicons name="chevron-back" size={22} color="#fff" />
+  const HeaderBtn = ({
+    onPress,
+    children,
+  }: {
+    onPress: () => void;
+    children: React.ReactNode;
+  }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      className="rounded-full p-2"
+      style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+    >
+      {children}
     </TouchableOpacity>
   );
+
+  const BackBtn = (
+    <HeaderBtn onPress={() => router.back()}>
+      <Ionicons name="chevron-back" size={22} color="#fff" />
+    </HeaderBtn>
+  );
   const FavBtn = (
-    <TouchableOpacity onPress={() => toggleSavedMuseum({ museumId })} style={styles.headerBtn}>
+    <HeaderBtn onPress={() => toggleSavedMuseum({ museumId })}>
       <Ionicons
         name={isSaved ? "heart" : "heart-outline"}
         size={22}
         color={isSaved ? "#FB7185" : "#fff"}
       />
-    </TouchableOpacity>
+    </HeaderBtn>
   );
 
   return (
     <>
       <ParallaxScrollView
         headerImage={headerImageUrl}
-        headerControls={<View style={styles.headerRow}>{BackBtn}{FavBtn}</View>}
+        headerControls={
+          <View className="flex-row justify-between">
+            {BackBtn}
+            {FavBtn}
+          </View>
+        }
         headerTitle={
           <View>
-            <Text style={styles.headerName} numberOfLines={2}>{museumDetails.name}</Text>
+            <Text
+              className="text-white text-[22px] font-bold -tracking-[0.3px]"
+              numberOfLines={2}
+            >
+              {museumDetails.name}
+            </Text>
             {museumDetails.formattedAddress ? (
-              <Text style={styles.headerAddr} numberOfLines={1}>
+              <Text
+                className="text-white/80 text-[13px] mt-0.5"
+                numberOfLines={1}
+              >
                 {museumDetails.formattedAddress}
               </Text>
             ) : null}
@@ -139,80 +174,107 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
         blurType="dark"
         statusBarStyle="light"
       >
-        <View style={{ backgroundColor: bg, paddingTop: 40, paddingBottom: 48 }}>
-
-          {/* Photo thumbnails (only if multiple photos) */}
+        <View
+          className={`pt-10 pb-12 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}
+        >
+          {/* Photo thumbnails */}
           {hasPhotos && museumDetails.photos!.length > 1 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 8 }}
+              className="mb-2"
             >
-              <View style={{ width: CARD_MX }} />
+              <View className="w-4" />
               {museumDetails.photos!.map((photo, i) => (
                 <TouchableOpacity
                   key={i}
                   onPress={() => setSelectedImageIndex(i)}
-                  style={[
-                    styles.thumb,
-                    i === selectedImageIndex && styles.thumbActive,
-                    { marginRight: 8 },
-                  ]}
+                  className={`w-[68px] h-[68px] rounded-xl overflow-hidden mr-2 ${i === selectedImageIndex ? "border-[2.5px] border-indigo-500" : ""}`}
                 >
                   <Image
                     source={{ uri: resolvePhotoUrl(photo.photoReference, 200) }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
+                    className="w-full h-full"
+                    resizeMode="cover"
                   />
                 </TouchableOpacity>
               ))}
-              <View style={{ width: CARD_MX }} />
+              <View className="w-4" />
             </ScrollView>
           )}
 
-          {/* ── Rating + status chips ─────────────────────────────────────── */}
-          <View style={styles.chipsRow}>
-            <View style={[styles.chip, { backgroundColor: isDark ? "rgba(245,158,11,0.15)" : "#FFFBEB" }]}>
+          {/* Rating + status chips */}
+          <View className="flex-row gap-2 px-4 pb-2">
+            <View
+              className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-full"
+              style={{
+                backgroundColor: isDark ? "rgba(245,158,11,0.15)" : "#FFFBEB",
+              }}
+            >
               <Ionicons name="star" size={13} color="#F59E0B" />
-              <Text style={[styles.chipBold, { color: isDark ? "#FCD34D" : "#B45309" }]}>
+              <Text
+                className={`text-[13px] font-bold ${isDark ? "text-yellow-300" : "text-amber-700"}`}
+              >
                 {avgRating?.toFixed(1) ?? "0.0"}
               </Text>
-              <Text style={[styles.chipLight, { color: textSub }]}>({totalReviews})</Text>
+              <Text
+                className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}
+              >
+                ({totalReviews})
+              </Text>
             </View>
 
             {museumDetails.openingHours && (
-              <View style={[styles.chip, {
-                backgroundColor: isOpen
-                  ? isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)"
-                  : isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)",
-              }]}>
-                <View style={[styles.dot, { backgroundColor: isOpen ? "#10B981" : "#EF4444" }]} />
-                <Text style={[styles.chipBold, {
-                  color: isOpen
-                    ? isDark ? "#34D399" : "#059669"
-                    : isDark ? "#F87171" : "#DC2626",
-                }]}>
+              <View
+                className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-full"
+                style={{
+                  backgroundColor: isOpen
+                    ? isDark
+                      ? "rgba(16,185,129,0.15)"
+                      : "rgba(16,185,129,0.1)"
+                    : isDark
+                      ? "rgba(239,68,68,0.15)"
+                      : "rgba(239,68,68,0.08)",
+                }}
+              >
+                <View
+                  className={`w-1.5 h-1.5 rounded-full ${isOpen ? "bg-emerald-500" : "bg-red-500"}`}
+                />
+                <Text
+                  className={`text-[13px] font-bold ${
+                    isOpen
+                      ? isDark
+                        ? "text-emerald-400"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-red-400"
+                        : "text-red-600"
+                  }`}
+                >
                   {isOpen ? "Open Now" : "Closed"}
                 </Text>
               </View>
             )}
           </View>
 
-          {/* ── About ──────────────────────────────────────────────────────── */}
+          {/* About */}
           {museumDetails.editorialSummary && (
-            <Card bg={cardBg} style={{ marginTop: CARD_GAP }}>
-              <CardHeader icon="information-circle-outline" label="About" isDark={isDark} textColor={textMain} />
-              <Text style={[styles.body, { color: textSub, paddingHorizontal: PAD, paddingBottom: PAD }]}>
+            <Card isDark={isDark}>
+              <CardHeader
+                icon="information-circle-outline"
+                label="About"
+                isDark={isDark}
+              />
+              <Text
+                className={`text-sm leading-[22px] px-5 pb-5 ${isDark ? "text-gray-400" : "text-gray-500"}`}
+              >
                 {museumDetails.editorialSummary.overview}
               </Text>
             </Card>
           )}
 
-          {/* ── Opening Hours ───────────────────────────────────────────────── */}
+          {/* Opening Hours */}
           {museumDetails.openingHours?.weekdayText && (
-            <Card bg={cardBg} style={{ marginTop: CARD_GAP }}>
-              {/* OpeningHours renders its own header + content with p-5 (20px) */}
+            <Card isDark={isDark}>
               <OpeningHours
                 weekdayText={museumDetails.openingHours.weekdayText}
                 showTitle
@@ -221,35 +283,50 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
             </Card>
           )}
 
-          {/* ── Reviews ────────────────────────────────────────────────────── */}
-          <Card bg={cardBg} style={{ marginTop: CARD_GAP }}>
-            {/* Header row — same PAD as Reviews component's inner padding */}
-            <View style={[styles.reviewsHeader, { paddingHorizontal: PAD, paddingTop: PAD, paddingBottom: 14 }]}>
-              <View style={styles.reviewsTitle}>
-                <View style={[styles.iconTile, { backgroundColor: isDark ? "#374151" : "#EEF2FF" }]}>
-                  <Ionicons name="chatbubbles-outline" size={15} color="#6366F1" />
+          {/* Reviews */}
+          <Card isDark={isDark}>
+            <View className="flex-row items-center justify-between px-5 pt-5 pb-3.5">
+              <View className="flex-row items-center gap-2.5">
+                <View
+                  className={`w-[30px] h-[30px] rounded-lg items-center justify-center ${isDark ? "bg-gray-700" : "bg-indigo-50"}`}
+                >
+                  <Ionicons
+                    name="chatbubbles-outline"
+                    size={15}
+                    color="#6366F1"
+                  />
                 </View>
-                <Text style={[styles.cardLabel, { color: textMain }]}>Reviews</Text>
+                <Text
+                  className={`text-[15px] font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`}
+                >
+                  Reviews
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setReviewModalVisible(true)}
-                style={[styles.reviewBtn, { backgroundColor: isDark ? "#312E81" : "#EEF2FF" }]}
+                className={`flex-row items-center gap-1 px-2.5 py-1.5 rounded-full ${isDark ? "bg-indigo-900/50" : "bg-indigo-50"}`}
               >
                 <Ionicons
                   name={userReview ? "create-outline" : "add-circle-outline"}
                   size={14}
                   color="#6366F1"
                 />
-                <Text style={styles.reviewBtnText}>{userReview ? "Edit" : "Review"}</Text>
+                <Text className="text-indigo-500 text-xs font-semibold">
+                  {userReview ? "Edit" : "Review"}
+                </Text>
               </TouchableOpacity>
             </View>
-            {/* compact=true removes the top padding so it butts up against our header */}
-            <Reviews reviews={mappedReviews} maxReviews={5} showTitle={false} compact />
+            <Reviews
+              reviews={mappedReviews}
+              maxReviews={5}
+              showTitle={false}
+              compact
+            />
           </Card>
 
-          {/* ── Location ────────────────────────────────────────────────────── */}
-          <Card bg={cardBg} style={{ marginTop: CARD_GAP, overflow: "hidden" }}>
-            <CardHeader icon="map-outline" label="Location" isDark={isDark} textColor={textMain} />
+          {/* Location */}
+          <Card isDark={isDark} overflow>
+            <CardHeader icon="map-outline" label="Location" isDark={isDark} />
             <FixedMapLinking
               latitude={museumDetails.geometry.location.lat}
               longitude={museumDetails.geometry.location.lng}
@@ -262,44 +339,68 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
             />
           </Card>
 
-          {/* ── Contact ─────────────────────────────────────────────────────── */}
+          {/* Contact */}
           {(museumDetails.formattedPhoneNumber || museumDetails.website) && (
-            <Card bg={cardBg} style={{ marginTop: CARD_GAP }}>
-              <CardHeader icon="call-outline" label="Contact" isDark={isDark} textColor={textMain} />
-              <View style={[styles.contactList, { borderColor, marginHorizontal: PAD, marginBottom: PAD }]}>
+            <Card isDark={isDark}>
+              <CardHeader icon="call-outline" label="Contact" isDark={isDark} />
+              <View
+                className={`mx-5 mb-5 rounded-xl border overflow-hidden ${isDark ? "border-gray-700" : "border-gray-200"}`}
+              >
                 {museumDetails.formattedPhoneNumber && (
                   <TouchableOpacity
-                    style={[
-                      styles.contactRow,
-                      museumDetails.website ? { borderBottomWidth: 1, borderColor } : undefined,
-                    ]}
-                    onPress={() => Linking.openURL(`tel:${museumDetails.formattedPhoneNumber}`)}
+                    className={`flex-row items-center gap-3 p-3.5 ${museumDetails.website ? `border-b ${isDark ? "border-gray-700" : "border-gray-200"}` : ""}`}
+                    onPress={() =>
+                      Linking.openURL(
+                        `tel:${museumDetails.formattedPhoneNumber}`,
+                      )
+                    }
                   >
-                    <View style={[styles.contactIcon, { backgroundColor: isDark ? "#374151" : "#F0FDF4" }]}>
+                    <View
+                      className={`w-8 h-8 rounded-[9px] items-center justify-center ${isDark ? "bg-gray-700" : "bg-green-50"}`}
+                    >
                       <Ionicons name="call-outline" size={16} color="#10B981" />
                     </View>
-                    <Text style={[styles.contactText, { color: textMain }]}>
+                    <Text
+                      className={`flex-1 text-sm font-medium ${isDark ? "text-gray-50" : "text-gray-900"}`}
+                    >
                       {museumDetails.formattedPhoneNumber}
                     </Text>
-                    <Ionicons name="chevron-forward" size={15} color={isDark ? "#4B5563" : "#D1D5DB"} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={15}
+                      color={isDark ? "#4B5563" : "#D1D5DB"}
+                    />
                   </TouchableOpacity>
                 )}
                 {museumDetails.website && (
                   <TouchableOpacity
-                    style={styles.contactRow}
+                    className="flex-row items-center gap-3 p-3.5"
                     onPress={() => Linking.openURL(museumDetails.website!)}
                   >
-                    <View style={[styles.contactIcon, { backgroundColor: isDark ? "#374151" : "#EEF2FF" }]}>
-                      <Ionicons name="globe-outline" size={16} color="#6366F1" />
+                    <View
+                      className={`w-8 h-8 rounded-[9px] items-center justify-center ${isDark ? "bg-gray-700" : "bg-indigo-50"}`}
+                    >
+                      <Ionicons
+                        name="globe-outline"
+                        size={16}
+                        color="#6366F1"
+                      />
                     </View>
-                    <Text style={[styles.contactText, { color: textMain }]}>Visit Website</Text>
-                    <Ionicons name="open-outline" size={15} color={isDark ? "#4B5563" : "#D1D5DB"} />
+                    <Text
+                      className={`flex-1 text-sm font-medium ${isDark ? "text-gray-50" : "text-gray-900"}`}
+                    >
+                      Visit Website
+                    </Text>
+                    <Ionicons
+                      name="open-outline"
+                      size={15}
+                      color={isDark ? "#4B5563" : "#D1D5DB"}
+                    />
                   </TouchableOpacity>
                 )}
               </View>
             </Card>
           )}
-
         </View>
       </ParallaxScrollView>
 
@@ -315,137 +416,50 @@ const MuseumDetailsView = ({ museumId }: MuseumDetailsViewProps) => {
   );
 };
 
-// ─── Shared card wrapper ──────────────────────────────────────────────────────
 const Card = ({
   children,
-  bg,
-  style,
+  isDark,
+  overflow,
 }: {
   children: React.ReactNode;
-  bg: string;
-  style?: object;
+  isDark: boolean;
+  overflow?: boolean;
 }) => (
-  <View style={[styles.card, { backgroundColor: bg }, style]}>
+  <View
+    className={`mx-4 mt-2.5 rounded-[18px] ${overflow ? "overflow-hidden" : ""} ${isDark ? "bg-gray-800" : "bg-white"}`}
+    style={{
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 10,
+      elevation: 3,
+    }}
+  >
     {children}
   </View>
 );
 
-// ─── Shared section header ────────────────────────────────────────────────────
 const CardHeader = ({
   icon,
   label,
   isDark,
-  textColor,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   isDark: boolean;
-  textColor: string;
 }) => (
-  <View style={styles.cardHeaderRow}>
-    <View style={[styles.iconTile, { backgroundColor: isDark ? "#374151" : "#EEF2FF" }]}>
+  <View className="flex-row items-center gap-2.5 px-5 pt-5 pb-3.5">
+    <View
+      className={`w-[30px] h-[30px] rounded-lg items-center justify-center ${isDark ? "bg-gray-700" : "bg-indigo-50"}`}
+    >
       <Ionicons name={icon} size={15} color="#6366F1" />
     </View>
-    <Text style={[styles.cardLabel, { color: textColor }]}>{label}</Text>
+    <Text
+      className={`text-[15px] font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`}
+    >
+      {label}
+    </Text>
   </View>
 );
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  // Header
-  headerBtn: {
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderRadius: 24,
-    padding: 8,
-  },
-  headerRow: { flexDirection: "row", justifyContent: "space-between" },
-  headerName: { color: "#fff", fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
-  headerAddr: { color: "rgba(255,255,255,0.8)", fontSize: 13, marginTop: 3 },
-
-  // Thumbnails
-  thumb: { width: 68, height: 68, borderRadius: 12, overflow: "hidden" },
-  thumbActive: { borderWidth: 2.5, borderColor: "#6366F1" },
-
-  // Chips row (first thing after image)
-  chipsRow: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: CARD_MX,
-    paddingBottom: 8,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  chipBold: { fontSize: 13, fontWeight: "700" },
-  chipLight: { fontSize: 12 },
-  dot: { width: 7, height: 7, borderRadius: 4 },
-
-  // Card
-  card: {
-    marginHorizontal: CARD_MX,
-    borderRadius: CARD_RADIUS,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-
-  // Card header row — same horizontal padding as card content (PAD = 20)
-  cardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: PAD,
-    paddingTop: PAD,
-    paddingBottom: 14,
-  },
-  iconTile: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardLabel: { fontSize: 15, fontWeight: "700" },
-
-  // About
-  body: { fontSize: 14, lineHeight: 22 },
-
-  // Reviews header
-  reviewsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  reviewsTitle: { flexDirection: "row", alignItems: "center", gap: 10 },
-  reviewBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  reviewBtnText: { color: "#6366F1", fontSize: 12, fontWeight: "600" },
-
-  // Contact
-  contactList: { borderRadius: 12, borderWidth: 1, overflow: "hidden" },
-  contactRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 14,
-  },
-  contactIcon: { width: 32, height: 32, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  contactText: { flex: 1, fontSize: 14, fontWeight: "500" },
-});
 
 export default MuseumDetailsView;
