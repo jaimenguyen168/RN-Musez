@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/provider/ThemeProvider";
+import { Colors } from "@/constants/colors";
 
 interface FavoriteArtworksEmptyProps {
   onSnapPress: () => void;
@@ -31,7 +32,7 @@ const FavoriteArtworksEmpty = ({ onSnapPress }: FavoriteArtworksEmptyProps) => {
 
         <TouchableOpacity
           onPress={onSnapPress}
-          className="bg-indigo-500 px-6 py-3 rounded-full"
+          style={{ backgroundColor: Colors.Primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 }}
         >
           <Text className="text-white font-semibold">Explore Artworks</Text>
         </TouchableOpacity>

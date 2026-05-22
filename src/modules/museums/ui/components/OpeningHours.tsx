@@ -152,7 +152,7 @@ const OpeningHours = ({
   const today = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
 
   return (
-    <View className="p-6">
+    <View className="p-5">
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="time" size={20} color={iconColor} />

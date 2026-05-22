@@ -3,6 +3,7 @@ import { useAction, useQuery as useConvexQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Museum } from "@/types/museum";
 import { useMuseumImageBackfill } from "./useMuseumImageBackfill";
+import { isOpenNow } from "@/utils/openingHours";
 
 export interface FetchMuseumsParams {
   latitude: number;
@@ -55,7 +56,7 @@ export const useMuseumsQuery = (params: FetchMuseumsParams | null) => {
       rating: summary?.avgRating ?? undefined,
       userRatingsTotal: summary?.totalReviews ?? 0,
       openingHours: m.openingHours
-        ? { openNow: false, weekdayText: [m.openingHours] }
+        ? { openNow: isOpenNow(m.openingHours), weekdayText: [m.openingHours] }
         : undefined,
       geometry: {
         location: { lat: m.lat, lng: m.lng },

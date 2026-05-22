@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from "react";
 import { FlatList, View, ActivityIndicator, Text } from "react-native";
 import { useQuery } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/colors";
 import FavoriteGrid, {
   CategorySection,
 } from "@/modules/favorite/ui/components/FavoriteGrid";
@@ -105,7 +106,7 @@ const MuseumModeView = ({
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-app">
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color={Colors.Primary} />
         <Text className="mt-2 text-secondary">Fetching museum details...</Text>
       </View>
     );
@@ -142,7 +143,7 @@ const MuseumModeView = ({
       }}
       contentContainerStyle={{
         flexGrow: 1,
-        paddingTop: 180,
+        paddingTop: 16,
         paddingBottom: 32,
       }}
       showsVerticalScrollIndicator={false}

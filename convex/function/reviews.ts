@@ -81,7 +81,7 @@ export const getMuseumReviews = query({
         const user = await ctx.db.get(review.userId as any);
         return {
           ...review,
-          userName: (user as any)?.name ?? "Anonymous",
+          userName: (user as any)?.username ?? "Anonymous",
           userAvatar: (user as any)?.imageUrl ?? null,
         };
       })

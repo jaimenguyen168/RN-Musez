@@ -7,6 +7,7 @@ interface Review {
   rating: number;
   text: string;
   relativeTimeDescription: string;
+  userAvatar?: string | null;
 }
 
 interface ReviewsProps {
@@ -16,6 +17,7 @@ interface ReviewsProps {
   title?: string;
   iconColor?: string;
   cardWidth?: number;
+  compact?: boolean; // removes top padding when a custom header sits above
 }
 
 const Reviews = ({
@@ -25,15 +27,12 @@ const Reviews = ({
   title = "Recent Reviews",
   iconColor = "#6366F1",
   cardWidth = 320,
+  compact = false,
 }: ReviewsProps) => {
-  if (!reviews || reviews.length === 0) {
-    return null;
-  }
-
-  const displayReviews = reviews.slice(0, maxReviews);
+  const displayReviews = (reviews ?? []).slice(0, maxReviews);
 
   return (
-    <View className="p-6">
+    <View style={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: compact ? 0 : 20 }}>
       {showTitle && (
         <View className="flex-row items-center mb-4">
           <Ionicons name="chatbubbles" size={20} color={iconColor} />
@@ -41,6 +40,17 @@ const Reviews = ({
         </View>
       )}
 
+      {displayReviews.length === 0 ? (
+        <View className="bg-surface rounded-2xl p-6 items-center border border-soft">
+          <Ionicons name="chatbubble-outline" size={32} color="#9CA3AF" />
+          <Text className="text-base font-semibold text-main mt-3">
+            No reviews yet
+          </Text>
+          <Text className="text-sm text-secondary mt-1 text-center">
+            Be the first to review this museum
+          </Text>
+        </View>
+      ) : (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {displayReviews.map((review, index) => (
           <View
@@ -81,6 +91,7 @@ const Reviews = ({
           </View>
         ))}
       </ScrollView>
+      )}
     </View>
   );
 };

@@ -38,7 +38,7 @@ module.exports = {
     function ({ addUtilities, theme }) {
       const newUtilities = {
         ".bg-app": {
-          backgroundColor: theme("colors.gray.50"),
+          backgroundColor: "#FAFAFA",
           "@media (prefers-color-scheme: dark)": {
             backgroundColor: theme("colors.gray.900"),
           },

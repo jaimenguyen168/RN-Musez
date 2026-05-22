@@ -1,12 +1,43 @@
 import { v } from "convex/values";
-import { action, internalMutation, internalQuery, mutation, query } from "../_generated/server";
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "../_generated/server";
 import { internal as _internal } from "../_generated/api";
-// Cast to any until `convex dev` regenerates _generated/api.d.ts with this file's exports.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const internal = _internal as any;
 
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-const SEARCH_RADIUS_M = 10000;                  // 10km
+const SEARCH_RADIUS_M = 10000; // 10km
+
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+];
+
+async function fetchFromOverpass(overpassQuery: string): Promise<Response> {
+  let lastError: Error = new Error("No Overpass endpoints tried");
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `data=${encodeURIComponent(overpassQuery)}`,
+      });
+      if (res.ok) return res;
+      lastError = new Error(`Overpass error: ${res.status}`);
+      // Only retry on server/gateway errors; bail immediately on 4xx (except 429)
+      if (res.status < 500 && res.status !== 429) throw lastError;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+  throw lastError;
+}
 
 type OverpassElement = {
   type: string;
@@ -16,7 +47,6 @@ type OverpassElement = {
   center?: { lat: number; lon: number };
   tags?: Record<string, string>;
 };
-
 
 // ─── Internal mutation: upsert museums ───────────────────────────────────────
 export const upsertMuseums = internalMutation({
@@ -35,7 +65,7 @@ export const upsertMuseums = internalMutation({
         phone: v.optional(v.string()),
         imageUrl: v.optional(v.string()),
         fetchedAt: v.number(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -68,7 +98,7 @@ export const getMuseumsNearLocationInternal = internalQuery({
       .filter(
         (m) =>
           Math.abs(m.lat - args.lat) <= delta &&
-          Math.abs(m.lng - args.lng) <= delta
+          Math.abs(m.lng - args.lng) <= delta,
       )
       .map((m) => ({ osmId: m.osmId, fetchedAt: m.fetchedAt }));
   },
@@ -83,7 +113,7 @@ export const fetchMuseumsNearLocation = action({
     // Skip if we have fresh data for this area
     const existing: { osmId: string; fetchedAt: number }[] = await ctx.runQuery(
       internal.function.museumLocations.getMuseumsNearLocationInternal,
-      { lat, lng }
+      { lat, lng },
     );
 
     const now = Date.now();
@@ -103,13 +133,14 @@ export const fetchMuseumsNearLocation = action({
       out center;
     `;
 
-    const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `data=${encodeURIComponent(overpassQuery)}`,
-    });
-
-    if (!overpassRes.ok) throw new Error(`Overpass error: ${overpassRes.status}`);
+    let overpassRes: Response;
+    try {
+      overpassRes = await fetchFromOverpass(overpassQuery);
+    } catch (err) {
+      // All endpoints failed — return stale cached data rather than crashing
+      if (existing.length > 0) return existing.map((m) => m.osmId);
+      throw err;
+    }
 
     const data = await overpassRes.json();
     const elements: OverpassElement[] = data.elements ?? [];
@@ -120,7 +151,10 @@ export const fetchMuseumsNearLocation = action({
         const tags = el.tags ?? {};
         const coordLat = el.lat ?? el.center?.lat ?? 0;
         const coordLng = el.lon ?? el.center?.lon ?? 0;
-        const addrParts = [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean);
+        const addrParts = [
+          tags["addr:housenumber"],
+          tags["addr:street"],
+        ].filter(Boolean);
 
         return {
           osmId: `${el.type}/${el.id}`,
@@ -170,7 +204,6 @@ export const patchMuseumImage = internalMutation({
   },
 });
 
-
 // ─── Public query: get a single museum by osmId ──────────────────────────────
 export const getMuseumByOsmId = query({
   args: { osmId: v.string() },
@@ -192,8 +225,8 @@ export const getMuseumsByOsmIds = query({
         ctx.db
           .query("museums")
           .withIndex("by_osm_id", (q) => q.eq("osmId", osmId))
-          .first()
-      )
+          .first(),
+      ),
     );
     return results.filter(Boolean);
   },
@@ -208,7 +241,7 @@ export const getMuseumsNearLocation = query({
     return all.filter(
       (m) =>
         Math.abs(m.lat - args.lat) <= delta &&
-        Math.abs(m.lng - args.lng) <= delta
+        Math.abs(m.lng - args.lng) <= delta,
     );
   },
 });

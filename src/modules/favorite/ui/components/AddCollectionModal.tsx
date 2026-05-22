@@ -10,11 +10,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  StyleSheet,
+  Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Museum } from "@/types/museum";
 import { useTheme } from "@/provider/ThemeProvider";
+import { Colors } from "@/constants/colors";
+
+const GRID_PADDING = 14;
+const GRID_GAP = 8;
+const COLUMNS = 3;
+const ITEM_WIDTH = (Dimensions.get("window").width - GRID_PADDING * 2 - GRID_GAP * (COLUMNS - 1)) / COLUMNS;
 
 interface AddCollectionModalProps {
   visible: boolean;
@@ -33,40 +42,40 @@ const AddCollectionModal = ({
 }: AddCollectionModalProps) => {
   const { isDark } = useTheme();
   const [collectionName, setCollectionName] = useState("");
-  const [selectedMuseums, setSelectedMuseums] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedMuseums, setSelectedMuseums] = useState<Set<string>>(new Set());
 
-  const handleMuseumPress = (museum: Museum) => {
-    if (isCreating) return; // Disable selection while creating
+  const bg = isDark ? "#111827" : "#FAFAFA";
+  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
+  const textMain = isDark ? "#F9FAFB" : "#111827";
+  const textSub = isDark ? "#9CA3AF" : "#6B7280";
+  const borderColor = isDark ? "#374151" : "#E5E7EB";
+  const inputBg = isDark ? "#1F2937" : "#FFFFFF";
 
-    const newSelected = new Set(selectedMuseums);
-    if (newSelected.has(museum.placeId)) {
-      newSelected.delete(museum.placeId);
-    } else {
-      newSelected.add(museum.placeId);
-    }
-    setSelectedMuseums(newSelected);
+  const handleMuseumToggle = (museum: Museum) => {
+    if (isCreating) return;
+    const next = new Set(selectedMuseums);
+    next.has(museum.placeId) ? next.delete(museum.placeId) : next.add(museum.placeId);
+    setSelectedMuseums(next);
   };
 
   const handleCreate = () => {
-    if (collectionName.trim() && !isCreating) {
-      const selectedMuseumsArray = museums.filter((museum) =>
-        selectedMuseums.has(museum.placeId),
-      );
-      onCreateCollection(collectionName.trim(), selectedMuseumsArray);
-      setCollectionName("");
-      setSelectedMuseums(new Set());
-    }
+    if (!collectionName.trim() || isCreating) return;
+    onCreateCollection(
+      collectionName.trim(),
+      museums.filter((m) => selectedMuseums.has(m.placeId)),
+    );
+    setCollectionName("");
+    setSelectedMuseums(new Set());
   };
 
   const handleClose = () => {
-    if (!isCreating) {
-      setCollectionName("");
-      setSelectedMuseums(new Set());
-      onClose();
-    }
+    if (isCreating) return;
+    setCollectionName("");
+    setSelectedMuseums(new Set());
+    onClose();
   };
+
+  const isDisabled = !collectionName.trim() || selectedMuseums.size === 0 || isCreating;
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
     const isSelected = selectedMuseums.has(item.placeId);
@@ -78,59 +87,44 @@ const AddCollectionModal = ({
       : null;
 
     return (
-      <View style={{ width: "33.33%" }} className="p-1">
-        <Pressable
-          onPress={() => handleMuseumPress(item)}
-          disabled={isCreating}
-          className={`rounded-lg overflow-hidden ${
-            isSelected
-              ? "border-2 border-blue-500"
-              : "border border-gray-200 dark:border-gray-700"
-          } ${isCreating ? "opacity-50" : ""}`}
-        >
-          <View className="relative aspect-square">
-            {imageUrl ? (
-              <Image
-                source={{ uri: imageUrl }}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                }}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-              />
-            ) : (
-              <View className="w-full h-full bg-divider justify-center items-center">
-                <Ionicons
-                  name="image-outline"
-                  size={20}
-                  color={isDark ? "#9CA3AF" : "#666"}
-                />
-              </View>
-            )}
-
-            {isSelected && (
-              <View className="absolute top-1 right-1 bg-blue-500 rounded-full w-5 h-5 justify-center items-center">
-                <Ionicons name="checkmark" size={12} color="white" />
-              </View>
-            )}
-          </View>
-
-          <View className="p-1.5" style={{ height: 40 }}>
-            <Text
-              className="text-xs font-medium text-main line-clamp-2"
-              numberOfLines={2}
-            >
-              {item.name}
-            </Text>
-          </View>
-        </Pressable>
-      </View>
+      <Pressable
+        onPress={() => handleMuseumToggle(item)}
+        disabled={isCreating}
+        style={[
+          styles.museumItem,
+          {
+            backgroundColor: cardBg,
+            borderColor: isSelected ? Colors.Primary : borderColor,
+            borderWidth: isSelected ? 2 : 1,
+            opacity: isCreating ? 0.5 : 1,
+          },
+        ]}
+      >
+        <View style={styles.museumThumb}>
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+            />
+          ) : (
+            <View style={[styles.museumPlaceholder, { backgroundColor: isDark ? "#374151" : "#F3F4F6" }]}>
+              <Ionicons name="image-outline" size={18} color="#9CA3AF" />
+            </View>
+          )}
+          {isSelected && (
+            <View style={styles.checkBadge}>
+              <Ionicons name="checkmark" size={11} color="#fff" />
+            </View>
+          )}
+        </View>
+        <Text style={[styles.museumName, { color: textMain }]} numberOfLines={2}>
+          {item.name}
+        </Text>
+      </Pressable>
     );
   };
-
-  const isCreateDisabled =
-    !collectionName.trim() || selectedMuseums.size === 0 || isCreating;
 
   return (
     <Modal
@@ -140,93 +134,194 @@ const AddCollectionModal = ({
       onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
-        className="flex-1"
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={30}
       >
-        <View className="flex-1 bg-white dark:bg-gray-900 px-6 gap-6 py-12">
-          {/* Modal Header */}
-          <View className="flex-row justify-between items-center">
-            <Text className="text-lg font-semibold text-main">
-              Create Collection
-            </Text>
-            <TouchableOpacity onPress={handleClose} disabled={isCreating}>
-              <Ionicons
-                name="close"
-                size={24}
-                color={isCreating ? "#ccc" : isDark ? "#9CA3AF" : "#666"}
-              />
-            </TouchableOpacity>
+        <View style={[styles.sheet, { backgroundColor: bg }]}>
+
+          {/* ── Header ─────────────────────────────────────────────────────── */}
+          <View style={styles.header}>
+            <View style={styles.dragHandle} />
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={[styles.title, { color: textMain }]}>New Collection</Text>
+                <Text style={[styles.subtitle, { color: textSub }]}>
+                  {selectedMuseums.size > 0
+                    ? `${selectedMuseums.size} museum${selectedMuseums.size > 1 ? "s" : ""} selected`
+                    : "Select museums to add"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleClose}
+                disabled={isCreating}
+                style={[styles.closeBtn, { backgroundColor: cardBg, borderColor }]}
+              >
+                <Ionicons name="close" size={18} color={textSub} />
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <View className="flex-1">
-            {/* Collection Name Input */}
-            <View className="mb-6">
-              <Text className="text-base font-medium text-main mb-2">
-                Name Collection
-              </Text>
-              <TextInput
-                value={collectionName}
-                onChangeText={setCollectionName}
-                placeholder="Ex : Collection 2024"
-                placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-                className={`border border-soft rounded-lg p-4 text-base ${
-                  isCreating
-                    ? "bg-gray-100 dark:bg-gray-800"
-                    : "bg-white dark:bg-gray-900"
-                } text-gray-900 dark:text-white`}
-                maxLength={30}
-                editable={!isCreating}
-              />
-              <Text className="text-sm text-secondary mt-1">
-                {collectionName.length}/30 Character
-              </Text>
-            </View>
+          {/* ── Name input ─────────────────────────────────────────────────── */}
+          <View style={[styles.inputSection, { borderBottomColor: borderColor }]}>
+            <Text style={[styles.label, { color: textSub }]}>COLLECTION NAME</Text>
+            <TextInput
+              value={collectionName}
+              onChangeText={setCollectionName}
+              placeholder="e.g. Paris Trip 2025"
+              placeholderTextColor={isDark ? "#4B5563" : "#D1D5DB"}
+              style={[styles.input, { backgroundColor: inputBg, borderColor, color: textMain }]}
+              maxLength={30}
+              editable={!isCreating}
+            />
+            <Text style={[styles.charCount, { color: textSub }]}>{collectionName.length}/30</Text>
+          </View>
 
-            {/* Museums Grid */}
-            <View className="flex-1">
-              <Text className="text-base font-medium text-main mb-3">
-                Select Museums ({selectedMuseums.size} selected)
-              </Text>
-              <FlatList
-                data={museums}
-                numColumns={3}
-                keyExtractor={(item) => item.placeId}
-                renderItem={renderMuseumItem}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
-                scrollEnabled={!isCreating}
-              />
-            </View>
+          {/* ── Museums grid ───────────────────────────────────────────────── */}
+          <View style={styles.gridSection}>
+            <Text style={[styles.label, { color: textSub, paddingHorizontal: 20, marginBottom: 12 }]}>
+              MUSEUMS
+            </Text>
+            <FlatList
+              data={museums}
+              numColumns={3}
+              keyExtractor={(item) => item.placeId}
+              renderItem={renderMuseumItem}
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={!isCreating}
+              contentContainerStyle={styles.grid}
+              columnWrapperStyle={{ gap: GRID_GAP, marginBottom: GRID_GAP }}
+            />
+          </View>
 
-            {/* Create Button */}
+          {/* ── Create button ───────────────────────────────────────────────── */}
+          <View style={[styles.footer, { borderTopColor: borderColor }]}>
             <TouchableOpacity
               onPress={handleCreate}
-              disabled={isCreateDisabled}
-              className={`py-4 rounded-lg ${
-                collectionName.trim() && selectedMuseums.size > 0 && !isCreating
-                  ? "bg-orange-500"
-                  : "bg-gray-300 dark:bg-gray-700"
-              }`}
+              disabled={isDisabled}
+              style={[styles.createBtn, { opacity: isDisabled ? 0.5 : 1 }]}
+              activeOpacity={0.85}
             >
-              <View className="flex-row justify-center items-center">
-                {isCreating && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    style={{ marginRight: 8 }}
-                  />
+              <View style={[styles.createBtnGradient, { backgroundColor: Colors.Primary }]}>
+                {isCreating ? (
+                  <>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.createBtnText}>Creating...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.createBtnText}>Create Collection</Text>
+                  </>
                 )}
-                <Text className="text-center text-white font-semibold text-base">
-                  {isCreating ? "Creating..." : "Create"}
-                </Text>
               </View>
             </TouchableOpacity>
           </View>
+
         </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  sheet: { flex: 1 },
+
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#D1D5DB",
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  title: { fontSize: 22, fontWeight: "800", letterSpacing: -0.4 },
+  subtitle: { fontSize: 13, marginTop: 3 },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  inputSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  charCount: { fontSize: 11, marginTop: 6, textAlign: "right" },
+
+  gridSection: { flex: 1, paddingTop: 20 },
+  grid: { paddingHorizontal: 14, paddingBottom: 16 },
+  gridRow: { gap: 8, marginBottom: 8 },
+
+  museumItem: {
+    width: ITEM_WIDTH,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  museumThumb: { width: "100%", aspectRatio: 1, position: "relative" },
+  museumPlaceholder: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.Primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  museumName: {
+    fontSize: 11,
+    fontWeight: "500",
+    padding: 6,
+    lineHeight: 15,
+  },
+
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 32,
+    borderTopWidth: 1,
+  },
+  createBtn: { borderRadius: 14, overflow: "hidden" },
+  createBtnGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+  },
+  createBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+});
 
 export default AddCollectionModal;

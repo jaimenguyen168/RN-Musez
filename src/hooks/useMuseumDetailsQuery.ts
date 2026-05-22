@@ -1,6 +1,7 @@
 import { useQuery as useConvexQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { MuseumDetails } from "@/types/museum";
+import { isOpenNow } from "@/utils/openingHours";
 
 export const useMuseumDetailsQuery = (museumId: string | null) => {
   // museumId from the route may be URL-encoded (e.g. "way%2F1234") — decode it
@@ -29,7 +30,7 @@ export const useMuseumDetailsQuery = (museumId: string | null) => {
     formattedPhoneNumber: museum.phone,
     website: museum.website,
     openingHours: museum.openingHours
-      ? { openNow: false, weekdayText: [museum.openingHours] }
+      ? { openNow: isOpenNow(museum.openingHours), weekdayText: [museum.openingHours] }
       : undefined,
     geometry: {
       location: { lat: museum.lat, lng: museum.lng },
