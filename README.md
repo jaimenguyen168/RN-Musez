@@ -1,4 +1,4 @@
-# RN-Musez
+<img width="1536" height="1024" alt="musez" src="https://github.com/user-attachments/assets/32cb9399-1ce2-4196-b61f-c29539c2a935" />
 
 <div align="center">
   <img src="https://img.shields.io/badge/-React_Native-black?style=for-the-badge&logoColor=white&logo=react&color=20232A" alt="React Native" />
@@ -104,9 +104,6 @@ EXPO_PUBLIC_CONVEX_URL=
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=
 EXPO_CLERK_FRONTEND_API_URL=
 CLERK_SECRET_KEY=
-
-# Google Maps
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=
 
 # Google Gemini
 EXPO_PUBLIC_GEMINI_API_KEY=
