@@ -6,171 +6,67 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/provider/ThemeProvider";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";
 import BackButton from "@/components/BackButton";
+import { usePaywall } from "@/hooks/usePaywall";
+import { useCredits } from "@/modules/snap/hooks/useCredits";
+import Purchases from "react-native-purchases";
+import { Colors } from "@/constants/colors";
+
+const MANAGE_URL =
+  Platform.OS === "ios"
+    ? "itms-apps://apps.apple.com/account/subscriptions"
+    : "https://play.google.com/store/account/subscriptions";
+
+const FEATURES_FREE = [
+  "Museum Discovery",
+  "Location-Based Search",
+  "AI Artwork Analysis (5/day)",
+  "Personal Art Collection",
+];
+
+const FEATURES_PRO = [
+  "Everything in Free",
+  "Unlimited AI Artwork Analysis",
+  "Priority Support",
+];
 
 const SubscriptionsView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
-  const [subscribing, setSubscribing] = useState(false);
+  const { isProUser } = useCredits();
+  const { presentPaywall } = usePaywall();
+  const [restoring, setRestoring] = useState(false);
 
-  // Mock current plan - replace with your actual subscription logic
-  const currentPlan = { id: "free", name: "Free", price: 0 };
-  const isProUser = false; // Replace with actual pro check
-
-  const plans = [
-    {
-      id: "free",
-      name: "Free",
-      price: 0,
-      interval: "month",
-      features: [
-        "🏛️ Museum Discovery",
-        "📍 Location-Based Search",
-        "🤖 AI Artwork Analysis (Limited)",
-        "🎨 Personal Art Collection",
-      ],
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: 14.99,
-      interval: "month",
-      yearlyPrice: 11.99,
-      popular: true,
-      trialDays: 7,
-      features: [
-        "🎨 Personal Art Collection",
-        "🏛️ Museum Discovery",
-        "📍 Location-Based Search",
-        "🤖 AI Artwork Analysis (Unlimited)",
-        "🆘 24/7 Priority Support",
-      ],
-    },
-  ];
-
-  const handleSubscribe = async (planId: string) => {
-    if (planId === "free") {
-      Alert.alert("Free Plan", "You are already on the free plan!");
-      return;
-    }
-
-    setSubscribing(true);
-    try {
-      // Here you would integrate with your payment system
-      Alert.alert(
-        "Coming Soon",
-        "Payment integration will be available soon!",
-        [{ text: "OK" }],
-      );
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    } finally {
-      setSubscribing(false);
-    }
-  };
-
-  const formatPrice = (price: number, interval: string) => {
-    if (price === 0) return "Free";
-    return `$${price.toFixed(2)}/${interval}`;
-  };
-
-  const PlanCard = ({ plan }: { plan: any }) => {
-    const isCurrentPlan = currentPlan.id === plan.id;
-
-    return (
-      <View
-        className={`p-6 rounded-3xl mb-4 border-2 ${
-          isCurrentPlan ? "border-soft bg-card" : "border-soft bg-card"
-        }`}
-      >
-        <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-1">
-            <View className="flex-row items-center">
-              <Text
-                className={`text-2xl font-bold ${
-                  isCurrentPlan ? "text-secondary" : "text-main"
-                }`}
-              >
-                {plan.name}
-              </Text>
-              {plan.popular && (
-                <View className="bg-primary px-2 py-1 rounded-full ml-2">
-                  <Text className="text-white text-xs font-semibold">
-                    POPULAR
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text
-              className={`text-3xl font-black mt-1 ${
-                isCurrentPlan ? "text-secondary" : "text-main"
-              }`}
-            >
-              {formatPrice(plan.price, plan.interval)}
-            </Text>
-            {plan.yearlyPrice && (
-              <Text className="text-primary font-medium text-sm">
-                ${plan.yearlyPrice}/mo when billed annually
-              </Text>
-            )}
-            {plan.trialDays && plan.id !== "free" && (
-              <Text className="text-secondary font-medium text-sm">
-                {plan.trialDays}-day free trial
-              </Text>
-            )}
-          </View>
-
-          {isCurrentPlan && (
-            <View className="bg-surface px-3 py-1 rounded-full">
-              <Text className="text-secondary font-semibold text-sm">
-                Current
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View className="space-y-3 mb-4">
-          {plan.features.map((feature: string, index: number) => (
-            <View key={index} className="flex-row items-center">
-              <Ionicons
-                name="checkmark-circle"
-                size={20}
-                color={isCurrentPlan ? "#9ca3af" : "#FF9900"}
-              />
-              <Text className="text-secondary ml-3 flex-1 text-sm">
-                {feature}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {!isCurrentPlan && (
-          <TouchableOpacity
-            className={`py-4 rounded-2xl ${
-              subscribing ? "bg-surface" : "bg-primary"
-            }`}
-            onPress={() => handleSubscribe(plan.id)}
-            disabled={subscribing}
-          >
-            {subscribing ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-center font-semibold text-lg text-white">
-                {plan.trialDays
-                  ? `Start ${plan.trialDays}-Day Trial`
-                  : "Select Plan"}
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
+  const handleManage = () => {
+    Linking.openURL(MANAGE_URL).catch(() =>
+      Alert.alert("Error", "Could not open subscription settings."),
     );
   };
+
+  const handleRestore = async () => {
+    setRestoring(true);
+    try {
+      const info = await Purchases.restorePurchases();
+      if (info.entitlements.active["Musez Pro"]) {
+        Alert.alert("Restored!", "Your Pro subscription has been restored.");
+      } else {
+        Alert.alert("No Purchases Found", "We couldn't find any previous purchases to restore.");
+      }
+    } catch {
+      Alert.alert("Restore Failed", "Something went wrong. Please try again.");
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  const features = isProUser ? FEATURES_PRO : FEATURES_FREE;
 
   return (
     <View className="flex-1 bg-app">
@@ -184,54 +80,94 @@ const SubscriptionsView = () => {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 100, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: 100, paddingBottom: 40 }}
       >
-        {/* Current Plan Overview */}
-        <View className="px-4 mb-6">
-          <Text className="text-2xl font-bold text-main mb-4">
-            Current Plan
-          </Text>
-          <View className="bg-card rounded-2xl p-4 border border-soft">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-lg font-semibold text-main">
-                  {currentPlan.name}
-                </Text>
-                <Text className="text-secondary">
-                  {formatPrice(currentPlan.price, "month")}
-                </Text>
-              </View>
-              <View className="bg-primary/10 rounded-lg px-3 py-1">
-                <Text className="text-primary font-semibold">
-                  {isProUser ? "PRO" : "FREE"}
-                </Text>
-              </View>
+        {/* Current plan banner */}
+        <View className="px-5 mb-6">
+          <View
+            className="rounded-2xl p-5 flex-row items-center justify-between bg-card"
+            style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}
+          >
+            <View className="gap-0.5">
+              <Text className="text-[13px] font-semibold text-secondary">Current Plan</Text>
+              <Text className="text-[22px] font-extrabold -tracking-[0.3px] text-main">
+                {isProUser ? "Musez Pro" : "Free"}
+              </Text>
+            </View>
+            <View className={`px-3.5 py-1.5 rounded-full ${isProUser ? "bg-[#FFF4E0]" : "bg-surface"}`}>
+              <Text className={`text-[13px] font-bold ${isProUser ? "text-primary" : "text-secondary"}`}>
+                {isProUser ? "PRO" : "FREE"}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Plans Section */}
-        <View className="px-4 mb-6">
-          <Text className="text-2xl font-bold text-main mb-2">
-            Choose Your Plan
-          </Text>
-          <Text className="text-secondary mb-6">
-            Unlock the full potential of artwork discovery
-          </Text>
-
-          {plans.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} />
-          ))}
+        {/* Feature list */}
+        <View className="px-5 mb-6">
+          <View
+            className="rounded-2xl overflow-hidden bg-card"
+            style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}
+          >
+            <View className="flex-row items-center gap-2.5 px-5 pt-5 pb-3.5 border-b border-soft">
+              <View className={`w-[30px] h-[30px] rounded-lg items-center justify-center ${isDark ? "bg-gray-700" : "bg-orange-50"}`}>
+                <Ionicons name="star-outline" size={15} color={Colors.Primary} />
+              </View>
+              <Text className="text-[15px] font-bold text-main">
+                {isProUser ? "Your Pro Benefits" : "What's Included"}
+              </Text>
+            </View>
+            {features.map((f, i) => (
+              <View
+                key={i}
+                className={`flex-row items-center gap-3 px-5 py-3.5 ${i < features.length - 1 ? "border-b border-soft" : ""}`}
+              >
+                <Ionicons name="checkmark-circle" size={18} color={Colors.Primary} />
+                <Text className="text-sm text-main">{f}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
-        {/* Footer */}
-        <View className="px-4">
-          <View className="flex-row items-center justify-center">
-            <Ionicons name="lock-closed" size={16} className="text-secondary" />
-            <Text className="text-secondary text-sm ml-2">
-              Secure payments powered by Clerk
-            </Text>
-          </View>
+        {/* Actions */}
+        <View className="px-5 gap-3">
+          {isProUser ? (
+            <TouchableOpacity
+              onPress={handleManage}
+              activeOpacity={0.85}
+              className="flex-row items-center gap-3 rounded-2xl p-4 border bg-card border-soft"
+            >
+              <View className={`w-9 h-9 rounded-xl items-center justify-center ${isDark ? "bg-gray-700" : "bg-red-50"}`}>
+                <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[15px] font-semibold text-main">Manage Subscription</Text>
+                <Text className="text-xs mt-0.5 text-secondary">Cancel or change plan in the App Store</Text>
+              </View>
+              <Ionicons name="open-outline" size={16} color={isDark ? "#4B5563" : "#D1D5DB"} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => presentPaywall({})}
+              activeOpacity={0.85}
+              className="flex-row items-center justify-center gap-2 rounded-2xl py-4 bg-primary"
+            >
+              <Ionicons name="star" size={17} color="#fff" />
+              <Text className="text-white text-[16px] font-bold">Upgrade to Pro</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            onPress={handleRestore}
+            disabled={restoring}
+            activeOpacity={0.7}
+            className="items-center py-3"
+          >
+            {restoring ? (
+              <ActivityIndicator size="small" color={Colors.Primary} />
+            ) : (
+              <Text className="text-sm text-secondary">Restore Purchases</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

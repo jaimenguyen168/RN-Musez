@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import React, { useMemo } from "react";
 import { Museum } from "@/types/museum";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,16 +13,17 @@ interface MuseumInfoListProps {
 }
 
 const MuseumInfoList = ({ title, museums, onCardPress }: MuseumInfoListProps) => {
-  const { isDark } = useTheme();
   if (museums.length === 0) return null;
 
   return (
-    <View style={{ marginBottom: 24 }}>
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: isDark ? "#F9FAFB" : "#111827" }]}>{title}</Text>
+    <View className="mb-6">
+      <View className="px-6 mb-3">
+        <Text className="text-[18px] font-bold text-main">{title}</Text>
       </View>
-
-      <View style={styles.listContainer}>
+      <View
+        className="mx-4 rounded-2xl overflow-hidden"
+        style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}
+      >
         {museums.map((museum, index) => (
           <MuseumInfoCard
             key={museum.placeId}
@@ -65,142 +66,53 @@ const MuseumInfoCard = ({
     <TouchableOpacity
       onPress={onCardPress}
       activeOpacity={0.7}
-      style={[
-        styles.row,
-        {
-          backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
-          borderBottomColor: isDark ? "#374151" : "#F3F4F6",
-          borderBottomWidth: isLast ? 0 : 1,
-        },
-      ]}
+      className={`flex-row items-center px-3.5 py-3 gap-3 bg-card ${!isLast ? "border-b border-soft" : ""}`}
     >
-      {/* Icon */}
-      <View style={[styles.iconWrap, { backgroundColor: isDark ? "#374151" : "#F0F4FF" }]}>
+      <View className={`w-9 h-9 rounded-[10px] items-center justify-center ${isDark ? "bg-gray-700" : "bg-indigo-50"}`}>
         <Ionicons name="business-outline" size={18} color="#6366F1" />
       </View>
 
-      {/* Text */}
-      <View style={styles.textBlock}>
-        <Text
-          style={[styles.rowName, { color: isDark ? "#F9FAFB" : "#111827" }]}
-          numberOfLines={1}
-        >
+      <View className="flex-1 gap-0.5">
+        <Text className="text-[13px] font-semibold text-main" numberOfLines={1}>
           {museum.name}
         </Text>
-        <View style={styles.rowMeta}>
+        <View className="flex-row items-center">
           {formattedDistance && (
-            <Text style={[styles.rowMetaText, { color: isDark ? "#9CA3AF" : "#9CA3AF" }]}>
-              {formattedDistance}
-            </Text>
+            <Text className="text-[11px] text-secondary">{formattedDistance}</Text>
           )}
           {formattedDistance && museum.vicinity && (
-            <Text style={[styles.rowMetaText, { color: isDark ? "#6B7280" : "#D1D5DB" }]}>  ·  </Text>
+            <Text className={`text-[11px] ${isDark ? "text-gray-600" : "text-gray-300"}`}>{"  ·  "}</Text>
           )}
           {(museum.vicinity || museum.formattedAddress) && (
-            <Text
-              style={[styles.rowMetaText, { color: isDark ? "#9CA3AF" : "#9CA3AF", flex: 1 }]}
-              numberOfLines={1}
-            >
+            <Text className="text-[11px] text-secondary flex-1" numberOfLines={1}>
               {museum.vicinity || museum.formattedAddress}
             </Text>
           )}
         </View>
       </View>
 
-      {/* Status + chevron */}
-      <View style={styles.rowRight}>
+      <View className="flex-row items-center gap-1.5">
         {isOpen !== undefined && (
           <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: isOpen
-                  ? isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)"
-                  : isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)",
-              },
-            ]}
+            className={`px-2 py-0.5 rounded-full ${
+              isOpen
+                ? isDark ? "bg-emerald-500/15" : "bg-emerald-500/10"
+                : isDark ? "bg-red-500/15" : "bg-red-500/8"
+            }`}
           >
             <Text
-              style={[
-                styles.statusBadgeText,
-                { color: isOpen ? (isDark ? "#34D399" : "#059669") : (isDark ? "#F87171" : "#DC2626") },
-              ]}
+              className={`text-[11px] font-semibold ${
+                isOpen
+                  ? isDark ? "text-emerald-400" : "text-emerald-600"
+                  : isDark ? "text-red-400" : "text-red-600"
+              }`}
             >
               {isOpen ? "Open" : "Closed"}
             </Text>
           </View>
         )}
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={isDark ? "#4B5563" : "#D1D5DB"}
-        />
+        <Ionicons name="chevron-forward" size={16} color={isDark ? "#4B5563" : "#D1D5DB"} />
       </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  sectionHeader: {
-    paddingHorizontal: 24,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  listContainer: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    gap: 12,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textBlock: {
-    flex: 1,
-    gap: 2,
-  },
-  rowName: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  rowMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rowMetaText: {
-    fontSize: 11,
-  },
-  rowRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-});

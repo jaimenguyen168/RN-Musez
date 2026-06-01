@@ -1,140 +1,63 @@
-import { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
-interface CreditsData {
-  credits: number;
-  lastResetDate: string;
-}
+const DAILY_LIMIT = 3;
 
-const CREDITS_KEY = "@user_credits";
-const DAILY_CREDIT_LIMIT = 5;
+/**
+ * Returns the YYYY-MM-DD key for the current 8am reset window.
+ * If it's before 8am, the active window started yesterday at 8am.
+ */
+const getResetPeriodKey = (): string => {
+  const now = new Date();
+  if (now.getHours() < 8) {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split("T")[0];
+  }
+  return now.toISOString().split("T")[0];
+};
 
-export const useCredits = (isProUser: boolean) => {
-  const [credits, setCredits] = useState<number>(DAILY_CREDIT_LIMIT);
-  const [loading, setLoading] = useState(true);
+/**
+ * Returns the next 8am reset time as a Date object.
+ */
+const getNextResetTime = (): Date => {
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(8, 0, 0, 0);
+  if (now.getHours() >= 8) {
+    next.setDate(next.getDate() + 1);
+  }
+  return next;
+};
 
-  // Get today's date as string (YYYY-MM-DD)
-  const getTodayDateString = (): string => {
-    return new Date().toISOString().split("T")[0];
-  };
+export const useCredits = () => {
+  const resetPeriodKey = getResetPeriodKey();
 
-  // Load credits from storage
-  const loadCredits = async () => {
-    try {
-      if (isProUser) {
-        setCredits(Infinity); // Unlimited for pro users
-        setLoading(false);
-        return;
-      }
+  const result = useQuery(api.function.credits.getCredits, { resetPeriodKey });
+  const consumeCreditMutation = useMutation(api.function.credits.consumeCredit);
 
-      const stored = await AsyncStorage.getItem(CREDITS_KEY);
-      const today = getTodayDateString();
+  const loading = result === undefined;
+  const credits = result?.credits ?? DAILY_LIMIT;
+  const isProUser = result?.isProUser ?? false;
 
-      if (stored) {
-        const creditsData: CreditsData = JSON.parse(stored);
-
-        // Check if we need to reset (new day)
-        if (creditsData.lastResetDate !== today) {
-          // Reset credits for new day
-          const newCreditsData: CreditsData = {
-            credits: DAILY_CREDIT_LIMIT,
-            lastResetDate: today,
-          };
-
-          await AsyncStorage.setItem(
-            CREDITS_KEY,
-            JSON.stringify(newCreditsData),
-          );
-          setCredits(DAILY_CREDIT_LIMIT);
-        } else {
-          // Use stored credits from today
-          setCredits(creditsData.credits);
-        }
-      } else {
-        // First time - initialize credits
-        const newCreditsData: CreditsData = {
-          credits: DAILY_CREDIT_LIMIT,
-          lastResetDate: today,
-        };
-
-        await AsyncStorage.setItem(CREDITS_KEY, JSON.stringify(newCreditsData));
-        setCredits(DAILY_CREDIT_LIMIT);
-      }
-    } catch (error) {
-      console.error("Error loading credits:", error);
-      setCredits(DAILY_CREDIT_LIMIT); // Fallback
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Use a credit
   const consumeCredit = async (): Promise<boolean> => {
-    if (isProUser) return true; // Pro users have unlimited credits
-
-    if (credits <= 0) return false; // No credits left
-
-    try {
-      const newCredits = credits - 1;
-      const today = getTodayDateString();
-
-      const creditsData: CreditsData = {
-        credits: newCredits,
-        lastResetDate: today,
-      };
-
-      await AsyncStorage.setItem(CREDITS_KEY, JSON.stringify(creditsData));
-      setCredits(newCredits);
-      return true;
-    } catch (error) {
-      console.error("Error using credit:", error);
-      return false;
-    }
+    const res = await consumeCreditMutation({ resetPeriodKey });
+    return res.success;
   };
 
-  // Check if user has credits available
   const hasCredits = (): boolean => {
     if (isProUser) return true;
-    return credits > 0;
+    return (credits ?? 0) > 0;
   };
 
-  // Get time until next reset (for UI display)
-  const getTimeUntilReset = (): Date => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow;
-  };
-
-  // Reset credits manually (for testing or admin purposes)
-  const resetCredits = async () => {
-    if (isProUser) return;
-
-    try {
-      const today = getTodayDateString();
-      const creditsData: CreditsData = {
-        credits: DAILY_CREDIT_LIMIT,
-        lastResetDate: today,
-      };
-
-      await AsyncStorage.setItem(CREDITS_KEY, JSON.stringify(creditsData));
-      setCredits(DAILY_CREDIT_LIMIT);
-    } catch (error) {
-      console.error("Error resetting credits:", error);
-    }
-  };
-
-  // Load credits when hook mounts or when pro status changes
-  useEffect(() => {
-    loadCredits();
-  }, [isProUser]);
+  const getTimeUntilReset = (): Date => getNextResetTime();
 
   return {
     credits: isProUser ? Infinity : credits,
     loading,
+    isProUser,
     consumeCredit,
     hasCredits,
     getTimeUntilReset,
-    resetCredits,
   };
 };

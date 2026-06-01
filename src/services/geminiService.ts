@@ -28,19 +28,17 @@ export const analyzeArtwork = async (
 
     const prompt = `Analyze this artwork and provide information in this JSON format:
 {
-  "title": "artwork title if identifiable",
-  "artist": "artist name if identifiable", 
+  "title": "artwork title if identifiable, omit if unknown",
+  "artist": "artist name if identifiable, omit if unknown",
   "period": "time period or era",
   "style": "art movement or style",
-  "description": "what you observe in this artwork",
-  "significance": "why this work is important or notable",
-  "confidence": "high/medium/low based on identification certainty",
-  
-  "medium": "materials or medium used",
   "location": "current museum or city if known",
+  "description": "what you observe in this artwork",
+  "medium": "materials or medium used",
   "dateCreated": "year or period when created",
+  "culturalContext": "historical or cultural background",
   "funFact": "interesting trivia or story about this artwork",
-  "culturalContext": "historical or cultural background"
+  "relatedArtworks": ["name of related artwork 1", "name of related artwork 2", "name of related artwork 3"]
 }
 
 Return ONLY the JSON object, no additional text.`;

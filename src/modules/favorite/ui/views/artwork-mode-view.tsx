@@ -1,18 +1,10 @@
 import React from "react";
-import {
-  FlatList,
-  TouchableOpacity,
-  Dimensions,
-  View,
-  Text,
-  StyleSheet,
-} from "react-native";
-import { Image } from "expo-image";
+import { FlatList, TouchableOpacity, Dimensions, View, Text, Image } from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "convex/react";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import { api } from "../../../../../convex/_generated/api";
-import { useTheme } from "@/provider/ThemeProvider";
 
 type ArtworkDoc = Doc<"artworks">;
 
@@ -27,38 +19,32 @@ const COLUMNS = 3;
 const CARD_WIDTH = (SW - PAD * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
 const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
-  const { isDark } = useTheme();
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
-
-  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
-  const borderColor = isDark ? "#374151" : "#E5E7EB";
 
   const renderItem = ({ item }: { item: ArtworkDoc }) => (
     <TouchableOpacity
       onPress={() => onArtworkPress(item)}
       activeOpacity={0.85}
-      style={[styles.card, { backgroundColor: cardBg, borderColor }]}
+      className="rounded-2xl overflow-hidden border bg-card border-soft"
+      style={{ width: CARD_WIDTH }}
     >
-      <View style={styles.imageWrap}>
+      <View className="w-full aspect-square">
         <Image
           source={{ uri: item.imageUri }}
-          style={{ width: "100%", height: "100%" }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
+          className="w-full h-full"
+          resizeMode="cover"
         />
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.5)"]}
-          style={styles.imageGradient}
+          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "50%" }}
         />
       </View>
-      <View style={styles.info}>
-        <Text style={[styles.cardTitle, { color: textMain }]} numberOfLines={1}>
+      <View className="p-2 gap-0.5">
+        <Text className="text-[13px] font-semibold text-main" numberOfLines={1}>
           {item.title || "Unidentified Artwork"}
         </Text>
         {item.artist && (
-          <Text style={[styles.cardArtist, { color: textSub }]} numberOfLines={1}>
+          <Text className="text-xs text-secondary" numberOfLines={1}>
             {item.artist}
           </Text>
         )}
@@ -72,32 +58,11 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
       renderItem={renderItem}
       keyExtractor={(item) => item._id}
       numColumns={COLUMNS}
-      contentContainerStyle={styles.grid}
+      contentContainerStyle={{ paddingHorizontal: PAD, paddingTop: 16, paddingBottom: 32 }}
       columnWrapperStyle={{ gap: GAP, marginBottom: GAP }}
       showsVerticalScrollIndicator={false}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  grid: { paddingHorizontal: PAD, paddingTop: 16, paddingBottom: 32 },
-  card: {
-    width: CARD_WIDTH,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-  },
-  imageWrap: { width: "100%", aspectRatio: 1, position: "relative" },
-  imageGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-  },
-  info: { padding: 10, gap: 3 },
-  cardTitle: { fontSize: 13, fontWeight: "600" },
-  cardArtist: { fontSize: 12 },
-});
 
 export default ArtworkModeView;

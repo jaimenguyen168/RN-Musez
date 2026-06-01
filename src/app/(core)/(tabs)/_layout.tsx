@@ -2,10 +2,12 @@ import React from "react";
 import { NativeTabs, Label, Icon } from "expo-router/unstable-native-tabs";
 import { Colors } from "@/constants/colors";
 import { RevenueCatProvider } from "@/provider/RevenueCatProvider";
+import { PaywallProvider } from "@/provider/PaywallProvider";
 
 export default function TabsLayout() {
   return (
     <RevenueCatProvider>
+      <PaywallProvider>
       <NativeTabs
         blurEffect="prominent"
         tintColor={Colors.Primary}
@@ -46,6 +48,7 @@ export default function TabsLayout() {
           />
         </NativeTabs.Trigger>
       </NativeTabs>
+      </PaywallProvider>
     </RevenueCatProvider>
   );
 }

@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, Dimensions, StyleSheet } from "react-native";
-import { Image } from "expo-image";
+import { View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Museum } from "@/types/museum";
@@ -34,9 +34,6 @@ interface FavoriteGridProps {
 
 const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
   const { isDark } = useTheme();
-  const cardBg = isDark ? "#1F2937" : "#FFFFFF";
-  const textMain = isDark ? "#F9FAFB" : "#111827";
-  const textSub = isDark ? "#9CA3AF" : "#6B7280";
 
   const museums: (Museum | null)[] = [
     ...category.museums.slice(0, 4),
@@ -47,64 +44,56 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={[styles.card, { backgroundColor: cardBg, width: CARD_WIDTH }]}
+      className="rounded-[18px] overflow-hidden mb-2.5 bg-card"
+      style={{
+        width: CARD_WIDTH,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 4,
+      }}
     >
-      {/* 2×2 image mosaic */}
-      <View style={styles.mosaic}>
-        <View style={styles.mosaicCol}>
-          {[0, 2].map((i) => {
-            const url = resolvePhotoUrl(museums[i]);
-            return (
-              <View key={i} style={[styles.mosaicCell, i === 0 ? { marginBottom: 2 } : { marginTop: 2 }]}>
-                {url ? (
-                  <Image source={{ uri: url }} style={styles.mosaicImg} contentFit="cover" cachePolicy="memory-disk" />
-                ) : (
-                  <View style={[styles.mosaicPlaceholder, { backgroundColor: isDark ? "#374151" : "#F3F4F6" }]}>
-                    <Ionicons name="image-outline" size={20} color="#9CA3AF" />
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </View>
-        <View style={styles.mosaicCol}>
-          {[1, 3].map((i) => {
-            const url = resolvePhotoUrl(museums[i]);
-            return (
-              <View key={i} style={[styles.mosaicCell, i === 1 ? { marginBottom: 2 } : { marginTop: 2 }]}>
-                {url ? (
-                  <Image source={{ uri: url }} style={styles.mosaicImg} contentFit="cover" cachePolicy="memory-disk" />
-                ) : (
-                  <View style={[styles.mosaicPlaceholder, { backgroundColor: isDark ? "#374151" : "#F3F4F6" }]}>
-                    <Ionicons name="image-outline" size={20} color="#9CA3AF" />
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </View>
+      {/* 2×2 mosaic */}
+      <View className="h-40 flex-row relative">
+        {[0, 1].map((col) => (
+          <View key={col} className="flex-1">
+            {[col * 2, col * 2 + 1].map((i, rowIdx) => {
+              const url = resolvePhotoUrl(museums[i]);
+              return (
+                <View key={i} className={`flex-1 ${rowIdx === 0 ? "mb-0.5" : "mt-0.5"}`}>
+                  {url ? (
+                    <Image source={{ uri: url }} className="w-full h-full" resizeMode="cover" />
+                  ) : (
+                    <View className="w-full h-full items-center justify-center bg-surface">
+                      <Ionicons name="image-outline" size={20} color="#9CA3AF" />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ))}
 
-        {/* Gradient overlay at bottom */}
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.35)"]}
-          style={styles.mosaicGradient}
+          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60 }}
         />
 
-        {/* Extra count badge */}
         {category.count > 4 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>+{category.count - 4}</Text>
+          <View className="absolute bottom-2 right-2 bg-black/55 rounded-full px-2 py-0.5">
+            <Text className="text-white text-[11px] font-bold">+{category.count - 4}</Text>
           </View>
         )}
       </View>
 
-      {/* Card footer */}
-      <View style={styles.footer}>
-        <View style={styles.footerLeft}>
-          <Text style={[styles.footerTitle, { color: textMain }]} numberOfLines={1}>
+      {/* Footer */}
+      <View className="flex-row items-center justify-between px-3.5 py-3">
+        <View className="flex-1 gap-0.5">
+          <Text className="text-sm font-bold text-main" numberOfLines={1}>
             {category.title}
           </Text>
-          <Text style={[styles.footerCount, { color: textSub }]}>
+          <Text className="text-xs text-secondary">
             {category.count} {category.count === 1 ? "museum" : "museums"}
           </Text>
         </View>
@@ -113,60 +102,5 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 18,
-    overflow: "hidden",
-    marginBottom: GAP,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  mosaic: {
-    height: 160,
-    flexDirection: "row",
-    position: "relative",
-  },
-  mosaicCol: { flex: 1 },
-  mosaicCell: { flex: 1 },
-  mosaicImg: { width: "100%", height: "100%" },
-  mosaicPlaceholder: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  mosaicGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-  },
-  countBadge: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  countBadgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
-
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  footerLeft: { flex: 1, gap: 2 },
-  footerTitle: { fontSize: 14, fontWeight: "700" },
-  footerCount: { fontSize: 12 },
-});
 
 export default FavoriteGrid;
