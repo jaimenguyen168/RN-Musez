@@ -11,7 +11,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { Artwork } from "@/types/artwork";
 import ImagePicker, { ImageAsset } from "@/components/ImagePicker";
 import { useTheme } from "@/provider/ThemeProvider";
-import { useRevenueCat } from "@/provider/RevenueCatProvider";
 import { Colors } from "@/constants/colors";
 import { useCredits } from "@/modules/snap/hooks/useCredits";
 import { usePaywall } from "@/hooks/usePaywall";
@@ -26,12 +25,11 @@ const SnapView = () => {
   const router = useRouter();
   const { setCurrentArtwork } = useArtworkStore();
   const { isDark } = useTheme();
-  const { isProUser } = useRevenueCat();
   const { presentPaywall, presentUpgradePrompt } = usePaywall();
   const insets = useSafeAreaInsets();
 
-  const { credits, loading: creditsLoading, consumeCredit, hasCredits, getTimeUntilReset } =
-    useCredits(isProUser || false);
+  const { credits, loading: creditsLoading, consumeCredit, hasCredits, getTimeUntilReset, isProUser } =
+    useCredits();
 
   const handleImageSelected = (image: ImageAsset) => setSelectedImage(image);
   const handleImageError = (error: string) => Alert.alert("Error", `Failed to select image: ${error}`);
@@ -39,11 +37,11 @@ const SnapView = () => {
 
   const showUpgradePrompt = () => {
     const resetTime = getTimeUntilReset();
-    const hoursUntilReset = Math.ceil((resetTime.getTime() - Date.now()) / (1000 * 60 * 60));
+    const resetHour = resetTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     presentUpgradePrompt({
       title: "No Credits Remaining",
-      message: `You've used all your daily credits. They'll reset in ${hoursUntilReset} hours, or upgrade to Pro for unlimited access.`,
-      cancelText: "Cancel",
+      message: `You've used all 3 daily credits. They reset at 8:00 AM tomorrow (${resetHour}), or upgrade to Pro for unlimited access.`,
+      cancelText: "Wait until tomorrow",
       upgradeText: "Upgrade to Pro",
     });
   };
@@ -99,7 +97,7 @@ const SnapView = () => {
       >
         <Ionicons name="diamond" size={12} color={empty ? "#EF4444" : PRIMARY} />
         <Text className="text-[13px] font-semibold" style={{ color: empty ? "#EF4444" : PRIMARY }}>
-          {credits}/5 credits
+          {credits}/3 credits
         </Text>
       </View>
     );
@@ -150,21 +148,6 @@ const SnapView = () => {
           <CreditsPill />
         </View>
 
-        {credits === 0 && !isProUser && (
-          <View
-            className={`px-6 pt-4 border-t ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
-            style={{ paddingBottom: insets.bottom + 12 }}
-          >
-            <TouchableOpacity
-              onPress={() => presentPaywall({ showSuccessAlert: true })}
-              className="flex-row items-center justify-center gap-2 rounded-[14px] py-3.5 bg-primary"
-              activeOpacity={0.85}
-            >
-              <Ionicons name="star" size={15} color="#fff" />
-              <Text className="text-white font-semibold text-sm">Upgrade to Pro for unlimited scans</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
     );
   }

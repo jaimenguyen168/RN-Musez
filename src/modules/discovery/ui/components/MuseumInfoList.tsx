@@ -13,13 +13,12 @@ interface MuseumInfoListProps {
 }
 
 const MuseumInfoList = ({ title, museums, onCardPress }: MuseumInfoListProps) => {
-  const { isDark } = useTheme();
   if (museums.length === 0) return null;
 
   return (
     <View className="mb-6">
       <View className="px-6 mb-3">
-        <Text className={`text-[18px] font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`}>{title}</Text>
+        <Text className="text-[18px] font-bold text-main">{title}</Text>
       </View>
       <View
         className="mx-4 rounded-2xl overflow-hidden"
@@ -67,25 +66,25 @@ const MuseumInfoCard = ({
     <TouchableOpacity
       onPress={onCardPress}
       activeOpacity={0.7}
-      className={`flex-row items-center px-3.5 py-3 gap-3 ${isDark ? "bg-gray-800" : "bg-white"} ${!isLast ? `border-b ${isDark ? "border-gray-700" : "border-gray-100"}` : ""}`}
+      className={`flex-row items-center px-3.5 py-3 gap-3 bg-card ${!isLast ? "border-b border-soft" : ""}`}
     >
       <View className={`w-9 h-9 rounded-[10px] items-center justify-center ${isDark ? "bg-gray-700" : "bg-indigo-50"}`}>
         <Ionicons name="business-outline" size={18} color="#6366F1" />
       </View>
 
       <View className="flex-1 gap-0.5">
-        <Text className={`text-[13px] font-semibold ${isDark ? "text-gray-50" : "text-gray-900"}`} numberOfLines={1}>
+        <Text className="text-[13px] font-semibold text-main" numberOfLines={1}>
           {museum.name}
         </Text>
         <View className="flex-row items-center">
           {formattedDistance && (
-            <Text className="text-[11px] text-gray-400">{formattedDistance}</Text>
+            <Text className="text-[11px] text-secondary">{formattedDistance}</Text>
           )}
           {formattedDistance && museum.vicinity && (
             <Text className={`text-[11px] ${isDark ? "text-gray-600" : "text-gray-300"}`}>{"  ·  "}</Text>
           )}
           {(museum.vicinity || museum.formattedAddress) && (
-            <Text className="text-[11px] text-gray-400 flex-1" numberOfLines={1}>
+            <Text className="text-[11px] text-secondary flex-1" numberOfLines={1}>
               {museum.vicinity || museum.formattedAddress}
             </Text>
           )}

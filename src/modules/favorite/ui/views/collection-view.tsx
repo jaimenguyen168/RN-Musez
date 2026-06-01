@@ -7,6 +7,7 @@ import ContextMenuDropdown from "@/components/ContextMenuDropdown";
 import MuseumListView from "@/modules/museums/ui/views/museum-list-view";
 import BackButton from "@/components/BackButton";
 import RemoveCollectionModal from "@/modules/favorite/ui/components/RemoveCollectionModal";
+import { Colors } from "@/constants/colors";
 import { useTheme } from "@/provider/ThemeProvider";
 
 const CollectionView = () => {
@@ -43,7 +44,6 @@ const CollectionView = () => {
       const timer = setTimeout(() => {
         router.back();
       }, 100);
-
       return () => clearTimeout(timer);
     }
   }, [museums.length, isDeleting, isRemoving, router]);
@@ -65,6 +65,18 @@ const CollectionView = () => {
     </View>
   );
 
+  const LoadingOverlay = ({ message, zIndex }: { message: string; zIndex: number }) => (
+    <View
+      className="absolute inset-0 flex-1 items-center justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex }}
+    >
+      <View className="bg-card p-6 rounded-2xl items-center">
+        <ActivityIndicator size="large" color={isDark ? "#fff" : "#000"} />
+        <Text className="mt-3 text-base font-medium text-main">{message}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <>
       <MuseumListView
@@ -74,7 +86,6 @@ const CollectionView = () => {
         rightComponent={title !== "Saved" ? rightComponent : null}
       />
 
-      {/* Remove Collection Modal */}
       <RemoveCollectionModal
         visible={showRemoveModal}
         onClose={handleCloseRemoveModal}
@@ -84,41 +95,8 @@ const CollectionView = () => {
         isRemoving={isRemoving}
       />
 
-      {/* Full screen loading overlay for deletion */}
-      {isDeleting && (
-        <View
-          className="absolute inset-0 bg-black bg-opacity-50 flex-1 items-center justify-center"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 1000,
-          }}
-        >
-          <View className="bg-white p-6 rounded-lg items-center">
-            <ActivityIndicator size="large" color="#000" />
-            <Text className="mt-3 text-base font-medium">
-              Deleting collection...
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Full screen loading overlay for removing museums */}
-      {isRemoving && (
-        <View
-          className="absolute inset-0 bg-black bg-opacity-50 flex-1 items-center justify-center"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 999,
-          }}
-        >
-          <View className="bg-white p-6 rounded-lg items-center">
-            <ActivityIndicator size="large" color="#000" />
-            <Text className="mt-3 text-base font-medium">
-              Removing museums...
-            </Text>
-          </View>
-        </View>
-      )}
+      {isDeleting && <LoadingOverlay message="Deleting collection..." zIndex={1000} />}
+      {isRemoving && <LoadingOverlay message="Removing museums..." zIndex={999} />}
     </>
   );
 };

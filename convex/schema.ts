@@ -2,6 +2,7 @@ import { defineSchema } from "convex/server";
 import { museums, museumCategories, savedMuseums, reviews } from "./schema/museums";
 import { artworks } from "./schema/artworks";
 import { users } from "./schema/users";
+import { credits } from "./schema/credits";
 
 export default defineSchema({
   users: users,
@@ -12,4 +13,5 @@ export default defineSchema({
   museumCategories: museumCategories,
 
   artworks: artworks,
+  credits: credits,
 });

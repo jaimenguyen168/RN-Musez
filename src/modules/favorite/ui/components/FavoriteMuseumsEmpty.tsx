@@ -14,7 +14,7 @@ const FavoriteMuseumsEmpty = ({
   const { isDark } = useTheme();
 
   return (
-    <View className="flex-1 items-center justify-center p-8">
+    <View className="flex-1 items-center justify-center p-8 mb-20">
       <View className="bg-card rounded-3xl p-8 items-center shadow-md w-full max-w-sm border border-soft">
         <View className="w-20 h-20 bg-surface rounded-full items-center justify-center mb-6">
           <Ionicons
@@ -34,7 +34,12 @@ const FavoriteMuseumsEmpty = ({
 
         <TouchableOpacity
           onPress={onDiscoveryPress}
-          style={{ backgroundColor: Colors.Primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 }}
+          style={{
+            backgroundColor: Colors.Primary,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 24,
+          }}
         >
           <Text className="text-white font-semibold">Discover Museums</Text>
         </TouchableOpacity>

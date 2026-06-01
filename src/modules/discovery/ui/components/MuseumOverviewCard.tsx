@@ -52,7 +52,7 @@ const MuseumOverviewCard = ({
         className="rounded-[20px] overflow-hidden"
         style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 }}
       >
-        <View className="h-60 bg-gray-200">
+        <View className="h-60 bg-surface">
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
@@ -60,7 +60,7 @@ const MuseumOverviewCard = ({
               resizeMode="cover"
             />
           ) : (
-            <View className="absolute inset-0 items-center justify-center bg-gray-100">
+            <View className="absolute inset-0 items-center justify-center bg-surface">
               <Ionicons name="image-outline" size={40} color="#6B7280" />
             </View>
           )}
@@ -115,10 +115,10 @@ const MuseumOverviewCard = ({
   return (
     <Pressable
       onPress={onCardPress}
-      className={`flex-row rounded-2xl overflow-hidden mx-4 mb-3 h-[100px] ${isDark ? "bg-gray-800" : "bg-white"}`}
+      className="flex-row rounded-2xl overflow-hidden mx-4 mb-3 h-[100px] bg-card"
       style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}
     >
-      <View className="w-24 h-full bg-gray-200">
+      <View className="w-24 h-full bg-surface">
         {photoUrl ? (
           <Image
             source={{ uri: photoUrl }}
@@ -126,33 +126,33 @@ const MuseumOverviewCard = ({
             resizeMode="cover"
           />
         ) : (
-          <View className="w-full h-full items-center justify-center bg-gray-100">
+          <View className="w-full h-full items-center justify-center bg-surface">
             <Ionicons name="image-outline" size={28} color="#9CA3AF" />
           </View>
         )}
       </View>
 
       <View className="flex-1 px-3 py-2.5 justify-center">
-        <Text className={`text-[13px] font-bold mb-0.5 tracking-wide ${isDark ? "text-gray-50" : "text-gray-900"}`} numberOfLines={2}>
+        <Text className="text-[13px] font-bold mb-0.5 tracking-wide text-main" numberOfLines={2}>
           {museum.name}
         </Text>
-        <Text className={`text-[11px] mb-1.5 ${isDark ? "text-gray-400" : "text-gray-500"}`} numberOfLines={1}>
+        <Text className="text-[11px] mb-1.5 text-secondary" numberOfLines={1}>
           {museum.vicinity || museum.formattedAddress}
         </Text>
 
         <View className="flex-row items-center gap-0.5">
           <Ionicons name="star" size={12} color="#F59E0B" />
-          <Text className={`text-xs font-semibold ml-0.5 ${isDark ? "text-gray-50" : "text-gray-900"}`}>
+          <Text className="text-xs font-semibold ml-0.5 text-main">
             {museum.rating?.toFixed(1) ?? "0.0"}
           </Text>
-          <Text className={`text-[11px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+          <Text className="text-[11px] text-secondary">
             ({museum.userRatingsTotal ?? 0})
           </Text>
           {formattedDistance && (
             <>
               <Text className={`text-xs mx-0.5 ${isDark ? "text-gray-600" : "text-gray-300"}`}>·</Text>
               <Ionicons name="location-outline" size={12} color={isDark ? "#9CA3AF" : "#6B7280"} />
-              <Text className={`text-[11px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>{formattedDistance}</Text>
+              <Text className="text-[11px] text-secondary">{formattedDistance}</Text>
             </>
           )}
         </View>

@@ -5,7 +5,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "convex/react";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import { api } from "../../../../../convex/_generated/api";
-import { useTheme } from "@/provider/ThemeProvider";
 
 type ArtworkDoc = Doc<"artworks">;
 
@@ -20,14 +19,13 @@ const COLUMNS = 3;
 const CARD_WIDTH = (SW - PAD * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
 const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
-  const { isDark } = useTheme();
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
   const renderItem = ({ item }: { item: ArtworkDoc }) => (
     <TouchableOpacity
       onPress={() => onArtworkPress(item)}
       activeOpacity={0.85}
-      className={`rounded-2xl overflow-hidden border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+      className="rounded-2xl overflow-hidden border bg-card border-soft"
       style={{ width: CARD_WIDTH }}
     >
       <View className="w-full aspect-square">
@@ -42,17 +40,11 @@ const ArtworkModeView = ({ onArtworkPress }: ArtworkModeViewProps) => {
         />
       </View>
       <View className="p-2 gap-0.5">
-        <Text
-          className={`text-[13px] font-semibold ${isDark ? "text-gray-50" : "text-gray-900"}`}
-          numberOfLines={1}
-        >
+        <Text className="text-[13px] font-semibold text-main" numberOfLines={1}>
           {item.title || "Unidentified Artwork"}
         </Text>
         {item.artist && (
-          <Text
-            className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}
-            numberOfLines={1}
-          >
+          <Text className="text-xs text-secondary" numberOfLines={1}>
             {item.artist}
           </Text>
         )}

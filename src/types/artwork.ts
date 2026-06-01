@@ -4,8 +4,6 @@ export interface ArtworkInsights {
   period?: string;
   style?: string;
   description?: string;
-  significance?: string;
-  confidence?: "high" | "medium" | "low";
   error?: string;
 
   medium?: string;
@@ -13,6 +11,7 @@ export interface ArtworkInsights {
   dateCreated?: string;
   funFact?: string;
   culturalContext?: string;
+  relatedArtworks?: string[];
 }
 
 export interface Artwork extends ArtworkInsights {

@@ -9,18 +9,13 @@ const handleClerkWebhook = httpAction(async (ctx, request) => {
 
   switch (type) {
     case "user.created":
-      await ctx.runMutation(internal.auth.upsertFromClerk, {
-        data,
-      });
+      await ctx.runMutation(internal.auth.upsertFromClerk, { data });
       break;
     case "user.deleted":
-      const clerkUserId = data.id!;
-      await ctx.runMutation(internal.auth.deleteFromClerk, { clerkUserId });
+      await ctx.runMutation(internal.auth.deleteFromClerk, { clerkUserId: data.id! });
       break;
     case "user.updated":
-      await ctx.runMutation(internal.auth.upsertFromClerk, {
-        data,
-      });
+      await ctx.runMutation(internal.auth.upsertFromClerk, { data });
       break;
     default:
       break;

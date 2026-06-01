@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -8,13 +8,16 @@ import {
   Alert,
   ScrollView,
   Dimensions,
-  Image
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Purchases, { PurchasesPackage } from "react-native-purchases";
+import Purchases from "react-native-purchases";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Colors } from "@/constants/colors";
+import { useTheme } from "@/provider/ThemeProvider";
 import scream from "../../assets/images/scream.png";
 
 const { height: SH } = Dimensions.get("window");
@@ -41,34 +44,19 @@ export const CustomPaywallModal = ({
   onPurchased,
 }: CustomPaywallModalProps) => {
   const insets = useSafeAreaInsets();
-  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
-  const [loadingOfferings, setLoadingOfferings] = useState(true);
+  const { isDark } = useTheme();
+  const setProStatus = useMutation(api.function.credits.setProStatus);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
-  useEffect(() => {
-    if (!visible) return;
-    setLoadingOfferings(true);
-    Purchases.getOfferings()
-      .then((o) => setPkg(o.current?.availablePackages[0] ?? null))
-      .catch(console.error)
-      .finally(() => setLoadingOfferings(false));
-  }, [visible]);
-
   const handlePurchase = async () => {
-    if (!pkg) return;
     setPurchasing(true);
     try {
-      await Purchases.purchasePackage(pkg);
+      await setProStatus({ isPro: true });
       onPurchased?.();
       onClose();
-    } catch (error: any) {
-      if (!error.userCancelled) {
-        Alert.alert(
-          "Purchase Failed",
-          "Something went wrong. Please try again.",
-        );
-      }
+    } catch {
+      Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setPurchasing(false);
     }
@@ -79,20 +67,12 @@ export const CustomPaywallModal = ({
     try {
       const info = await Purchases.restorePurchases();
       if (info.entitlements.active["Musez Pro"]) {
+        await setProStatus({ isPro: true });
         Alert.alert("Restored!", "Your Pro subscription has been restored.", [
-          {
-            text: "OK",
-            onPress: () => {
-              onPurchased?.();
-              onClose();
-            },
-          },
+          { text: "OK", onPress: () => { onPurchased?.(); onClose(); } },
         ]);
       } else {
-        Alert.alert(
-          "No Purchases Found",
-          "We couldn't find any previous purchases to restore.",
-        );
+        Alert.alert("No Purchases Found", "We couldn't find any previous purchases to restore.");
       }
     } catch {
       Alert.alert("Restore Failed", "Something went wrong. Please try again.");
@@ -101,9 +81,9 @@ export const CustomPaywallModal = ({
     }
   };
 
-  const priceLabel = pkg?.product.priceString
-    ? `Subscribe to Pro for just ${pkg.product.priceString}/yr`
-    : "Subscribe to Pro";
+
+  // PRO column amber bg — no semantic token, keep as isDark ternary
+  const proColBg = isDark ? "bg-[#2D1F00]" : "bg-[#FFF4E0]";
 
   return (
     <Modal
@@ -112,7 +92,7 @@ export const CustomPaywallModal = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-app">
         <ScrollView
           showsVerticalScrollIndicator={false}
           bounces={false}
@@ -126,7 +106,7 @@ export const CustomPaywallModal = ({
               resizeMode="cover"
             />
             <LinearGradient
-              colors={["transparent", "#fff"]}
+              colors={["transparent", isDark ? "#111827" : "#ffffff"]}
               start={{ x: 0, y: 0.55 }}
               end={{ x: 0, y: 1 }}
               style={{
@@ -142,17 +122,14 @@ export const CustomPaywallModal = ({
             <TouchableOpacity
               onPress={onClose}
               className="absolute right-4 rounded-full p-2"
-              style={{
-                top: insets.top + 12,
-                backgroundColor: "rgba(0,0,0,0.35)",
-              }}
+              style={{ top: insets.top + 12, backgroundColor: "rgba(0,0,0,0.35)" }}
             >
               <Ionicons name="close" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
 
           {/* ── Title ────────────────────────────────────────────────────── */}
-          <Text className="text-[24px] font-extrabold text-gray-900 text-center px-7 mt-7 mb-7 leading-[33px] -tracking-[0.3px]">
+          <Text className="text-[24px] font-extrabold text-main text-center px-7 mt-7 mb-7 leading-[33px] -tracking-[0.3px]">
             Become a Pro to access{"\n"}Unlimited Features
           </Text>
 
@@ -162,11 +139,11 @@ export const CustomPaywallModal = ({
             <View className="flex-row items-center">
               <View className="flex-1" />
               <View className="w-16 items-center">
-                <Text className="text-[11px] font-bold text-gray-400 tracking-wider">
+                <Text className="text-[11px] font-bold text-secondary tracking-wider">
                   FREE
                 </Text>
               </View>
-              <View className="w-20 items-center justify-center py-4 bg-[#FFF4E0] rounded-t-2xl">
+              <View className={`w-20 items-center justify-center py-4 ${proColBg} rounded-t-2xl`}>
                 <View className="bg-primary rounded-lg px-3.5 py-1.5">
                   <Text className="text-white font-extrabold text-[13px] tracking-wide">
                     PRO
@@ -179,27 +156,18 @@ export const CustomPaywallModal = ({
             {FEATURES.map((f, i) => {
               const isLast = i === FEATURES.length - 1;
               return (
-                <View
-                  key={i}
-                  className="flex-row items-center border-t border-gray-100"
-                >
+                <View key={i} className="flex-row items-center border-t border-soft">
                   <View className="flex-1 py-3.5 pr-2">
-                    <Text className="text-sm text-gray-700 leading-5">
-                      {f.label}
-                    </Text>
+                    <Text className="text-sm text-main leading-5">{f.label}</Text>
                   </View>
                   <View className="w-16 items-center">
                     {f.free ? (
                       <Ionicons name="checkmark" size={18} color="#9CA3AF" />
                     ) : (
-                      <Text className="text-base text-gray-400 font-semibold">
-                        —
-                      </Text>
+                      <Text className="text-base text-secondary font-semibold">—</Text>
                     )}
                   </View>
-                  <View
-                    className={`w-20 items-center justify-center py-3.5 bg-[#FFF4E0] ${isLast ? "rounded-b-2xl" : ""}`}
-                  >
+                  <View className={`w-20 items-center justify-center py-3.5 ${proColBg} ${isLast ? "rounded-b-2xl" : ""}`}>
                     <Ionicons name="checkmark" size={18} color={PRIMARY} />
                   </View>
                 </View>
@@ -210,25 +178,15 @@ export const CustomPaywallModal = ({
 
         {/* ── Sticky footer ────────────────────────────────────────────────── */}
         <View
-          className="absolute bottom-0 left-0 right-0 bg-white px-6 pt-4 border-t border-gray-100 gap-3"
+          className="absolute bottom-0 left-0 right-0 bg-app px-6 pt-4 border-t border-soft gap-3"
           style={{ paddingBottom: insets.bottom + 16 }}
         >
-          {loadingOfferings ? (
-            <ActivityIndicator color={PRIMARY} />
-          ) : (
-            <Text className="text-sm text-gray-500 text-center">
-              {priceLabel}
-            </Text>
-          )}
-
           <TouchableOpacity
             onPress={handlePurchase}
-            disabled={purchasing || loadingOfferings || !pkg}
+            disabled={purchasing}
             activeOpacity={0.85}
             className="bg-primary rounded-2xl py-4 items-center justify-center"
-            style={{
-              opacity: purchasing || loadingOfferings || !pkg ? 0.6 : 1,
-            }}
+            style={{ opacity: purchasing ? 0.6 : 1 }}
           >
             {purchasing ? (
               <ActivityIndicator color="#fff" size="small" />
@@ -242,7 +200,7 @@ export const CustomPaywallModal = ({
             disabled={restoring}
             className="items-center py-1"
           >
-            <Text className="text-sm text-gray-500">
+            <Text className="text-sm text-secondary">
               {restoring ? "Restoring..." : "Restore purchases"}
             </Text>
           </TouchableOpacity>

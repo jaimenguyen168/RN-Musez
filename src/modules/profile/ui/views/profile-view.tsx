@@ -16,14 +16,14 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/provider/ThemeProvider";
-import { useRevenueCat } from "@/provider/RevenueCatProvider";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useCredits } from "@/modules/snap/hooks/useCredits";
 
 const ProfileView = () => {
   const router = useRouter();
   const { signOut } = useAuth();
   const { setTheme, isDark } = useTheme();
-  const { isProUser } = useRevenueCat();
+  const { isProUser } = useCredits();
   const { presentPaywall } = usePaywall();
 
   const scrollY = useRef(new Animated.Value(0)).current;

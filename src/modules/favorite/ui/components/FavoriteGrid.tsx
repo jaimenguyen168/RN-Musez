@@ -44,7 +44,7 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      className={`rounded-[18px] overflow-hidden mb-2.5 ${isDark ? "bg-gray-800" : "bg-white"}`}
+      className="rounded-[18px] overflow-hidden mb-2.5 bg-card"
       style={{
         width: CARD_WIDTH,
         shadowColor: "#000",
@@ -65,7 +65,7 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
                   {url ? (
                     <Image source={{ uri: url }} className="w-full h-full" resizeMode="cover" />
                   ) : (
-                    <View className={`w-full h-full items-center justify-center ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
+                    <View className="w-full h-full items-center justify-center bg-surface">
                       <Ionicons name="image-outline" size={20} color="#9CA3AF" />
                     </View>
                   )}
@@ -90,10 +90,10 @@ const FavoriteGrid = ({ category, onPress }: FavoriteGridProps) => {
       {/* Footer */}
       <View className="flex-row items-center justify-between px-3.5 py-3">
         <View className="flex-1 gap-0.5">
-          <Text className={`text-sm font-bold ${isDark ? "text-gray-50" : "text-gray-900"}`} numberOfLines={1}>
+          <Text className="text-sm font-bold text-main" numberOfLines={1}>
             {category.title}
           </Text>
-          <Text className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+          <Text className="text-xs text-secondary">
             {category.count} {category.count === 1 ? "museum" : "museums"}
           </Text>
         </View>

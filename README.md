@@ -1,307 +1,139 @@
 # RN-Musez
 
-> RN-Musez is a React Native Expo app leveraging Clerk for authentication, Convex for data storage, and Google's generative AI, with a native mobile interface.
-
 <div align="center">
+  <img src="https://img.shields.io/badge/-React_Native-black?style=for-the-badge&logoColor=white&logo=react&color=20232A" alt="React Native" />
+  <img src="https://img.shields.io/badge/-Expo-black?style=for-the-badge&logoColor=white&logo=expo&color=000020" alt="Expo" />
   <img src="https://img.shields.io/badge/-TypeScript-black?style=for-the-badge&logoColor=white&logo=typescript&color=3178C6" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/-NativeWind-black?style=for-the-badge&logoColor=white&logo=tailwindcss&color=06B6D4" alt="NativeWind" />
+  <img src="https://img.shields.io/badge/-Convex-black?style=for-the-badge&logoColor=white&logo=convex&color=EE4E3A" alt="Convex" />
   <img src="https://img.shields.io/badge/-Clerk-black?style=for-the-badge&logoColor=white&logo=clerk&color=6C47FF" alt="Clerk" />
+  <img src="https://img.shields.io/badge/-Gemini_AI-black?style=for-the-badge&logoColor=white&logo=google&color=4285F4" alt="Google Gemini" />
+  <img src="https://img.shields.io/badge/-RevenueCat-black?style=for-the-badge&logoColor=white&logo=revenuecat&color=F50057" alt="RevenueCat" />
 </div>
 
-## 📋 <a name="table-of-contents">Table of Contents</a>
+---
 
-1. ✨ [Introduction](#introduction)
-2. 📋 [Requirements Specification](#requirements-specification)
+## 📋 Table of Contents
+
+1. 📋 [Project Overview](#project-overview)
+2. 🔋 [Key Features](#key-features)
+3. 🚀 [Planned Features](#planned-features)
+4. 📌 [Getting Started](#getting-started)
 
 ---
 
-## <a name="introduction">✨ Introduction</a>
+## <a name="project-overview">📋 Project Overview</a>
 
-## Project Abstract
-
-This project aims to create a comprehensive and engaging mobile application for art enthusiasts, providing a platform to discover, explore, and interact with various artworks and museums. The app seeks to bridge the gap between art lovers and the art world by offering a user-friendly interface to navigate through a vast collection of artworks, learn about artists and their creations, and connect with like-minded individuals. By leveraging cutting-edge technologies, the app will deliver a seamless and immersive experience, making art more accessible and enjoyable for everyone.
-
-## High Level Requirements
-
-The system must provide an intuitive and visually appealing interface that allows users to effortlessly browse through a vast collection of artworks, filter by categories, and access detailed information about each piece. It must also enable users to create personalized profiles, save favorite artworks, and engage with the community through features like commenting and sharing. Furthermore, the app should integrate mapping functionality to help users locate nearby museums and exhibitions, and offer a seamless authentication process to ensure secure and personalized experiences.
-
-## Conceptual Design
-
-The proposed system will be built as a mobile application, utilizing a combination of React Native and Expo to ensure cross-platform compatibility. The app will consist of several key components, including a discovery feed, artwork details, user profiles, and a mapping feature. A robust backend infrastructure, powered by Convex, will handle data storage, authentication, and API connectivity. The app will also leverage various libraries and APIs, such as Google Maps and Cloudinary, to provide a rich and seamless experience.
-
-## Background
-
-The art world has traditionally been inaccessible to many due to geographical and socio-economic barriers. Existing art platforms often cater to a niche audience, providing limited functionality and an overwhelming experience. This project aims to democratize access to art by creating an engaging, user-friendly, and inclusive platform. Current solutions often lack a strong focus on community engagement, personalized experiences, and seamless navigation. This project addresses these gaps by providing a comprehensive and immersive experience that bridges the gap between art enthusiasts and the art world.
-
-## Required Resources
-
-The project depends on the following tools, services, frameworks, and infrastructure:
-
-* React Native and Expo for cross-platform development
-* Convex for backend infrastructure and data management
-* Google Maps API for mapping functionality
-* Cloudinary for image and media storage
-* TypeScript and Tailwind CSS for development and styling
-* ESLint and Prettier for code quality and formatting
-
-These resources will enable the development of a scalable, secure, and feature-rich application that delivers a seamless and engaging experience to users.
+**Musez** is an art discovery mobile app built with **React Native** and **Expo** that brings the museum experience to your pocket. Explore museums near you on an interactive map or a curated list, snap any artwork with your camera for instant AI-powered insights powered by **Google Gemini**, and unlock the full story behind every masterpiece. Pro subscribers get unlimited AI analysis through an in-app purchase managed by **RevenueCat**.
 
 ---
 
-## <a name="requirements-specification">📋 Requirements Specification</a>
+## <a name="key-features">🔋 Key Features</a>
 
-### System Overview
+👉 **Museum Discovery**: explore nearby museums via an interactive map or a filterable list view, powered by location services and the Google Maps API
 
-## Purpose & Scope
-The Musez system is a mobile application designed to provide users with a seamless and engaging experience for exploring and interacting with artworks and museums. The primary users of this system are art enthusiasts, museum-goers, and individuals interested in cultural experiences.
+👉 **Snap AI — Artwork Analysis**: point your camera at any artwork or upload a photo from your gallery to get instant AI insights including artist, period, style, medium, and historical context — powered by Google Gemini 2.5 Flash
 
-The system explicitly does not cover:
-- A comprehensive art database; instead, it focuses on providing a curated selection of artworks and museums
-- E-commerce functionality; users cannot purchase artworks directly through the app
-- Advanced art analysis or critique tools; the app provides general information and insights about artworks
+👉 **Museum Details**: view rich information for each museum including location, categories, hours, and user reviews
 
-## System Goals
-The Musez system aims to achieve the following specific, measurable goals:
+👉 **Favorites & Collections**: save museums to personalised collections and revisit them any time from your profile
 
-1. **User Engagement**: Increase user engagement by providing an immersive and interactive experience, measured by a minimum of 30 minutes of average session duration.
-2. **Artwork Discovery**: Enable users to discover new artworks and museums, measured by a 25% increase in user-reported discovery of new art pieces.
-3. **Personalization**: Provide users with personalized recommendations for artworks and museums based on their interests, measured by a 4.5-star rating on the app store for relevance.
-4. **Social Sharing**: Encourage users to share their experiences and discoveries on social media, measured by a minimum of 10,000 social media posts per month.
-5. **User Retention**: Achieve a user retention rate of 75% after three months of usage.
+👉 **Reviews**: leave and read reviews for museums, with ratings tied to your Clerk profile
 
-## Key Features
-The Musez system offers the following key features:
+👉 **Pro Subscription**: free users get a limited number of AI insight credits; Pro subscribers unlock unlimited snaps via RevenueCat in-app purchases
 
-👉 **Interactive Map**: A map view that allows users to explore nearby museums and artworks
-👉 **Artwork Details**: Detailed information about artworks, including images, descriptions, and artist information
-👉 **Museum Information**: Information about museums, including location, hours of operation, and exhibitions
-👉 **Personalized Recommendations**: Recommendations for artworks and museums based on user interests
-👉 **Social Sharing**: Ability to share experiences and discoveries on social media
+👉 **Authentication**: sign up and sign in with email/password or Google OAuth via Clerk, with session management and protected routes
 
-## User Roles
-The Musez system has the following user roles:
+👉 **Dark / Light Mode**: system-aware theme that automatically follows your device appearance
 
-👉 **End User**: The primary user of the Musez system, who interacts with the application's features to explore and discover artworks and museums
-👉 **Administrator**: Responsible for maintaining the application's content, including artworks and museum information
+👉 **Modern UI**: built with NativeWind (Tailwind CSS for React Native), Expo Router file-based navigation, and smooth animations via Reanimated
 
-## Assumptions & Constraints
-The Musez system is built on the following assumptions:
+---
 
-* Users have a stable internet connection
-* Users have a compatible mobile device
-* The system has access to a curated selection of artworks and museums
+## <a name="planned-features">🚀 Planned Features</a>
 
-The system has the following known limitations:
+⚡ **AR Artwork Lens**: point your camera at a museum wall and see an AR overlay with the artwork's title, artist, and story — no tapping required
 
-* Limited to a curated selection of artworks and museums; not a comprehensive database
-* No e-commerce functionality
-* No advanced art analysis or critique tools
+🗺️ **Guided Audio Tours**: AI-generated personalized audio tours for specific museums, narrated based on your interests and the artworks you've already explored
 
-## Success Criteria
-The Musez system will be considered successful if it achieves the following measurable outcomes:
+🤝 **Social Collections**: create and share curated art collections with friends, follow other collectors, and discover new artworks through your network
 
-1. **User Adoption**: A minimum of 10,000 downloads within the first six months of launch
-2. **User Engagement**: Average session duration of 30 minutes
-3. **User Retention**: A user retention rate of 75% after three months of usage
-4. **App Store Rating**: A 4.5-star rating on the app store
-5. **Social Media Presence**: A minimum of 10,000 social media followers within the first six months of launch
+---
 
-### Architecture Diagram
+## <a name="getting-started">📌 Getting Started</a>
 
-The provided source code appears to be for a React Native application built with Expo, utilizing various libraries and tools such as Nativewind for styling, Convex for backend functionality, and Clerk for authentication. 
+### Prerequisites
 
-The architectural design of the application seems to follow a modular approach, with separate components for different features and functionalities. For instance, navigation headers, buttons, image pickers, and map views are all separate components. This modularity allows for easier maintenance and updates to individual components without affecting the rest of the application.
+- Node.js 20+
+- pnpm
+- Expo CLI (`pnpm add -g expo-cli`)
+- iOS Simulator (Xcode) or a physical iOS/Android device
+- A [Convex](https://convex.dev) account
+- A [Clerk](https://clerk.com) account
+- A [Google Cloud](https://console.cloud.google.com) project with Maps SDK and Gemini API enabled
+- A [RevenueCat](https://revenuecat.com) account
 
-The use of TypeScript and a `tsconfig.json` file indicates that the application is built with type safety in mind, which can help catch errors early in the development process and improve code maintainability. 
+### Installation
 
-The application's routing is handled by Expo's built-in file-based routing system, which allows for easy navigation between different screens and features. 
+**Clone the repository**
 
-The application's theme and styling are managed through a combination of Nativewind and a custom `tailwind.config.js` file, which provides a set of predefined styles and utilities for building the application's UI.
+```bash
+git clone https://github.com/jaimenguyen168/RN-Musez.git
+cd RN-Musez
+```
 
-The Convex library is used for backend functionality, including authentication, data storage, and API routes. The `convex` directory contains various files related to Convex configuration, schema definitions, and API implementations.
+**Install dependencies**
 
-The Clerk library is used for authentication and user management, with features such as sign-in, sign-up, and password reset.
+```bash
+pnpm install
+```
 
-The application's components are designed to be reusable and flexible, with features such as animated headers, customizable buttons, and image pickers. 
+### Environment Variables
 
-The use of Expo's built-in libraries and tools, such as `expo-image-picker` and `expo-location`, allows for easy integration of native device features into the application.
+Create a `.env.local` file in the root of the project and add the following:
 
-Overall, the application's architecture appears to be well-structured and modular, with a clear separation of concerns between different components and features. 
+```env
+# App
+EXPO_PUBLIC_BASE_URL=http://localhost:8081
 
-The application's use of various libraries and tools allows for a wide range of functionalities, from authentication and data storage to navigation and styling. 
+# Convex
+CONVEX_DEPLOYMENT=
+EXPO_PUBLIC_CONVEX_URL=
 
-The application's code is well-organized, with clear and concise naming conventions, and a consistent coding style throughout. 
+# Clerk
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=
+EXPO_CLERK_FRONTEND_API_URL=
+CLERK_SECRET_KEY=
 
-The use of TypeScript and a `tsconfig.json` file ensures that the application is built with type safety in mind, which can help catch errors early in the development process and improve code maintainability. 
+# Google Maps
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=
 
-The application's routing and navigation are handled by Expo's built-in file-based routing system, which allows for easy navigation between different screens and features. 
+# Google Gemini
+EXPO_PUBLIC_GEMINI_API_KEY=
 
-The application's theme and styling are managed through a combination of Nativewind and a custom `tailwind.config.js` file, which provides a set of predefined styles and utilities for building the application's UI.
+# RevenueCat
+EXPO_PUBLIC_REVENUECAT_IOS_KEY=
+EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=
+```
 
-The Convex and Clerk libraries provide a robust backend and authentication system, allowing for secure data storage and user management.
+### Convex Setup
 
-The application's components are designed to work seamlessly across different platforms, including web, iOS, and Android.
+```bash
+pnpm dlx convex dev
+```
 
-The application's use of Expo and React Native allows for easy deployment and testing on different platforms.
+This will prompt you to log in, create a project, and sync your schema automatically.
 
-The application's code is built with performance and scalability in mind, with features such as optimized database queries and efficient data storage.
+### Run the Development Server
 
-The application's security features, such as authentication and data encryption, ensure that user data is protected and secure.
+```bash
+pnpm start
+```
 
-The application's features and functionalities are designed to be highly customizable, allowing for easy adaptation to different use cases and business requirements.
-
-The application's design and architecture make it an ideal choice for building complex and scalable React Native applications. 
-
-The use of a modular approach and reusable components allows for easy maintenance and updates to individual components without affecting the rest of the application. 
-
-The application's comprehensive testing and debugging tools ensure that the application is thoroughly tested and validated before deployment. 
-
-The application follows standard professional guidelines for coding, testing, and documentation. 
-
-Overall, the application's architecture and design appear to be well-suited for a complex and scalable React Native application. 
-
-The use of various libraries and tools allows for a wide range of functionalities, from authentication and data storage to navigation and styling. 
-
-The application's codebase is well-structured and easy to maintain, with a clear separation of concerns between different components and features. 
-
-The application's comprehensive testing and debugging tools ensure that the application is thoroughly tested and validated before deployment. 
-
-The application's security features ensure that user data is protected and secure. 
-
-The application's design and architecture make it an ideal choice for building complex and scalable React Native applications. 
-
-The application's comprehensive documentation and commenting ensure that the codebase is easy to understand and maintain. 
-
-The use of TypeScript and a tsconfig.json file ensures that the application is built with type safety in mind. 
-
-The application's testing and debugging tools ensure that the application is thoroughly tested and validated before deployment. 
-
-The application's scalability features ensure that the application can handle large amounts of traffic and usage. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's documentation and commenting ensure that the codebase is easy to understand and maintain. 
-
-The application's modular approach and reusable components allow for easy maintenance and updates to individual components. 
-
-The application's codebase is well-structured and easy to maintain. 
-
-The application's use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's testing and validation ensure that the application meets the required standards and specifications. 
-
-The application follows best practices for coding, testing, and documentation. 
-
-The application's comprehensive testing and validation ensure that the application is thoroughly tested and validated before deployment. 
-
-The application's codebase is well-organized and easy to maintain. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application follows standard professional guidelines for coding, testing, and documentation. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's documentation and commenting ensure that the codebase is easy to understand and maintain. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's code follows best practices for coding, testing, and documentation. 
-
-The use of TypeScript and a tsconfig.json file ensures that the application is built with type safety in mind. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's scalability features ensure that the application can handle large amounts of traffic and usage. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's codebase is well-structured and easy to maintain. 
-
-The application's use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's comprehensive testing and validation ensure that the application is thoroughly tested and validated before deployment. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application follows best practices for coding, testing, and documentation. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The use of TypeScript and a tsconfig.json file ensures that the application is built with type safety in mind. 
-
-The application's scalability features ensure that the application can handle large amounts of traffic and usage. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's code follows best practices for coding, testing, and documentation. 
-
-The application's use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application follows standard professional guidelines for coding, testing, and documentation. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's comprehensive testing and validation ensure that the application is thoroughly tested and validated before deployment. 
-
-The application's codebase is well-structured and easy to maintain. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application follows best practices for coding, testing, and documentation. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application follows best practices for coding, testing, and documentation. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The use of best practices and standard professional guidelines ensures that the application is built to a high standard. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's comprehensive testing and validation ensure that the application meets the required standards and specifications. 
-
-The application's comprehensive testing and validation ensure that the application meets
+Then press `i` for iOS Simulator or `a` for Android emulator, or scan the QR code with the Expo Go app on your device.
 
 ---
 
 <div align="center">
-  <p>Built with ❤️ using <a href="https://stackcraft.dev">StackCraft</a> · <a href="https://github.com/jaimenguyen168/RN-Musez">View Repository</a></p>
   <p>⭐ Star this repo if you find it helpful!</p>
 </div>
