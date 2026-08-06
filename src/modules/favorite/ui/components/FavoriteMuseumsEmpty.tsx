@@ -1,49 +1,27 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/provider/ThemeProvider";
-import { Colors } from "@/constants/colors";
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 interface FavoriteMuseumsEmptyProps {
   onDiscoveryPress: () => void;
 }
 
-const FavoriteMuseumsEmpty = ({
-  onDiscoveryPress,
-}: FavoriteMuseumsEmptyProps) => {
-  const { isDark } = useTheme();
+const FavoriteMuseumsEmpty = ({ onDiscoveryPress }: FavoriteMuseumsEmptyProps) => {
+  const c = useOrganicTheme();
 
   return (
-    <View className="flex-1 items-center justify-center p-8 mb-20">
-      <View className="bg-card rounded-3xl p-8 items-center shadow-md w-full max-w-sm border border-soft">
-        <View className="w-20 h-20 bg-surface rounded-full items-center justify-center mb-6">
-          <Ionicons
-            name="bookmark-outline"
-            size={32}
-            color={isDark ? "#6B7280" : "#9CA3AF"}
-          />
-        </View>
-
-        <Text className="text-xl font-bold text-main mb-3 text-center">
-          Start Your Collection
-        </Text>
-
-        <Text className="text-secondary text-center mb-6 leading-6">
-          Save museums you want to visit and create your personal wishlist
-        </Text>
-
-        <TouchableOpacity
-          onPress={onDiscoveryPress}
-          style={{
-            backgroundColor: Colors.Primary,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 24,
-          }}
-        >
-          <Text className="text-white font-semibold">Discover Museums</Text>
-        </TouchableOpacity>
+    <View className="flex-1 items-center justify-center px-8 gap-3">
+      <View className="w-24 h-24 rounded-full items-center justify-center bg-organic-surface">
+        <Ionicons name="heart-outline" size={38} color={c.accent} />
       </View>
+      <Text className="font-heading text-organic text-[22px]">Nothing saved yet</Text>
+      <Text className="font-figtree text-organic-muted text-[13.5px] text-center leading-5 max-w-[280px]">
+        Tap the heart on any museum and it lands here. Groups let you sort them into trips later.
+      </Text>
+      <TouchableOpacity onPress={onDiscoveryPress} className="mt-1 px-7 py-3.5 rounded-full bg-organic-accent">
+        <Text className="font-heading text-organic-accent-soft text-[14.5px]">Find museums nearby</Text>
+      </TouchableOpacity>
     </View>
   );
 };

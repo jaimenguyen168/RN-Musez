@@ -1,47 +1,27 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/provider/ThemeProvider";
-import { Colors } from "@/constants/colors";
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 interface FavoriteArtworksEmptyProps {
   onSnapPress: () => void;
 }
 
 const FavoriteArtworksEmpty = ({ onSnapPress }: FavoriteArtworksEmptyProps) => {
-  const { isDark } = useTheme();
+  const c = useOrganicTheme();
 
   return (
-    <View className="flex-1 items-center justify-center p-8 mb-20">
-      <View className="bg-card rounded-3xl p-8 items-center shadow-lg w-full max-w-sm border border-soft">
-        <View className="w-20 h-20 bg-surface rounded-full items-center justify-center mb-6">
-          <Ionicons
-            name="camera-outline"
-            size={32}
-            color={isDark ? "#6B7280" : "#9CA3AF"}
-          />
-        </View>
-
-        <Text className="text-xl font-bold text-main mb-3 text-center">
-          Start Your Art Collection
-        </Text>
-
-        <Text className="text-secondary text-center mb-6 leading-6">
-          Discover and save beautiful artworks from museums around the world
-        </Text>
-
-        <TouchableOpacity
-          onPress={onSnapPress}
-          style={{
-            backgroundColor: Colors.Primary,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 24,
-          }}
-        >
-          <Text className="text-white font-semibold">Explore Artworks</Text>
-        </TouchableOpacity>
+    <View className="flex-1 items-center justify-center px-8 gap-3">
+      <View className="w-24 h-24 rounded-full items-center justify-center bg-organic-accent2-soft">
+        <Ionicons name="camera-outline" size={36} color={c.accent2} />
       </View>
+      <Text className="font-heading text-organic text-[22px]">No artworks kept</Text>
+      <Text className="font-figtree text-organic-muted text-[13.5px] text-center leading-5 max-w-[280px]">
+        Snap a painting or sculpture, and anything you keep after the read shows up here.
+      </Text>
+      <TouchableOpacity onPress={onSnapPress} className="mt-1 px-7 py-3.5 rounded-full bg-organic-accent">
+        <Text className="font-heading text-organic-accent-soft text-[14.5px]">Open the camera</Text>
+      </TouchableOpacity>
     </View>
   );
 };

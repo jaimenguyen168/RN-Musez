@@ -10,18 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Dimensions,
   Image,
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { Museum } from "../../../../../convex/convexTypes";
-import { useTheme } from "@/provider/ThemeProvider";
-
-const GRID_PADDING = 14;
-const GRID_GAP = 8;
-const COLUMNS = 3;
-const ITEM_WIDTH = (Dimensions.get("window").width - GRID_PADDING * 2 - GRID_GAP * (COLUMNS - 1)) / COLUMNS;
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 interface AddCollectionModalProps {
   visible: boolean;
@@ -31,6 +25,14 @@ interface AddCollectionModalProps {
   isCreating?: boolean;
 }
 
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter((w) => /^[A-Z]/.test(w))
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+
 const AddCollectionModal = ({
   visible,
   onClose,
@@ -38,7 +40,7 @@ const AddCollectionModal = ({
   onCreateCollection,
   isCreating = false,
 }: AddCollectionModalProps) => {
-  const { isDark } = useTheme();
+  const c = useOrganicTheme();
   const [collectionName, setCollectionName] = useState("");
   const [selectedMuseums, setSelectedMuseums] = useState<Set<string>>(new Set());
 
@@ -70,131 +72,104 @@ const AddCollectionModal = ({
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
     const isSelected = selectedMuseums.has(item.osmId);
-    const imageUrl = item.imageUrl ?? null;
 
     return (
       <Pressable
         onPress={() => handleMuseumToggle(item)}
         disabled={isCreating}
-        className={`rounded-xl overflow-hidden bg-card ${isSelected ? "border-2 border-primary" : "border border-soft"} ${isCreating ? "opacity-50" : "opacity-100"}`}
-        style={{ width: ITEM_WIDTH, borderWidth: isSelected ? 2 : 1 }}
+        className={`bg-organic-surface rounded-2xl px-3.5 py-2.5 flex-row gap-3 items-center ${isCreating ? "opacity-50" : "opacity-100"}`}
       >
-        <View className="w-full aspect-square relative">
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} className="w-full h-full" resizeMode="cover" />
+        <View className="w-[42px] h-[42px] rounded-xl overflow-hidden bg-organic-accent-soft items-center justify-center">
+          {item.imageUrl ? (
+            <Image source={{ uri: item.imageUrl }} className="w-full h-full" resizeMode="cover" />
           ) : (
-            <View className="w-full h-full items-center justify-center bg-surface">
-              <Ionicons name="image-outline" size={18} color="#9CA3AF" />
-            </View>
-          )}
-          {isSelected && (
-            <View className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary items-center justify-center">
-              <Ionicons name="checkmark" size={11} color="#fff" />
-            </View>
+            <Text className="font-heading text-organic-accent-strong text-sm">{initialsOf(item.name)}</Text>
           )}
         </View>
-        <Text className="text-[11px] font-medium p-1.5 leading-[15px] text-main" numberOfLines={2}>
+        <Text className="flex-1 font-figtree-bold text-organic text-[13.5px]" numberOfLines={2}>
           {item.name}
         </Text>
+        <View
+          className="w-6 h-6 rounded-full items-center justify-center"
+          style={{
+            borderWidth: 2,
+            borderColor: isSelected ? c.accent : c.divider,
+            backgroundColor: isSelected ? c.accent : "transparent",
+          }}
+        >
+          {isSelected && <Ionicons name="checkmark" size={13} color={c.accentSoft} />}
+        </View>
       </Pressable>
     );
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
-    >
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={30}
       >
-        <View className="flex-1 bg-app">
+        <View className="flex-1 bg-organic">
 
           {/* Header */}
-          <View className="px-5 pt-3 pb-5">
-            <View className="w-9 h-1 rounded bg-gray-300 self-center mb-5" />
+          <View className="px-5 pt-3 pb-4">
+            <View className="w-9 h-1 rounded-full bg-organic-faint self-center mb-4" />
             <View className="flex-row items-start justify-between">
-              <View>
-                <Text className="text-[22px] font-extrabold -tracking-[0.4px] text-main">
-                  New Collection
-                </Text>
-                <Text className="text-[13px] mt-0.5 text-secondary">
-                  {selectedMuseums.size > 0
-                    ? `${selectedMuseums.size} museum${selectedMuseums.size > 1 ? "s" : ""} selected`
-                    : "Select museums to add"}
-                </Text>
-              </View>
+              <Text className="font-heading text-organic text-[22px]">New group</Text>
               <TouchableOpacity
                 onPress={handleClose}
                 disabled={isCreating}
-                className="w-[34px] h-[34px] rounded-[10px] border border-soft bg-card items-center justify-center"
+                className="w-9 h-9 rounded-full items-center justify-center bg-organic-surface"
               >
-                <Ionicons name="close" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                <Ionicons name="close" size={17} color={c.text} />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Name input */}
-          <View className="px-5 pb-5 border-b border-soft">
-            <Text className="text-[11px] font-bold tracking-[0.8px] mb-2.5 text-secondary">
-              COLLECTION NAME
-            </Text>
+          <View className="px-5 pb-4">
             <TextInput
               value={collectionName}
               onChangeText={setCollectionName}
-              placeholder="e.g. Paris Trip 2025"
-              placeholderTextColor={isDark ? "#4B5563" : "#D1D5DB"}
-              className="border border-soft rounded-xl px-4 py-3 text-[15px] font-medium bg-card text-main"
+              placeholder='Name it — "Weekend trip"'
+              placeholderTextColor={c.textFaint}
+              className="bg-organic-surface rounded-full px-4 py-3.5 font-figtree text-organic text-sm"
               maxLength={30}
               editable={!isCreating}
             />
-            <Text className="text-[11px] mt-1.5 text-right text-secondary">
-              {collectionName.length}/30
-            </Text>
           </View>
 
-          {/* Museums grid */}
-          <View className="flex-1 pt-5">
-            <Text className="text-[11px] font-bold tracking-[0.8px] mb-3 px-5 text-secondary">
-              MUSEUMS
-            </Text>
+          {/* Museums list */}
+          <View className="flex-1 px-5">
+            <View className="flex-row justify-between items-baseline mb-2.5">
+              <Text className="font-figtree-bold text-organic-muted text-[12.5px]">
+                Pick from your saved museums
+              </Text>
+              <Text className="font-figtree text-organic-faint text-xs">{selectedMuseums.size} selected</Text>
+            </View>
             <FlatList
               data={museums}
-              numColumns={3}
               keyExtractor={(item) => item.osmId}
               renderItem={renderMuseumItem}
               showsVerticalScrollIndicator={false}
               scrollEnabled={!isCreating}
-              contentContainerStyle={{ paddingHorizontal: GRID_PADDING, paddingBottom: 16 }}
-              columnWrapperStyle={{ gap: GRID_GAP, marginBottom: GRID_GAP }}
+              contentContainerStyle={{ gap: 8, paddingBottom: 16 }}
             />
           </View>
 
           {/* Footer */}
-          <View className="px-5 pt-3.5 pb-8 border-t border-soft">
+          <View className="px-5 pt-3.5 pb-8">
             <TouchableOpacity
               onPress={handleCreate}
               disabled={isDisabled}
-              className={`rounded-[14px] overflow-hidden ${isDisabled ? "opacity-50" : "opacity-100"}`}
               activeOpacity={0.85}
+              className={`py-4 rounded-full items-center flex-row justify-center gap-2 ${isDisabled ? "bg-organic-faint" : "bg-organic-accent"}`}
             >
-              <View className="flex-row items-center justify-center gap-2 py-4 bg-primary">
-                {isCreating ? (
-                  <>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text className="text-white text-base font-bold">Creating...</Text>
-                  </>
-                ) : (
-                  <>
-                    <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                    <Text className="text-white text-base font-bold">Create Collection</Text>
-                  </>
-                )}
-              </View>
+              {isCreating && <ActivityIndicator size="small" color={c.accentSoft} />}
+              <Text className="font-heading text-organic-accent-soft text-[15px]">
+                {isCreating ? "Creating…" : "Create group"}
+              </Text>
             </TouchableOpacity>
           </View>
 

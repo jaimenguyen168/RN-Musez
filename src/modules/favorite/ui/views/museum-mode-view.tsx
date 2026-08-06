@@ -1,24 +1,20 @@
 import React, { useMemo, useEffect } from "react";
-import { FlatList, View, ActivityIndicator, Text } from "react-native";
+import { FlatList, View, ActivityIndicator, Text, TouchableOpacity } from "react-native";
 import { useQuery } from "convex/react";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
-import FavoriteGrid, {
-  CategorySection,
-} from "@/modules/favorite/ui/components/FavoriteGrid";
+import FavoriteGroupRow, { CategorySection } from "@/modules/favorite/ui/components/FavoriteGroupRow";
 import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
 import { api } from "../../../../../convex/_generated/api";
 import { Museum } from "../../../../../convex/convexTypes";
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 interface MuseumModeViewProps {
   onCategoryPress: (category: CategorySection) => void;
   onMuseumsLoaded: (museums: Museum[]) => void;
+  onNewGroupPress: () => void;
 }
 
-const MuseumModeView = ({
-  onCategoryPress,
-  onMuseumsLoaded,
-}: MuseumModeViewProps) => {
+const MuseumModeView = ({ onCategoryPress, onMuseumsLoaded, onNewGroupPress }: MuseumModeViewProps) => {
+  const c = useOrganicTheme();
   const savedMuseumIds = useQuery(api.function.museums.getSavedMuseumIds, {});
   const categorizedMuseumIds = useQuery(
     api.function.museumCategories.getMuseumsByCategories,
@@ -69,6 +65,7 @@ const MuseumModeView = ({
         count: favoriteMuseums.length,
         museums: favoriteMuseums,
         categoryKey: "saved",
+        isAll: true,
       });
     }
 
@@ -105,9 +102,9 @@ const MuseumModeView = ({
   // Loading state
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-app">
-        <ActivityIndicator size="large" color={Colors.Primary} />
-        <Text className="mt-2 text-secondary">Fetching museum details...</Text>
+      <View className="flex-1 justify-center items-center bg-organic">
+        <ActivityIndicator size="large" color={c.accent} />
+        <Text className="font-figtree text-organic-muted text-sm mt-2">Fetching museum details...</Text>
       </View>
     );
   }
@@ -115,16 +112,9 @@ const MuseumModeView = ({
   // Error state
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center p-4 bg-app">
-        <View className="bg-card rounded-2xl p-6 items-center shadow-lg border border-soft">
-          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-          <Text className="text-red-500 text-center mt-4 font-semibold">
-            Error loading museums
-          </Text>
-          <Text className="text-secondary text-center mt-2">
-            {error.message}
-          </Text>
-        </View>
+      <View className="flex-1 justify-center items-center px-5 bg-organic gap-1.5">
+        <Text className="font-heading text-organic-status-closed text-base">Error loading museums</Text>
+        <Text className="font-figtree text-organic-muted text-sm text-center">{error.message}</Text>
       </View>
     );
   }
@@ -132,18 +122,27 @@ const MuseumModeView = ({
   return (
     <FlatList
       data={categories}
-      numColumns={2}
       keyExtractor={(item) => item.categoryKey || item.title}
       renderItem={({ item }) => (
-        <FavoriteGrid category={item} onPress={() => onCategoryPress(item)} />
+        <FavoriteGroupRow category={item} onPress={() => onCategoryPress(item)} />
       )}
-      columnWrapperStyle={{
-        justifyContent: "space-between",
-        paddingHorizontal: 16,
-      }}
+      ListHeaderComponent={
+        <Text className="font-figtree text-organic-muted text-[12.5px] mb-3">
+          {categories.length} group{categories.length === 1 ? "" : "s"}
+        </Text>
+      }
+      ListFooterComponent={
+        <TouchableOpacity
+          onPress={onNewGroupPress}
+          className="mt-2.5 py-4 rounded-2xl items-center border-2 border-dashed border-organic-divider"
+        >
+          <Text className="font-heading text-organic-accent-strong text-[14.5px]">＋ New group</Text>
+        </TouchableOpacity>
+      }
+      ItemSeparatorComponent={() => <View className="h-2.5" />}
       contentContainerStyle={{
-        flexGrow: 1,
-        paddingTop: 16,
+        paddingHorizontal: 20,
+        paddingTop: 4,
         paddingBottom: 32,
       }}
       showsVerticalScrollIndicator={false}

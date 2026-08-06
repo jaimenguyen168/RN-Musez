@@ -3,10 +3,9 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CategorySection } from "@/modules/favorite/ui/components/FavoriteGrid";
+import { CategorySection } from "@/modules/favorite/ui/components/FavoriteGroupRow";
 import FavoriteMuseumsEmpty from "@/modules/favorite/ui/components/FavoriteMuseumsEmpty";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -15,9 +14,9 @@ import { Museum } from "../../../../../convex/convexTypes";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
-import TabsPicker from "@/components/TabsPicker";
 import FavoriteArtworksEmpty from "@/modules/favorite/ui/components/FavoriteArtworksEmpty";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 type ViewMode = "museum" | "artwork";
 type ArtworkDoc = Doc<"artworks">;
@@ -25,6 +24,7 @@ type ArtworkDoc = Doc<"artworks">;
 const FavoriteView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
+  const c = useOrganicTheme();
   const insets = useSafeAreaInsets();
   const { artwork } = useLocalSearchParams<{ artwork?: string }>();
   const [viewMode, setViewMode] = useState<ViewMode>(artwork === "true" ? "artwork" : "museum");
@@ -38,11 +38,7 @@ const FavoriteView = () => {
   const categorizedMuseumIds = useQuery(api.function.museumCategories.getMuseumsByCategories);
   const savedArtworks = useQuery(api.function.artworks.getAllArtworks);
 
-  const viewModeOptions: [string, string] = ["Museums", "Artworks"];
   const createCollectionMutation = useMutation(api.function.museumCategories.createCollection);
-
-  const getDisplayValue = (mode: ViewMode) => mode === "museum" ? "Museums" : "Artworks";
-  const getInternalValue = (display: string): ViewMode => display === "Museums" ? "museum" : "artwork";
 
   const handleDiscoveryPress = () => router.push("/discovery");
   const handleSnapPress = () => router.push("/snap");
@@ -82,74 +78,88 @@ const FavoriteView = () => {
 
   if (isLoading) {
     return (
-      <View className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
+      <View className="flex-1 justify-center items-center bg-organic">
         <StatusBar style={isDark ? "light" : "dark"} />
-        <ActivityIndicator size="large" color={Colors.Primary} />
+        <ActivityIndicator size="large" color={c.accent} />
       </View>
     );
   }
 
   return (
-    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
+    <View className="flex-1 bg-organic">
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <View
-        className={`px-6 pb-3.5 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}
-        style={{ paddingTop: insets.top + 8 }}
-      >
-        <View className="flex-row items-start justify-between mb-4">
-          <View className="gap-0.5">
-            <Text className={`text-[28px] font-extrabold -tracking-[0.5px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>
-              Favorites
-            </Text>
-            <Text className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              Your saved museums & artworks
+      <View className="px-5 gap-[18px]" style={{ paddingTop: insets.top + 8, paddingBottom: 14 }}>
+        <View className="flex-row items-start justify-between gap-3">
+          <View className="gap-[3px]">
+            <Text className="font-heading text-organic text-[28px] leading-[32px]">Favorites</Text>
+            <Text className="font-figtree text-organic-muted text-[13px]">
+              Everything you&apos;ve kept, in one place.
             </Text>
           </View>
           {viewMode === "museum" && (
             <TouchableOpacity
               onPress={() => setIsModalVisible(true)}
-              className={`w-9 h-9 rounded-[10px] border items-center justify-center mt-1 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+              className="w-10 h-10 rounded-full items-center justify-center bg-organic-accent mt-0.5"
             >
-              <Ionicons name="add" size={20} color={Colors.Primary} />
+              <Ionicons name="add" size={22} color={c.accentSoft} />
             </TouchableOpacity>
           )}
         </View>
 
-        <TabsPicker
-          options={viewModeOptions}
-          selectedValue={getDisplayValue(viewMode)}
-          onSelectionChange={(val) => setViewMode(getInternalValue(val))}
-        />
+        <View className="bg-organic-surface rounded-full p-1 flex-row gap-1">
+          <TouchableOpacity
+            onPress={() => setViewMode("museum")}
+            activeOpacity={0.8}
+            className={`flex-1 py-2.5 rounded-full items-center ${viewMode === "museum" ? "bg-organic-accent" : ""}`}
+          >
+            <Text
+              className={`font-heading text-sm ${viewMode === "museum" ? "text-organic-accent-soft" : "text-organic"}`}
+            >
+              Museums
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setViewMode("artwork")}
+            activeOpacity={0.8}
+            className={`flex-1 py-2.5 rounded-full items-center ${viewMode === "artwork" ? "bg-organic-accent" : ""}`}
+          >
+            <Text
+              className={`font-heading text-sm ${viewMode === "artwork" ? "text-organic-accent-soft" : "text-organic"}`}
+            >
+              Artworks
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Content ──────────────────────────────────────────────────────────── */}
-      {isEmpty ? (
-        <View className="flex-1">
-          {viewMode === "museum" ? (
+      <View className="flex-1">
+        {isEmpty ? (
+          viewMode === "museum" ? (
             <FavoriteMuseumsEmpty onDiscoveryPress={handleDiscoveryPress} />
           ) : (
             <FavoriteArtworksEmpty onSnapPress={handleSnapPress} />
-          )}
-        </View>
-      ) : viewMode === "museum" ? (
-        <>
+          )
+        ) : viewMode === "museum" ? (
           <MuseumModeView
             onCategoryPress={handleCategoryPress}
             onMuseumsLoaded={handleMuseumsLoaded}
+            onNewGroupPress={() => setIsModalVisible(true)}
           />
-          <AddCollectionModal
-            visible={isModalVisible}
-            onClose={() => setIsModalVisible(false)}
-            museums={museums}
-            onCreateCollection={handleCreateCollection}
-            isCreating={isCreatingCollection}
-          />
-        </>
-      ) : (
-        <ArtworkModeView onArtworkPress={handleArtworkPress} />
-      )}
+        ) : (
+          <ArtworkModeView onArtworkPress={handleArtworkPress} />
+        )}
+      </View>
+
+      <AddCollectionModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        museums={museums}
+        onCreateCollection={handleCreateCollection}
+        isCreating={isCreatingCollection}
+      />
     </View>
   );
 };
