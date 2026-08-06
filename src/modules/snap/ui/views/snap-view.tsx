@@ -1,8 +1,6 @@
-import React, { useState } from "react";
-import { View, Text, Alert, TouchableOpacity, ActivityIndicator, Dimensions, Image } from "react-native";
-
-import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, Alert, TouchableOpacity, ActivityIndicator, Animated, Easing, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useArtworkStore } from "@/stores/artworkStore";
@@ -11,236 +9,382 @@ import { Ionicons } from "@expo/vector-icons";
 import { Artwork } from "@/types/artwork";
 import ImagePicker, { ImageAsset } from "@/components/ImagePicker";
 import { useTheme } from "@/provider/ThemeProvider";
-import { Colors } from "@/constants/colors";
+import { useOrganicTheme } from "@/constants/organicTheme";
 import { useCredits } from "@/modules/snap/hooks/useCredits";
 import { usePaywall } from "@/hooks/usePaywall";
 
-const { width: SW, height: SH } = Dimensions.get("window");
-const IMAGE_HEIGHT = SH * 0.54;
-const PRIMARY = Colors.Primary;
+type SnapStage = "empty" | "importing" | "photo";
+
+const IMPORT_STAGES = ["Reading photo…", "Preparing…"];
+const IMPORT_DURATION_MS = 900;
+const LEAVING_DELAY_MS = 650;
+
+const SpinnerRing = ({ size, color, trackColor }: { size: number; color: string; trackColor: string }) => {
+  const spin = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(spin, { toValue: 1, duration: 800, easing: Easing.linear, useNativeDriver: true }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [spin]);
+
+  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+
+  return (
+    <Animated.View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: size > 24 ? 3 : 2.5,
+        borderColor: trackColor,
+        borderTopColor: color,
+        transform: [{ rotate }],
+      }}
+    />
+  );
+};
 
 const SnapView = () => {
-  const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { setCurrentArtwork } = useArtworkStore();
   const { isDark } = useTheme();
-  const { presentPaywall, presentUpgradePrompt } = usePaywall();
-  const insets = useSafeAreaInsets();
+  const c = useOrganicTheme();
+  const { setCurrentArtwork } = useArtworkStore();
+  const { presentPaywall } = usePaywall();
 
   const { credits, loading: creditsLoading, consumeCredit, hasCredits, getTimeUntilReset, isProUser } =
     useCredits();
 
-  const handleImageSelected = (image: ImageAsset) => setSelectedImage(image);
-  const handleImageError = (error: string) => Alert.alert("Error", `Failed to select image: ${error}`);
-  const resetImage = () => setSelectedImage(null);
+  const [stage, setStage] = useState<SnapStage>("empty");
+  const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
+  const [importPct, setImportPct] = useState(0);
+  const [importStageIndex, setImportStageIndex] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const importTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const showUpgradePrompt = () => {
-    const resetTime = getTimeUntilReset();
-    const resetHour = resetTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    presentUpgradePrompt({
-      title: "No Credits Remaining",
-      message: `You've used all 3 daily credits. They reset at 8:00 AM tomorrow (${resetHour}), or upgrade to Pro for unlimited access.`,
-      cancelText: "Wait until tomorrow",
-      upgradeText: "Upgrade to Pro",
-    });
+  useEffect(() => {
+    return () => {
+      if (importTimer.current) clearInterval(importTimer.current);
+    };
+  }, []);
+
+  const handleImageError = (error: string) => Alert.alert("Error", `Failed to select image: ${error}`);
+
+  const beginImport = (image: ImageAsset) => {
+    setSelectedImage(image);
+    setStage("importing");
+    setImportPct(0);
+    setImportStageIndex(0);
+    if (importTimer.current) clearInterval(importTimer.current);
+
+    const startedAt = Date.now();
+    importTimer.current = setInterval(() => {
+      const pct = Math.min(100, Math.round(((Date.now() - startedAt) / IMPORT_DURATION_MS) * 100));
+      setImportPct(pct);
+      setImportStageIndex(pct > 55 ? 1 : 0);
+      if (pct >= 100) {
+        if (importTimer.current) clearInterval(importTimer.current);
+        setStage("photo");
+      }
+    }, 60);
   };
 
-  const handleGenerate = async () => {
-    if (!selectedImage) return;
-    if (!hasCredits()) { showUpgradePrompt(); return; }
-    setLoading(true);
+  const cancelImport = () => {
+    if (importTimer.current) clearInterval(importTimer.current);
+    setSelectedImage(null);
+    setStage("empty");
+  };
+
+  const discard = () => {
+    setSelectedImage(null);
+    setStage("empty");
+  };
+
+  const handlePickPress = (selectImage: () => void) => {
+    if (!hasCredits()) {
+      setUpgradeOpen(true);
+      return;
+    }
+    selectImage();
+  };
+
+  const handleAnalyze = async () => {
+    if (busy || leaving || !selectedImage) return;
+    if (!hasCredits()) {
+      setUpgradeOpen(true);
+      return;
+    }
+    setBusy(true);
     try {
       const creditUsed = await consumeCredit();
-      if (!creditUsed) { showUpgradePrompt(); return; }
+      if (!creditUsed) {
+        setBusy(false);
+        setUpgradeOpen(true);
+        return;
+      }
       const result = await analyzeArtwork(selectedImage.uri);
       const artworkData: Artwork = { ...result, imageUri: selectedImage.uri };
       setCurrentArtwork(artworkData);
-      router.push("/artworks/new");
+      setBusy(false);
+      setLeaving(true);
+      setTimeout(() => router.push("/artworks/new"), LEAVING_DELAY_MS);
     } catch {
+      setBusy(false);
       Alert.alert("Error", "Failed to analyze artwork. Please try again.");
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const handleGoPro = () => {
+    setUpgradeOpen(false);
+    presentPaywall({ showSuccessAlert: true });
   };
 
   if (creditsLoading) {
     return (
-      <View className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
-        <ActivityIndicator size="large" color={PRIMARY} />
+      <View className="flex-1 items-center justify-center bg-organic">
+        <ActivityIndicator size="large" color={c.accent} />
       </View>
     );
   }
 
-  // ── Credits pill ─────────────────────────────────────────────────────────────
-  const CreditsPill = () => {
+  const ctaEnabled = busy || leaving || hasCredits();
+  const ctaLabel = leaving ? "Opening results ↗" : busy ? "Analyzing…" : !hasCredits() ? "No Credits" : "Analyze Artwork";
+  const hoursUntilReset = Math.max(1, Math.round((getTimeUntilReset().getTime() - Date.now()) / 3600000));
+
+  const SnapPill = () => {
     if (isProUser) {
       return (
-        <View
-          className="flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full"
-          style={{ backgroundColor: isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED" }}
-        >
-          <Ionicons name="infinite" size={13} color={PRIMARY} />
-          <Text className="text-[13px] font-semibold" style={{ color: PRIMARY }}>Pro · Unlimited</Text>
+        <View className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full bg-organic-accent-soft">
+          <Ionicons name="infinite" size={13} color={c.accentStrong} />
+          <Text className="font-figtree-bold text-organic-accent-strong text-[12px]">Unlimited</Text>
         </View>
       );
     }
     const empty = credits === 0;
     return (
       <View
-        className="flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full"
-        style={{
-          backgroundColor: empty
-            ? isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.08)"
-            : isDark ? "rgba(255,153,0,0.15)" : "#FFF7ED",
-        }}
+        className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-full ${empty ? "" : "bg-organic-accent-soft"}`}
+        style={empty ? { backgroundColor: isDark ? "rgba(255,198,165,0.18)" : "rgba(140,73,26,0.1)" } : undefined}
       >
-        <Ionicons name="diamond" size={12} color={empty ? "#EF4444" : PRIMARY} />
-        <Text className="text-[13px] font-semibold" style={{ color: empty ? "#EF4444" : PRIMARY }}>
+        <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: empty ? c.statusClosed : c.accent }} />
+        <Text className={`font-figtree-bold text-[12px] ${empty ? "text-organic-status-closed" : "text-organic-accent-strong"}`}>
           {credits}/3 credits
         </Text>
       </View>
     );
   };
 
-  // ── Empty state ───────────────────────────────────────────────────────────────
-  if (!selectedImage) {
-    return (
-      <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
-        <StatusBar style={isDark ? "light" : "dark"} />
-
-        <View className="px-6 pb-1" style={{ paddingTop: insets.top + 8 }}>
-          <Text className={`text-[28px] font-extrabold -tracking-[0.5px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>Snap</Text>
-          <Text className={`text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>AI-powered art identification</Text>
-        </View>
-
-        <View className="flex-1 items-center justify-center px-8 gap-8">
-          <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8}>
-            {({ selectImage }) => (
-              <TouchableOpacity
-                onPress={hasCredits() ? selectImage : showUpgradePrompt}
-                activeOpacity={0.8}
-                className="w-[230px] h-[230px] items-center justify-center gap-3.5"
-              >
-                <View style={{ position: "absolute", top: 0, left: 0, width: 26, height: 26, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
-                <View style={{ position: "absolute", top: 0, right: 0, width: 26, height: 26, borderTopWidth: 2.5, borderRightWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
-                <View style={{ position: "absolute", bottom: 0, left: 0, width: 26, height: 26, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
-                <View style={{ position: "absolute", bottom: 0, right: 0, width: 26, height: 26, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderRadius: 3, borderColor: PRIMARY }} />
-
-                <View
-                  className="w-[90px] h-[90px] rounded-[26px] items-center justify-center"
-                  style={{ backgroundColor: isDark ? "rgba(255,153,0,0.12)" : "#FFF7ED" }}
-                >
-                  <Ionicons name="scan-outline" size={48} color={PRIMARY} />
-                </View>
-                <Text className={`text-[13px] font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>Tap to choose artwork</Text>
-              </TouchableOpacity>
-            )}
-          </ImagePicker>
-
-          <View className="items-center gap-2">
-            <Text className={`text-[22px] font-bold -tracking-[0.3px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>Discover Any Artwork</Text>
-            <Text className={`text-sm text-center leading-[22px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              Photograph any painting, sculpture,{"\n"}or artwork for instant AI insights
-            </Text>
-          </View>
-
-          <CreditsPill />
-        </View>
-
-      </View>
-    );
-  }
-
-  // ── Image selected ────────────────────────────────────────────────────────────
-  return (
-    <View className={`flex-1 ${isDark ? "bg-gray-900" : "bg-[#FAFAFA]"}`}>
-      <StatusBar style="light" />
-
-      <View style={{ width: SW, height: IMAGE_HEIGHT }}>
-        <Image
-          source={{ uri: selectedImage.uri }}
-          className="w-full h-full"
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={["rgba(0,0,0,0.5)", "transparent"]}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140 }}
-        />
-        <LinearGradient
-          colors={["transparent", isDark ? "#111827" : "#FAFAFA"]}
-          start={{ x: 0, y: 0.3 }}
-          end={{ x: 0, y: 1 }}
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: IMAGE_HEIGHT * 0.55 }}
-        />
-        <TouchableOpacity
-          onPress={resetImage}
-          className="absolute left-4 rounded-full p-2"
-          style={{ top: insets.top + 10, backgroundColor: "rgba(0,0,0,0.35)" }}
-        >
-          <Ionicons name="chevron-back" size={22} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      <View className="flex-1 px-6 pt-4 gap-3 justify-center" style={{ paddingBottom: insets.bottom + 8 }}>
-        <Text className={`text-[22px] font-bold -tracking-[0.3px] ${isDark ? "text-gray-50" : "text-gray-900"}`}>Ready to analyze</Text>
-        <Text className={`text-sm leading-5 -mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-          AI will identify the artwork and provide detailed insights
+  const Header = () => (
+    <View className="px-5 flex-row justify-between items-start gap-3">
+      <View className="gap-[3px]">
+        <Text className="font-heading text-organic text-[28px] leading-[32px]">Snap</Text>
+        <Text className="font-figtree text-organic-muted text-[13px]">
+          Point at art, get the story — identified by AI.
         </Text>
+      </View>
+      <View className="mt-1">
+        <SnapPill />
+      </View>
+    </View>
+  );
 
-        <CreditsPill />
-
+  const UpgradeSheet = () =>
+    upgradeOpen ? (
+      <View className="absolute inset-0 z-40 justify-end">
         <TouchableOpacity
-          onPress={handleGenerate}
-          disabled={loading || !hasCredits()}
-          activeOpacity={0.85}
-          className={`rounded-2xl overflow-hidden mt-0.5 ${loading || !hasCredits() ? "opacity-65" : "opacity-100"}`}
-        >
-          <LinearGradient
-            colors={[Colors.Secondary, PRIMARY, "#E08800"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 16 }}
+          activeOpacity={1}
+          onPress={() => setUpgradeOpen(false)}
+          className="absolute inset-0 bg-organic-overlay"
+        />
+        <View className="bg-organic rounded-t-[28px] px-5 pt-3.5 pb-[52px] gap-3">
+          <View className="w-10 h-1 rounded-full bg-organic-faint self-center" />
+          <View
+            className="self-start rounded-full px-3 py-1.5"
+            style={{ backgroundColor: isDark ? "rgba(255,198,165,0.18)" : "rgba(140,73,26,0.1)" }}
           >
-            {loading ? (
-              <>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text className="text-white text-[17px] font-bold">Analyzing...</Text>
-              </>
-            ) : (
-              <>
-                <Ionicons name="sparkles" size={20} color="#fff" />
-                <Text className="text-white text-[17px] font-bold">
-                  {hasCredits() ? "Analyze Artwork" : "No Credits"}
-                </Text>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View className="flex-row gap-2.5">
-          <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8}>
-            {({ selectImage }) => (
-              <TouchableOpacity
-                onPress={selectImage}
-                disabled={loading}
-                className={`flex-1 flex-row items-center justify-center gap-2 border rounded-[14px] py-3 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
-              >
-                <Ionicons name="images-outline" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
-                <Text className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}>New Photo</Text>
-              </TouchableOpacity>
-            )}
-          </ImagePicker>
-
-          <TouchableOpacity
-            onPress={resetImage}
-            disabled={loading}
-            className={`w-[54px] items-center justify-center border rounded-[14px] py-3 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
-          >
-            <Ionicons name="trash-outline" size={18} color={isDark ? "#9CA3AF" : "#EF4444"} />
+            <Text className="font-figtree-bold text-organic-status-closed text-[11.5px]">Daily limit reached</Text>
+          </View>
+          <Text className="font-heading text-organic text-[23px] leading-[27px]">That&apos;s your 3 snaps for today</Text>
+          <Text className="font-figtree text-organic-muted text-[13.5px] leading-[19px]">
+            Free credits refill once every 24 hours — yours come back in about {hoursUntilReset}{" "}
+            hour{hoursUntilReset === 1 ? "" : "s"}. Pro removes the limit entirely.
+          </Text>
+          <View className="bg-organic-surface rounded-2xl p-3.5 gap-1.5">
+            {["Unlimited artwork identification", "Deeper reads on every piece", "Saved snap history"].map((line) => (
+              <View key={line} className="flex-row gap-2 items-center">
+                <Text className="text-organic-accent2 font-figtree-bold">◆</Text>
+                <Text className="font-figtree text-organic text-[13px]">{line}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity onPress={handleGoPro} className="py-[15px] rounded-full items-center bg-organic-accent">
+            <Text className="font-heading text-organic-accent-soft text-[15.5px]">Upgrade to Pro</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setUpgradeOpen(false)} className="py-3 rounded-full items-center">
+            <Text className="font-heading text-organic-muted text-[13.5px]">I&apos;ll wait for tomorrow</Text>
           </TouchableOpacity>
         </View>
       </View>
+    ) : null;
+
+  // ── Empty state ───────────────────────────────────────────────────────────────
+  if (stage === "empty") {
+    return (
+      <SafeAreaView className="flex-1 bg-organic" edges={["top"]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View className="flex-1 pt-3 gap-[18px]">
+          <Header />
+
+          <ImagePicker onImageSelected={beginImport} onError={handleImageError} quality={0.8}>
+            {({ selectImage }) => (
+              <TouchableOpacity
+                onPress={() => handlePickPress(selectImage)}
+                activeOpacity={0.85}
+                className="mx-5 h-[330px] rounded-2xl bg-organic-surface items-center justify-center overflow-hidden"
+              >
+                <View
+                  className="absolute rounded-xl"
+                  style={{ top: 18, left: 18, right: 18, bottom: 18, borderWidth: 2, borderStyle: "dashed", borderColor: c.divider }}
+                />
+                {[
+                  { top: 30, left: 30, borderTopWidth: 4, borderLeftWidth: 4, borderRadius: 14 },
+                  { top: 30, right: 30, borderTopWidth: 4, borderRightWidth: 4, borderRadius: 14 },
+                  { bottom: 30, left: 30, borderBottomWidth: 4, borderLeftWidth: 4, borderRadius: 14 },
+                  { bottom: 30, right: 30, borderBottomWidth: 4, borderRightWidth: 4, borderRadius: 14 },
+                ].map((corner, i) => (
+                  <View key={i} className="absolute w-[34px] h-[34px]" style={{ ...corner, borderColor: c.accent }} />
+                ))}
+
+                <View className="items-center gap-3">
+                  <View
+                    className="w-[74px] h-[74px] rounded-full items-center justify-center bg-organic-accent"
+                    style={{ shadowColor: c.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 4 }}
+                  >
+                    <Ionicons name="camera" size={30} color={c.accentSoft} />
+                  </View>
+                  <Text className="font-heading text-organic text-base">Choose an artwork photo</Text>
+                  <Text className="font-figtree text-organic-muted text-[12.5px]">Camera or library</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          </ImagePicker>
+
+          <View className="px-5 gap-1.5">
+            <Text className="font-heading text-organic text-[23px] leading-[27px]">Discover Any Artwork</Text>
+            <Text className="font-figtree text-organic-muted text-[13.5px] leading-[19px]">
+              Photograph a painting, sculpture, or any piece on display and get instant insights — artist, period,
+              and what makes it worth a second look.
+            </Text>
+          </View>
+        </View>
+
+        <UpgradeSheet />
+      </SafeAreaView>
+    );
+  }
+
+  // ── Importing state ──────────────────────────────────────────────────────────
+  if (stage === "importing") {
+    return (
+      <SafeAreaView className="flex-1 bg-organic" edges={["top"]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View className="flex-1 pt-3 gap-[18px]">
+          <Header />
+
+          <View className="mx-5 h-[330px] rounded-2xl bg-organic-surface overflow-hidden items-center justify-center">
+            <View className="absolute inset-0 bg-organic-placeholder-a" />
+            <View className="items-center gap-3.5">
+              <SpinnerRing size={34} color={c.accent} trackColor={c.divider} />
+              <Text className="font-heading text-organic text-base">{IMPORT_STAGES[importStageIndex]}</Text>
+            </View>
+          </View>
+
+          <View className="px-5 gap-2">
+            <View className="h-2 rounded-full bg-organic-faint overflow-hidden">
+              <View className="h-full rounded-full bg-organic-accent" style={{ width: `${importPct}%` }} />
+            </View>
+            <View className="flex-row justify-between items-center">
+              <Text className="font-figtree text-organic-muted text-[12.5px]">{importPct}%</Text>
+              <TouchableOpacity onPress={cancelImport}>
+                <Text className="font-figtree-bold text-organic-accent-strong text-[13px]">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Photo attached ────────────────────────────────────────────────────────────
+  return (
+    <View className="flex-1 bg-organic">
+      <StatusBar style="light" />
+      <View className="h-[430px] bg-organic-placeholder-a">
+        {selectedImage && (
+          <Image source={{ uri: selectedImage.uri }} className="w-full h-full" resizeMode="cover" />
+        )}
+        <TouchableOpacity
+          onPress={discard}
+          disabled={busy || leaving}
+          className="absolute top-16 left-3.5 w-9 h-9 rounded-full items-center justify-center bg-organic-photo-btn"
+        >
+          <Ionicons name="chevron-back" size={19} color={c.text} />
+        </TouchableOpacity>
+      </View>
+
+      <View className="px-5 pt-[18px] gap-1.5">
+        <View className="flex-row justify-between items-center gap-3">
+          <Text className="font-heading text-organic text-[23px]">Ready to analyze</Text>
+          <SnapPill />
+        </View>
+        <Text className="font-figtree text-organic-muted text-[13.5px] leading-[19px]">
+          We&apos;ll look for the artist, period and title, then hand you a short read on the piece.
+        </Text>
+      </View>
+
+      <View className="px-5 pt-[18px] gap-2.5">
+        <TouchableOpacity
+          onPress={handleAnalyze}
+          disabled={busy || leaving}
+          className={`py-[15px] rounded-full items-center flex-row justify-center gap-2.5 ${ctaEnabled ? "bg-organic-accent" : "bg-organic-faint"}`}
+        >
+          {busy && <SpinnerRing size={16} color={c.text} trackColor="rgba(32,30,29,0.25)" />}
+          <Text className="font-heading text-organic-accent-soft text-[15.5px]">{ctaLabel}</Text>
+        </TouchableOpacity>
+
+        <View className="flex-row gap-2">
+          <ImagePicker onImageSelected={beginImport} onError={handleImageError} quality={0.8}>
+            {({ selectImage }) => (
+              <TouchableOpacity
+                onPress={() => handlePickPress(selectImage)}
+                disabled={busy || leaving}
+                className="flex-1 py-3 rounded-full items-center border border-organic-divider bg-organic-surface-alt"
+              >
+                <Text className="font-heading text-organic text-[13.5px]">Different photo</Text>
+              </TouchableOpacity>
+            )}
+          </ImagePicker>
+          <TouchableOpacity
+            onPress={discard}
+            disabled={busy || leaving}
+            className="flex-1 py-3 rounded-full items-center border border-organic-divider"
+          >
+            <Text className="font-heading text-organic-accent-strong text-[13.5px]">Delete photo</Text>
+          </TouchableOpacity>
+        </View>
+
+        {leaving && (
+          <Text className="font-figtree text-organic-muted text-[12.5px] text-center">
+            Taking you to the results…
+          </Text>
+        )}
+      </View>
+
+      <UpgradeSheet />
     </View>
   );
 };
