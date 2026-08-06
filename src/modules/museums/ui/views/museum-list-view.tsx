@@ -1,6 +1,6 @@
 import { View, Text, FlatList } from "react-native";
 import React, { ReactNode } from "react";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../../convex/convexTypes";
 import MuseumOverviewCard from "@/modules/discovery/ui/components/MuseumOverviewCard";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import BlurNavigationHeader from "@/components/BlurNavigationHeader";
@@ -31,7 +31,7 @@ const MuseumListView = ({
     <MuseumOverviewCard
       museum={item}
       variant="detailed"
-      onCardPress={() => onCardPress?.(item.placeId)}
+      onCardPress={() => onCardPress?.(item.osmId)}
     />
   );
 
@@ -59,7 +59,7 @@ const MuseumListView = ({
       {/* Museum List */}
       <FlatList
         data={museums}
-        keyExtractor={(item) => item.placeId}
+        keyExtractor={(item) => item.osmId}
         renderItem={renderMuseumItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{

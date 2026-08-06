@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../convex/convexTypes";
 
 const fetchWikimediaImage = async (museumName: string): Promise<string | null> => {
   try {
@@ -52,7 +52,7 @@ export const useMuseumImageBackfill = (museums: Museum[]) => {
           batch.map(async (museum) => {
             const imageUrl = await fetchWikimediaImage(museum.name);
             if (imageUrl && !cancelled) {
-              await saveMuseumImage({ osmId: museum.placeId, imageUrl }).catch(() => {});
+              await saveMuseumImage({ osmId: museum.osmId, imageUrl }).catch(() => {});
             }
           })
         );
@@ -61,5 +61,5 @@ export const useMuseumImageBackfill = (museums: Museum[]) => {
 
     run();
     return () => { cancelled = true; };
-  }, [museums.map((m) => m.placeId).join(",")]);
+  }, [museums.map((m) => m.osmId).join(",")]);
 };

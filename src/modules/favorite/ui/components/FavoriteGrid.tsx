@@ -2,18 +2,11 @@ import { View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
 
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../../convex/convexTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/provider/ThemeProvider";
 
-const resolvePhotoUrl = (museum: Museum | null): string | null => {
-  if (!museum) return null;
-  const ref = museum.imageUrl ?? museum.photos?.[0]?.photoReference;
-  if (!ref) return null;
-  return ref.startsWith("http")
-    ? ref
-    : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${ref}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}`;
-};
+const resolvePhotoUrl = (museum: Museum | null): string | null => museum?.imageUrl ?? null;
 
 const { width } = Dimensions.get("window");
 const GAP = 10;

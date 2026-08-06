@@ -59,11 +59,18 @@ export const upsertMuseums = internalMutation({
         lng: v.number(),
         address: v.optional(v.string()),
         city: v.optional(v.string()),
+        state: v.optional(v.string()),
+        postcode: v.optional(v.string()),
         country: v.optional(v.string()),
         openingHours: v.optional(v.string()),
         website: v.optional(v.string()),
         phone: v.optional(v.string()),
         imageUrl: v.optional(v.string()),
+        description: v.optional(v.string()),
+        wikipedia: v.optional(v.string()),
+        fee: v.optional(v.string()),
+        wheelchair: v.optional(v.string()),
+        category: v.optional(v.string()),
         fetchedAt: v.number(),
       }),
     ),
@@ -76,10 +83,20 @@ export const upsertMuseums = internalMutation({
         .first();
 
       if (existing) {
-        // Only overwrite imageUrl if we got a new one (don't blank out an existing image)
+        // Only overwrite enrichment fields if we got a new value — a fresh
+        // Overpass refetch has none of these (they're either straight from
+        // OSM tags that may since be gone, or backfilled separately from
+        // Wikipedia), and patching with `undefined` clears the field.
         await ctx.db.patch(existing._id, {
           ...museum,
           imageUrl: museum.imageUrl ?? existing.imageUrl,
+          description: museum.description ?? existing.description,
+          wikipedia: museum.wikipedia ?? existing.wikipedia,
+          fee: museum.fee ?? existing.fee,
+          wheelchair: museum.wheelchair ?? existing.wheelchair,
+          category: museum.category ?? existing.category,
+          state: museum.state ?? existing.state,
+          postcode: museum.postcode ?? existing.postcode,
         });
       } else {
         await ctx.db.insert("museums", museum);
@@ -163,10 +180,17 @@ export const fetchMuseumsNearLocation = action({
           lng: coordLng,
           address: addrParts.length ? addrParts.join(" ") : undefined,
           city: tags["addr:city"] ?? undefined,
+          state: tags["addr:state"] ?? undefined,
+          postcode: tags["addr:postcode"] ?? undefined,
           country: tags["addr:country"] ?? undefined,
           openingHours: tags["opening_hours"] ?? undefined,
           website: tags["website"] ?? tags["contact:website"] ?? undefined,
           phone: tags["phone"] ?? tags["contact:phone"] ?? undefined,
+          description: tags["description"] ?? undefined,
+          wikipedia: tags["wikipedia"] ?? undefined,
+          fee: tags["fee"] ?? undefined,
+          wheelchair: tags["wheelchair"] ?? undefined,
+          category: tags["museum"] ?? undefined,
           fetchedAt: now,
         };
       });
@@ -193,6 +217,32 @@ export const saveMuseumImage = mutation({
     if (museum && !museum.imageUrl) {
       await ctx.db.patch(museum._id, { imageUrl: args.imageUrl });
     }
+  },
+});
+
+// ─── Public mutation: save a Wikipedia-sourced description (+ optional
+// higher-confidence photo) found by the client ────────────────────────────
+export const saveMuseumEnrichment = mutation({
+  args: {
+    osmId: v.string(),
+    description: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    // Set when imageUrl came from the exact OSM `wikipedia` tag (unambiguous
+    // match) — safe to replace a poorly name-matched existing photo with it.
+    overwriteImage: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const museum = await ctx.db
+      .query("museums")
+      .withIndex("by_osm_id", (q) => q.eq("osmId", args.osmId))
+      .first();
+    if (!museum) return;
+
+    const patch: { description?: string; imageUrl?: string } = {};
+    if (args.description && !museum.description) patch.description = args.description;
+    if (args.imageUrl && (args.overwriteImage || !museum.imageUrl)) patch.imageUrl = args.imageUrl;
+
+    if (Object.keys(patch).length) await ctx.db.patch(museum._id, patch);
   },
 });
 

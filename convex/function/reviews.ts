@@ -124,31 +124,3 @@ export const getMuseumRatingSummary = query({
     };
   },
 });
-
-// ─── Batch: get rating summaries for multiple museums at once ────────────────
-// Useful for showing ratings on discovery cards without N+1 queries
-export const getMuseumsRatingSummaries = query({
-  args: { museumIds: v.array(v.string()) },
-  handler: async (ctx, args) => {
-    const result: Record<string, { avgRating: number | null; totalReviews: number }> = {};
-
-    for (const museumId of args.museumIds) {
-      const reviews = await ctx.db
-        .query("reviews")
-        .withIndex("by_museum", (q) => q.eq("museumId", museumId))
-        .collect();
-
-      if (reviews.length === 0) {
-        result[museumId] = { avgRating: null, totalReviews: 0 };
-      } else {
-        const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-        result[museumId] = {
-          avgRating: Math.round((sum / reviews.length) * 10) / 10,
-          totalReviews: reviews.length,
-        };
-      }
-    }
-
-    return result;
-  },
-});

@@ -1,6 +1,6 @@
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import React, { useMemo } from "react";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../../convex/convexTypes";
 import { Ionicons } from "@expo/vector-icons";
 
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,6 +8,7 @@ import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { calculateAndFormatDistance, DistanceUnit } from "@/utils/distance";
+import { isOpenNow } from "@/utils/openingHours";
 import { useTheme } from "@/provider/ThemeProvider";
 
 interface MuseumOverviewCardProps {
@@ -24,24 +25,29 @@ const MuseumOverviewCard = ({
   const { isDark } = useTheme();
   const { coords } = useLocationManager(false);
 
-  const isSaved = useQuery(api.function.museums.isMuseumSaved, { museumId: museum.placeId });
+  const isSaved = useQuery(api.function.museums.isMuseumSaved, { museumId: museum.osmId });
   const toggleSavedMuseum = useMutation(api.function.museums.toggleSavedMuseum);
+  const ratingSummary = useQuery(api.function.reviews.getMuseumRatingSummary, {
+    museumId: museum.osmId,
+  });
 
   const formattedDistance = useMemo(() => {
-    if (!coords || !museum.geometry?.location) return null;
+    if (!coords) return null;
     return calculateAndFormatDistance(
       coords,
-      { latitude: museum.geometry.location.lat, longitude: museum.geometry.location.lng },
+      { latitude: museum.lat, longitude: museum.lng },
       "imperial" as DistanceUnit,
     );
-  }, [coords, museum.geometry?.location]);
+  }, [coords, museum.lat, museum.lng]);
 
   const onFavoritePress = async () => {
-    await toggleSavedMuseum({ museumId: museum.placeId });
+    await toggleSavedMuseum({ museumId: museum.osmId });
   };
 
   const photoUrl = museum.imageUrl;
-  const isOpen = museum.openingHours?.openNow ?? museum.currentOpeningHours?.openNow;
+  const isOpen = museum.openingHours ? isOpenNow(museum.openingHours) : undefined;
+  const rating = ratingSummary?.avgRating ?? undefined;
+  const totalReviews = ratingSummary?.totalReviews ?? 0;
 
   // ── Compact ───────────────────────────────────────────────────────────────────
   if (variant === "compact") {
@@ -76,7 +82,7 @@ const MuseumOverviewCard = ({
           <View className="absolute top-3 left-3 right-3 flex-row justify-between items-center">
             <View className="flex-row items-center gap-0.5 bg-black/40 px-2 py-1 rounded-full">
               <Ionicons name="star" size={11} color="#F59E0B" />
-              <Text className="text-white text-xs font-semibold">{museum.rating?.toFixed(1) ?? "0.0"}</Text>
+              <Text className="text-white text-xs font-semibold">{rating?.toFixed(1) ?? "0.0"}</Text>
             </View>
             <TouchableOpacity onPress={onFavoritePress} className="bg-black/35 p-1.5 rounded-full">
               <Ionicons name={isSaved ? "heart" : "heart-outline"} size={17} color={isSaved ? "#FB7185" : "white"} />
@@ -137,16 +143,16 @@ const MuseumOverviewCard = ({
           {museum.name}
         </Text>
         <Text className="text-[11px] mb-1.5 text-secondary" numberOfLines={1}>
-          {museum.vicinity || museum.formattedAddress}
+          {museum.address}
         </Text>
 
         <View className="flex-row items-center gap-0.5">
           <Ionicons name="star" size={12} color="#F59E0B" />
           <Text className="text-xs font-semibold ml-0.5 text-main">
-            {museum.rating?.toFixed(1) ?? "0.0"}
+            {rating?.toFixed(1) ?? "0.0"}
           </Text>
           <Text className="text-[11px] text-secondary">
-            ({museum.userRatingsTotal ?? 0})
+            ({totalReviews})
           </Text>
           {formattedDistance && (
             <>

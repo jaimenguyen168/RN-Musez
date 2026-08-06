@@ -1,7 +1,6 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Museum } from "@/types/museum";
-import { isOpenNow } from "@/utils/openingHours";
+import { Museum } from "../../convex/convexTypes";
 
 export interface FetchMuseumsByIdsParams {
   museumIds: string[];
@@ -18,36 +17,14 @@ export const useMuseumsFavorites = (
   );
 
   if (osmIds.length === 0) {
-    return { data: [] as Museum[], isLoading: false, error: null };
+    return { data: [] as Museum[], isLoading: false, error: null as Error | null };
   }
 
   if (results === undefined) {
-    return { data: [] as Museum[], isLoading: true, error: null };
+    return { data: [] as Museum[], isLoading: true, error: null as Error | null };
   }
 
-  const museums: Museum[] = (results as NonNullable<typeof results>).map((m) => ({
-    placeId: m.osmId,
-    name: m.name,
-    formattedAddress: [m.address, m.city, m.country].filter(Boolean).join(", "),
-    formattedPhoneNumber: m.phone,
-    website: m.website,
-    imageUrl: m.imageUrl,
-    openingHours: m.openingHours
-      ? { openNow: isOpenNow(m.openingHours), weekdayText: [m.openingHours] }
-      : undefined,
-    geometry: {
-      location: { lat: m.lat, lng: m.lng },
-      viewport: {
-        northeast: { lat: m.lat + 0.01, lng: m.lng + 0.01 },
-        southwest: { lat: m.lat - 0.01, lng: m.lng - 0.01 },
-      },
-    },
-    types: ["museum"],
-    businessStatus: "OPERATIONAL",
-    photos: m.imageUrl
-      ? [{ photoReference: m.imageUrl, height: 600, width: 800, htmlAttributions: [] }]
-      : undefined,
-  }));
+  const museums: Museum[] = results.filter((m): m is Museum => m !== null);
 
-  return { data: museums, isLoading: false, error: null };
+  return { data: museums, isLoading: false, error: null as Error | null };
 };

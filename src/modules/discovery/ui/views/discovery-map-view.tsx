@@ -11,6 +11,7 @@ import { useTheme } from "@/provider/ThemeProvider";
 import { useRevenueCat } from "@/provider/RevenueCatProvider";
 import { usePaywall } from "@/hooks/usePaywall";
 import CitySearchBar from "@/modules/discovery/ui/components/CitySearchBar";
+import { isOpenNow } from "@/utils/openingHours";
 
 const DiscoveryMapView = () => {
   const router = useRouter();
@@ -214,20 +215,15 @@ const DiscoveryMapView = () => {
       >
         {nearbyMuseums.map((museum, index) => (
           <Marker
-            key={museum.placeId || index}
+            key={museum.osmId || index}
             coordinate={{
-              latitude: museum.geometry.location.lat,
-              longitude: museum.geometry.location.lng,
+              latitude: museum.lat,
+              longitude: museum.lng,
             }}
             title={museum.name}
-            description={`${museum.vicinity} • Rating: ${museum.rating || "N/A"}`}
-            pinColor={
-              (museum.openingHours?.openNow ??
-              museum.currentOpeningHours?.openNow)
-                ? "purple"
-                : "gray"
-            }
-            onPress={() => handleMuseumMarkerPress(museum.placeId)}
+            description={museum.address}
+            pinColor={isOpenNow(museum.openingHours) ? "purple" : "gray"}
+            onPress={() => handleMuseumMarkerPress(museum.osmId)}
           />
         ))}
       </MapView>

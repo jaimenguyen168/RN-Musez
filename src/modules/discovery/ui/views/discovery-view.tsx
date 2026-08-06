@@ -1,22 +1,26 @@
-import { ActivityIndicator, View, Alert } from "react-native";
-import React, { useEffect, useMemo } from "react";
+import { ActivityIndicator, View, Alert, Text } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import DiscoveryHeader from "@/modules/discovery/ui/components/DiscoveryHeader";
-import MuseumRowList from "@/modules/discovery/ui/components/MuseumRowList";
-import { Colors } from "@/constants/colors";
+import DiscoverySearchBar from "@/modules/discovery/ui/components/DiscoverySearchBar";
+import MuseumSpotlightCard from "@/modules/discovery/ui/components/MuseumSpotlightCard";
+import MuseumWalkCarousel from "@/modules/discovery/ui/components/MuseumWalkCarousel";
+import MuseumTripList from "@/modules/discovery/ui/components/MuseumTripList";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import AnimatedHeaderWrapper from "@/components/AnimatedHeaderWrapper";
 import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 import { calculateRawDistance } from "@/utils/distance";
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useTheme } from "@/provider/ThemeProvider";
-import MuseumGridList from "@/modules/discovery/ui/components/MuseumGridList";
-import MuseumInfoList from "@/modules/discovery/ui/components/MuseumInfoList";
+import { useOrganicTheme } from "@/constants/organicTheme";
 import ProfileMenuDropdown from "@/modules/profile/ui/components/ProfileMenuDropdown";
 
 const DiscoveryView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
+  const c = useOrganicTheme();
+  const [query, setQuery] = useState("");
+
   const {
     address,
     coords,
@@ -45,8 +49,7 @@ const DiscoveryView = () => {
   }, [locationError]);
 
   const handleLocationPress = () => router.push("/discovery/map");
-  const handleGoToMuseum = (id: string) =>
-    router.push(`/museums/${encodeURIComponent(id)}`);
+  const handleGoToMuseum = (id: string) => router.push(`/museums/${encodeURIComponent(id)}`);
   const handleShowAll = () => {
     setMuseumList("Nearby", sortedMuseums);
     router.push("/museums");
@@ -57,78 +60,86 @@ const DiscoveryView = () => {
     if (!coords || !museums.length) return museums;
     return museums
       .map((museum) => {
-        const museumCoords = museum.geometry?.location
-          ? { latitude: museum.geometry.location.lat, longitude: museum.geometry.location.lng }
-          : null;
-        const rawDistance = museumCoords ? calculateRawDistance(coords, museumCoords) : Infinity;
+        const rawDistance = calculateRawDistance(coords, { latitude: museum.lat, longitude: museum.lng });
         return { ...museum, rawDistance };
       })
       .sort((a, b) => a.rawDistance - b.rawDistance)
       .map(({ rawDistance, ...museum }) => museum);
   }, [coords, museums]);
 
-  // Nearby: first 4 with a Wikimedia image stored in DB
-  const nearbyMuseums = useMemo(
-    () => sortedMuseums.filter((m) => !!m.imageUrl).slice(0, 4),
-    [sortedMuseums],
-  );
+  // Local name filter — "Search museums nearby…"
+  const filteredMuseums = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sortedMuseums;
+    return sortedMuseums.filter((m) => m.name.toLowerCase().includes(q));
+  }, [sortedMuseums, query]);
 
-  // "Featured" — next 4 museums with images, skipping those already shown in Nearby
-  const featuredMuseums = useMemo(() => {
-    const nearbyIds = new Set(nearbyMuseums.map((m) => m.placeId));
-    return sortedMuseums
-      .filter((m) => !!m.imageUrl && !nearbyIds.has(m.placeId))
-      .slice(0, 4);
-  }, [sortedMuseums, nearbyMuseums]);
-
-  // "Explore More" — next 5 by distance (with or without image), skipping Nearby + Featured
-  const exploreMoreMuseums = useMemo(() => {
-    const shownIds = new Set([
-      ...nearbyMuseums.map((m) => m.placeId),
-      ...featuredMuseums.map((m) => m.placeId),
-    ]);
-    return sortedMuseums.filter((m) => !shownIds.has(m.placeId)).slice(0, 5);
-  }, [sortedMuseums, nearbyMuseums, featuredMuseums]);
+  const spotlightMuseum = filteredMuseums[0];
+  const walkMuseums = filteredMuseums.slice(1, 6);
+  const tripMuseums = filteredMuseums.slice(6);
 
   const renderMainContent = () => {
     if (museumsLoading || isLocationLoading) {
       return (
-        <View className="flex-1 items-center justify-center min-h-[400px]">
-          <ActivityIndicator size="large" color={Colors.Primary} />
+        <View className="min-h-[400px] items-center justify-center">
+          <ActivityIndicator size="large" color={c.accent} />
+        </View>
+      );
+    }
+
+    if (filteredMuseums.length === 0) {
+      return (
+        <View className="min-h-[300px] items-center justify-center px-10">
+          <Text className="font-figtree text-organic-muted text-sm text-center">
+            No museums match “{query}” nearby.
+          </Text>
         </View>
       );
     }
 
     return (
-      <View className="flex-1 mt-4 bg-app">
-        <MuseumRowList
-          title="Nearby"
-          museums={nearbyMuseums}
-          onCardPress={(id) => handleGoToMuseum(id)}
+      <View className="pt-1 pb-[90px] gap-5">
+        <View className="gap-2.5">
+          <Text className="font-figtree-bold text-organic-accent text-[11px] tracking-[1.1px] uppercase px-5">
+            Closest to you
+          </Text>
+          <MuseumSpotlightCard
+            museum={spotlightMuseum}
+            onPress={() => handleGoToMuseum(spotlightMuseum.osmId)}
+          />
+        </View>
+
+        <MuseumWalkCarousel
+          title="A short walk away"
+          museums={walkMuseums}
+          onCardPress={handleGoToMuseum}
           onShowAll={handleShowAll}
         />
 
-        <MuseumGridList
-          title="Featured"
-          museums={featuredMuseums}
-          onCardPress={(id) => handleGoToMuseum(id)}
-        />
-
-        <MuseumInfoList
-          title="Explore More"
-          museums={exploreMoreMuseums}
-          onCardPress={(id) => handleGoToMuseum(id)}
+        <MuseumTripList
+          title="Worth the trip"
+          museums={tripMuseums}
+          onCardPress={handleGoToMuseum}
+          onShowAll={tripMuseums.length > 0 ? handleShowAll : undefined}
+          footerText={
+            tripMuseums.length > 0
+              ? `That's ${filteredMuseums.length} museum${filteredMuseums.length === 1 ? "" : "s"} nearby`
+              : undefined
+          }
         />
       </View>
     );
   };
 
   const headerComponent = (
-    <DiscoveryHeader
-      place={address || "Unknown Location"}
-      onLocationPress={handleLocationPress}
-      rightComponent={<ProfileMenuDropdown imageSize={36} />}
-    />
+    <View className="bg-organic pb-4 gap-4">
+      <DiscoveryHeader
+        place={address || "Unknown Location"}
+        onLocationPress={handleLocationPress}
+        rightComponent={<ProfileMenuDropdown imageSize={38} />}
+      />
+      <DiscoverySearchBar value={query} onChangeText={setQuery} />
+    </View>
   );
 
   return (
@@ -138,10 +149,10 @@ const DiscoveryView = () => {
       scrollThreshold={80}
       blurIntensity={80}
       blurType={isDark ? "dark" : "light"}
-      backgroundColor={isDark ? "#111827" : "#FAFAFA"}
-      titleStyle={`text-xl font-bold tracking-wide ${isDark ? "text-white" : "text-black"}`}
+      backgroundColor={c.bg}
+      titleStyle="font-heading text-organic text-[19px]"
     >
-      {renderMainContent()}
+      <View className="flex-1 bg-organic">{renderMainContent()}</View>
     </AnimatedHeaderWrapper>
   );
 };

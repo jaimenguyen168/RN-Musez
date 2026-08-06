@@ -8,7 +8,7 @@ import FavoriteGrid, {
 } from "@/modules/favorite/ui/components/FavoriteGrid";
 import { useMuseumsFavorites } from "@/hooks/useMuseumsFavorites";
 import { api } from "../../../../../convex/_generated/api";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../../convex/convexTypes";
 
 interface MuseumModeViewProps {
   onCategoryPress: (category: CategorySection) => void;
@@ -55,7 +55,7 @@ const MuseumModeView = ({
 
     // Create museum lookup map
     const museumMap = new Map(
-      museums.map((museum) => [museum.placeId, museum]),
+      museums.map((museum) => [museum.osmId, museum]),
     );
 
     // 1. Add "Saved" with ALL saved museums

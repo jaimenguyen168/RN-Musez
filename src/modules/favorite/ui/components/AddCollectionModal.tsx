@@ -15,7 +15,7 @@ import {
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../../convex/convexTypes";
 import { useTheme } from "@/provider/ThemeProvider";
 
 const GRID_PADDING = 14;
@@ -45,7 +45,7 @@ const AddCollectionModal = ({
   const handleMuseumToggle = (museum: Museum) => {
     if (isCreating) return;
     const next = new Set(selectedMuseums);
-    next.has(museum.placeId) ? next.delete(museum.placeId) : next.add(museum.placeId);
+    next.has(museum.osmId) ? next.delete(museum.osmId) : next.add(museum.osmId);
     setSelectedMuseums(next);
   };
 
@@ -53,7 +53,7 @@ const AddCollectionModal = ({
     if (!collectionName.trim() || isCreating) return;
     onCreateCollection(
       collectionName.trim(),
-      museums.filter((m) => selectedMuseums.has(m.placeId)),
+      museums.filter((m) => selectedMuseums.has(m.osmId)),
     );
     setCollectionName("");
     setSelectedMuseums(new Set());
@@ -69,13 +69,8 @@ const AddCollectionModal = ({
   const isDisabled = !collectionName.trim() || selectedMuseums.size === 0 || isCreating;
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
-    const isSelected = selectedMuseums.has(item.placeId);
-    const photoRef = item.imageUrl ?? item.photos?.[0]?.photoReference;
-    const imageUrl = photoRef
-      ? photoRef.startsWith("http")
-        ? photoRef
-        : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}`
-      : null;
+    const isSelected = selectedMuseums.has(item.osmId);
+    const imageUrl = item.imageUrl ?? null;
 
     return (
       <Pressable
@@ -170,7 +165,7 @@ const AddCollectionModal = ({
             <FlatList
               data={museums}
               numColumns={3}
-              keyExtractor={(item) => item.placeId}
+              keyExtractor={(item) => item.osmId}
               renderItem={renderMuseumItem}
               showsVerticalScrollIndicator={false}
               scrollEnabled={!isCreating}

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../convex/convexTypes";
 
 interface MuseumListState {
   title: string;

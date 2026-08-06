@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { stringToSlug } from "@/utils";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../convex/convexTypes";
 
 interface UseCollectionMenuProps {
   title: string;
@@ -57,7 +57,7 @@ export const useCollectionMenu = ({
       // Remove each selected museum from the collection
       const removePromises = selectedMuseums.map((museum) =>
         removeMuseumFromCategory({
-          museumId: museum.placeId,
+          museumId: museum.osmId,
           categoryName,
         }),
       );
@@ -70,9 +70,9 @@ export const useCollectionMenu = ({
       if (allSuccessful) {
         // Update local state by filtering out removed museums
         if (setMuseumList) {
-          const removedIds = new Set(selectedMuseums.map((m) => m.placeId));
+          const removedIds = new Set(selectedMuseums.map((m) => m.osmId));
           const updatedMuseums = museums.filter(
-            (museum) => !removedIds.has(museum.placeId),
+            (museum) => !removedIds.has(museum.osmId),
           );
           setMuseumList(title, updatedMuseums);
         }

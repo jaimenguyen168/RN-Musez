@@ -14,6 +14,14 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
+import {
+  Figtree_400Regular,
+  Figtree_500Medium,
+  Figtree_600SemiBold,
+  Figtree_700Bold,
+  Figtree_800ExtraBold,
+} from "@expo-google-fonts/figtree";
+import { Caprasimo_400Regular } from "@expo-google-fonts/caprasimo";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -45,6 +53,12 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
+    Figtree_400Regular,
+    Figtree_500Medium,
+    Figtree_600SemiBold,
+    Figtree_700Bold,
+    Figtree_800ExtraBold,
+    Caprasimo_400Regular,
   });
 
   useEffect(() => {

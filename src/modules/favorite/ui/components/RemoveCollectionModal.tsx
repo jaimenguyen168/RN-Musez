@@ -13,8 +13,7 @@ import {
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
-import { Museum } from "@/types/museum";
-import { getPhotoUrl } from "@/utils";
+import { Museum } from "../../../../../convex/convexTypes";
 import { useTheme } from "@/provider/ThemeProvider";
 
 interface RemoveCollectionModalProps {
@@ -43,10 +42,10 @@ const RemoveCollectionModal = ({
     if (isRemoving) return; // Disable selection while removing
 
     const newSelected = new Set(selectedMuseums);
-    if (newSelected.has(museum.placeId)) {
-      newSelected.delete(museum.placeId);
+    if (newSelected.has(museum.osmId)) {
+      newSelected.delete(museum.osmId);
     } else {
-      newSelected.add(museum.placeId);
+      newSelected.add(museum.osmId);
     }
     setSelectedMuseums(newSelected);
   };
@@ -54,7 +53,7 @@ const RemoveCollectionModal = ({
   const handleRemove = () => {
     if (selectedMuseums.size > 0 && !isRemoving) {
       const selectedMuseumsArray = museums.filter((museum) =>
-        selectedMuseums.has(museum.placeId),
+        selectedMuseums.has(museum.osmId),
       );
       onRemoveMuseums(selectedMuseumsArray);
       setSelectedMuseums(new Set());
@@ -69,8 +68,8 @@ const RemoveCollectionModal = ({
   };
 
   const renderMuseumItem = ({ item }: { item: Museum }) => {
-    const isSelected = selectedMuseums.has(item.placeId);
-    const imageUrl = getPhotoUrl(item.photos?.[0].photoReference || null);
+    const isSelected = selectedMuseums.has(item.osmId);
+    const imageUrl = item.imageUrl ?? null;
 
     return (
       <View style={{ width: "33.33%" }} className="p-1">
@@ -173,7 +172,7 @@ const RemoveCollectionModal = ({
                 <FlatList
                   data={museums}
                   numColumns={3}
-                  keyExtractor={(item) => item.placeId}
+                  keyExtractor={(item) => item.osmId}
                   renderItem={renderMuseumItem}
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 20 }}

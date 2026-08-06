@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAction, useQuery as useConvexQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../convex/convexTypes";
 import { useMuseumImageBackfill } from "./useMuseumImageBackfill";
-import { isOpenNow } from "@/utils/openingHours";
 
 export interface FetchMuseumsParams {
   latitude: number;
@@ -35,35 +34,7 @@ export const useMuseumsQuery = (params: FetchMuseumsParams | null) => {
     params ? { lat: params.latitude, lng: params.longitude } : "skip",
   );
 
-  // Batch-fetch rating summaries for all museums in view
-  const museumIds = (rawMuseums ?? []).map((m) => m.osmId);
-  const ratingSummaries = useConvexQuery(
-    api.function.reviews.getMuseumsRatingSummaries,
-    museumIds.length > 0 ? { museumIds } : "skip",
-  );
-
-  // Map DB shape → Museum type used across the app
-  const museums: Museum[] = (rawMuseums ?? []).map((m) => {
-    const summary = ratingSummaries?.[m.osmId];
-    return {
-      placeId: m.osmId,
-      name: m.name,
-      vicinity: m.address,
-      formattedAddress: m.address,
-      website: m.website,
-      formattedPhoneNumber: m.phone,
-      imageUrl: m.imageUrl,
-      rating: summary?.avgRating ?? undefined,
-      userRatingsTotal: summary?.totalReviews ?? 0,
-      openingHours: m.openingHours
-        ? { openNow: isOpenNow(m.openingHours), weekdayText: [m.openingHours] }
-        : undefined,
-      geometry: {
-        location: { lat: m.lat, lng: m.lng },
-      },
-      types: ["museum"],
-    };
-  });
+  const museums: Museum[] = rawMuseums ?? [];
 
   // Backfill: fetch Wikimedia images client-side for any museums missing one,
   // and save them back to Convex. UI updates reactively as images are saved.

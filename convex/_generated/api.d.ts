@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as convexTypes from "../convexTypes.js";
 import type * as function_artworks from "../function/artworks.js";
 import type * as function_credits from "../function/credits.js";
 import type * as function_museumCategories from "../function/museumCategories.js";
@@ -32,6 +33,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  convexTypes: typeof convexTypes;
   "function/artworks": typeof function_artworks;
   "function/credits": typeof function_credits;
   "function/museumCategories": typeof function_museumCategories;

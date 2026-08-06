@@ -11,7 +11,7 @@ import FavoriteMuseumsEmpty from "@/modules/favorite/ui/components/FavoriteMuseu
 import { useMuseumListStore } from "@/stores/museumListStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AddCollectionModal from "@/modules/favorite/ui/components/AddCollectionModal";
-import { Museum } from "@/types/museum";
+import { Museum } from "../../../../../convex/convexTypes";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import MuseumModeView from "@/modules/favorite/ui/views/museum-mode-view";
 import ArtworkModeView from "@/modules/favorite/ui/views/artwork-mode-view";
@@ -58,7 +58,7 @@ const FavoriteView = () => {
       setIsCreatingCollection(true);
       const result = await createCollectionMutation({
         collectionName: name,
-        museumIds: selectedMuseums.map((m) => m.placeId),
+        museumIds: selectedMuseums.map((m) => m.osmId),
       });
       if (result.success) {
         Alert.alert("Success", `Collection "${result.categoryDisplayName}" created with ${result.museumsAdded} museums.`);
