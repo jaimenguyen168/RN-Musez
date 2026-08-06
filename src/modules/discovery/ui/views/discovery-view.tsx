@@ -1,5 +1,5 @@
 import { ActivityIndicator, View, Alert, Text } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useRouter } from "expo-router";
 import DiscoveryHeader from "@/modules/discovery/ui/components/DiscoveryHeader";
 import DiscoverySearchBar from "@/modules/discovery/ui/components/DiscoverySearchBar";
@@ -19,7 +19,6 @@ const DiscoveryView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
   const c = useOrganicTheme();
-  const [query, setQuery] = useState("");
 
   const {
     address,
@@ -49,6 +48,7 @@ const DiscoveryView = () => {
   }, [locationError]);
 
   const handleLocationPress = () => router.push("/discovery/map");
+  const handleSearchPress = () => router.push("/search");
   const handleGoToMuseum = (id: string) => router.push(`/museums/${encodeURIComponent(id)}`);
   const handleShowAll = () => {
     setMuseumList("Nearby", sortedMuseums);
@@ -67,16 +67,9 @@ const DiscoveryView = () => {
       .map(({ rawDistance, ...museum }) => museum);
   }, [coords, museums]);
 
-  // Local name filter — "Search museums nearby…"
-  const filteredMuseums = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return sortedMuseums;
-    return sortedMuseums.filter((m) => m.name.toLowerCase().includes(q));
-  }, [sortedMuseums, query]);
-
-  const spotlightMuseum = filteredMuseums[0];
-  const walkMuseums = filteredMuseums.slice(1, 6);
-  const tripMuseums = filteredMuseums.slice(6);
+  const spotlightMuseum = sortedMuseums[0];
+  const walkMuseums = sortedMuseums.slice(1, 6);
+  const tripMuseums = sortedMuseums.slice(6);
 
   const renderMainContent = () => {
     if (museumsLoading || isLocationLoading) {
@@ -87,11 +80,11 @@ const DiscoveryView = () => {
       );
     }
 
-    if (filteredMuseums.length === 0) {
+    if (sortedMuseums.length === 0) {
       return (
         <View className="min-h-[300px] items-center justify-center px-10">
           <Text className="font-figtree text-organic-muted text-sm text-center">
-            No museums match “{query}” nearby.
+            No museums nearby yet.
           </Text>
         </View>
       );
@@ -123,7 +116,7 @@ const DiscoveryView = () => {
           onShowAll={tripMuseums.length > 0 ? handleShowAll : undefined}
           footerText={
             tripMuseums.length > 0
-              ? `That's ${filteredMuseums.length} museum${filteredMuseums.length === 1 ? "" : "s"} nearby`
+              ? `That's ${sortedMuseums.length} museum${sortedMuseums.length === 1 ? "" : "s"} nearby`
               : undefined
           }
         />
@@ -138,7 +131,7 @@ const DiscoveryView = () => {
         onLocationPress={handleLocationPress}
         rightComponent={<ProfileMenuDropdown imageSize={38} />}
       />
-      <DiscoverySearchBar value={query} onChangeText={setQuery} />
+      <DiscoverySearchBar onPress={handleSearchPress} />
     </View>
   );
 

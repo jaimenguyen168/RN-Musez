@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -44,41 +44,54 @@ const searchWikipediaTitle = async (name: string): Promise<string | null> => {
  * (unambiguous match — safe to also overwrite a poorly name-matched existing
  * photo); falls back to a name search otherwise, same as the image backfill,
  * where a fetched photo only fills a gap and never overwrites.
+ *
+ * Returns whether a backfill is in flight, so callers can hold their loading
+ * state until the description either arrives or is confirmed unavailable —
+ * avoiding a pop-in once the museum's other details are already on screen.
  */
 export const useMuseumDescriptionBackfill = (museum: BackfillableMuseum | null | undefined) => {
   const saveMuseumEnrichment = useMutation(api.function.museumLocations.saveMuseumEnrichment);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   useEffect(() => {
-    if (!museum || museum.description) return;
+    if (!museum || museum.description) {
+      setIsBackfilling(false);
+      return;
+    }
     let cancelled = false;
+    setIsBackfilling(true);
 
     const run = async () => {
-      let summary: { extract?: string; thumbnail?: string } | null = null;
-      let highConfidenceImage = false;
+      try {
+        let summary: { extract?: string; thumbnail?: string } | null = null;
+        let highConfidenceImage = false;
 
-      if (museum.wikipedia) {
-        const [lang, ...rest] = museum.wikipedia.split(":");
-        const title = rest.length ? rest.join(":") : museum.wikipedia;
-        summary = await fetchWikipediaSummary(lang || "en", title);
-        highConfidenceImage = true;
-      }
-
-      if (!summary?.extract) {
-        const title = await searchWikipediaTitle(museum.name);
-        if (title) {
-          summary = await fetchWikipediaSummary("en", title);
-          highConfidenceImage = false;
+        if (museum.wikipedia) {
+          const [lang, ...rest] = museum.wikipedia.split(":");
+          const title = rest.length ? rest.join(":") : museum.wikipedia;
+          summary = await fetchWikipediaSummary(lang || "en", title);
+          highConfidenceImage = true;
         }
+
+        if (!summary?.extract) {
+          const title = await searchWikipediaTitle(museum.name);
+          if (title) {
+            summary = await fetchWikipediaSummary("en", title);
+            highConfidenceImage = false;
+          }
+        }
+
+        if (cancelled || !summary || (!summary.extract && !summary.thumbnail)) return;
+
+        await saveMuseumEnrichment({
+          osmId: museum.osmId,
+          description: summary.extract,
+          imageUrl: summary.thumbnail,
+          overwriteImage: highConfidenceImage,
+        }).catch(() => {});
+      } finally {
+        if (!cancelled) setIsBackfilling(false);
       }
-
-      if (cancelled || !summary || (!summary.extract && !summary.thumbnail)) return;
-
-      await saveMuseumEnrichment({
-        osmId: museum.osmId,
-        description: summary.extract,
-        imageUrl: summary.thumbnail,
-        overwriteImage: highConfidenceImage,
-      }).catch(() => {});
     };
 
     run();
@@ -86,4 +99,6 @@ export const useMuseumDescriptionBackfill = (museum: BackfillableMuseum | null |
       cancelled = true;
     };
   }, [museum?.osmId, museum?.description, museum?.wikipedia, museum?.name]);
+
+  return isBackfilling;
 };

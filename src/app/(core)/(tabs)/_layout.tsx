@@ -21,6 +21,14 @@ export default function TabsLayout() {
           />
         </NativeTabs.Trigger>
 
+        <NativeTabs.Trigger name="search" role="search">
+          <Label>Search</Label>
+          <Icon
+            sf={{ default: "magnifyingglass", selected: "magnifyingglass" }}
+            drawable="search_drawable"
+          />
+        </NativeTabs.Trigger>
+
         <NativeTabs.Trigger name="snap">
           <Label>Snap</Label>
           <Icon

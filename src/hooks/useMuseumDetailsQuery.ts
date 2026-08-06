@@ -14,7 +14,7 @@ export const useMuseumDetailsQuery = (museumId: string | null) => {
     osmId ? { osmId } : "skip",
   );
 
-  useMuseumDescriptionBackfill(museum);
+  const isBackfilling = useMuseumDescriptionBackfill(museum);
 
   if (museum === undefined) {
     return { data: null, isLoading: true, error: null };
@@ -32,5 +32,5 @@ export const useMuseumDetailsQuery = (museumId: string | null) => {
 
   const data: MuseumDetails = { ...museum, formattedAddress };
 
-  return { data, isLoading: false, error: null };
+  return { data, isLoading: isBackfilling, error: null };
 };
