@@ -1,24 +1,16 @@
-import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { z } from "zod";
-import FormField from "@/modules/auth/ui/components/FormField";
-import AppButton from "@/components/AppButton";
-import BlurNavigationHeader from "@/components/BlurNavigationHeader";
-import BackButton from "@/components/BackButton";
 import ImagePicker, { ImageAsset } from "@/components/ImagePicker";
 import { useSignUpFormValidation } from "@/modules/auth/schemas/validator";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useOrganicTheme } from "@/constants/organicTheme";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
 const profileSchema = z.object({
@@ -29,327 +21,201 @@ const profileSchema = z.object({
     .max(50, "Username must be less than 50 characters"),
 });
 
-interface EditableField {
-  username: boolean;
-}
+const USERNAME_MAX = 50;
+
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter((w) => /^[A-Z]/.test(w))
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("") || name.slice(0, 2).toUpperCase();
 
 const EditProfileView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
+  const c = useOrganicTheme();
+  const insets = useSafeAreaInsets();
   const user = useQuery(api.function.users.getCurrentUser);
   const updateProfile = useMutation(api.function.users.updateUserProfile);
   const { uploadImageToConvex } = useImageUpload();
 
-  const { errors, validateForm, clearFieldError } =
-    useSignUpFormValidation(profileSchema);
+  const { errors, validateForm, clearFieldError } = useSignUpFormValidation(profileSchema);
 
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-  });
-
-  const [editableFields, setEditableFields] = useState<EditableField>({
-    username: false,
-  });
-
+  const [username, setUsername] = useState("");
+  const [selectedProfileImage, setSelectedProfileImage] = useState<ImageAsset | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProfileImage, setSelectedProfileImage] =
-    useState<ImageAsset | null>(null);
-  const [selectedCoverImage, setSelectedCoverImage] =
-    useState<ImageAsset | null>(null);
+  const [savedNote, setSavedNote] = useState(false);
+  const savedNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        username: user.username || "",
-        email: user.email || "",
-      });
-    }
+    if (user) setUsername(user.username || "");
   }, [user]);
 
+  useEffect(() => {
+    return () => {
+      if (savedNoteTimer.current) clearTimeout(savedNoteTimer.current);
+    };
+  }, []);
+
   const handleUsernameChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, username: value }));
+    setUsername(value);
     clearFieldError("username");
   };
 
-  const handleProfileImageSelected = (image: ImageAsset) => {
-    setSelectedProfileImage(image);
-  };
+  const handleImageSelected = (image: ImageAsset) => setSelectedProfileImage(image);
+  const handleImageError = (error: string) => Alert.alert("Error", `Failed to select image: ${error}`);
 
-  const handleCoverImageSelected = (image: ImageAsset) => {
-    setSelectedCoverImage(image);
-  };
+  const hasChanges = username.trim() !== (user?.username ?? "") || selectedProfileImage !== null;
 
-  const handleImageError = (error: string) => {
-    Alert.alert("Error", `Failed to select image: ${error}`);
-  };
-
-  const toggleFieldEdit = (field: keyof EditableField) => {
-    setEditableFields((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-
-    // If disabling edit mode, reset the field to original value
-    if (editableFields[field] && user) {
-      if (field === "username") {
-        setFormData((prev) => ({ ...prev, username: user.username || "" }));
-        clearFieldError("username");
-      }
-    }
-  };
-
-  const uploadImageToStorage = async (image: ImageAsset): Promise<string> => {
-    try {
-      return await uploadImageToConvex(image.uri);
-    } catch (error) {
-      console.error("Error uploading image to storage:", error);
-      throw new Error("Failed to upload image to storage");
-    }
+  const handleDiscard = () => {
+    setUsername(user?.username || "");
+    setSelectedProfileImage(null);
+    clearFieldError("username");
   };
 
   const handleSave = async () => {
-    const hasProfileChanges =
-      (editableFields.username &&
-        formData.username.trim() !== user?.username) ||
-      selectedProfileImage !== null ||
-      selectedCoverImage !== null;
+    if (!hasChanges || isLoading) return;
 
-    if (!hasProfileChanges) {
-      Alert.alert("No Changes", "Please make some changes before saving.");
-      return;
-    }
-
-    if (editableFields.username) {
-      if (
-        !validateForm({
-          username: formData.username.trim(),
-        })
-      ) {
-        return;
-      }
-    }
+    const usernameChanged = username.trim() !== (user?.username ?? "");
+    if (usernameChanged && !validateForm({ username: username.trim() })) return;
 
     setIsLoading(true);
     try {
-      const updateData: {
-        username?: string;
-        imageUrl?: string;
-        coverImageUrl?: string;
-      } = {};
-
-      if (
-        editableFields.username &&
-        formData.username.trim() !== user?.username
-      ) {
-        updateData.username = formData.username.trim();
-      }
-
-      if (selectedProfileImage) {
-        updateData.imageUrl = await uploadImageToStorage(selectedProfileImage);
-      }
-
-      if (selectedCoverImage) {
-        updateData.coverImageUrl =
-          await uploadImageToStorage(selectedCoverImage);
-      }
+      const updateData: { username?: string; imageUrl?: string } = {};
+      if (usernameChanged) updateData.username = username.trim();
+      if (selectedProfileImage) updateData.imageUrl = await uploadImageToConvex(selectedProfileImage.uri);
 
       await updateProfile(updateData);
 
-      Alert.alert("Success", "Profile updated successfully!");
-
-      setEditableFields({
-        username: false,
-      });
       setSelectedProfileImage(null);
-      setSelectedCoverImage(null);
+      setSavedNote(true);
+      if (savedNoteTimer.current) clearTimeout(savedNoteTimer.current);
+      savedNoteTimer.current = setTimeout(() => setSavedNote(false), 2200);
     } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error.message || "Failed to update profile. Please try again.",
-      );
+      Alert.alert("Error", error.message || "Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   if (!user) {
-    return null;
+    return (
+      <View className="flex-1 bg-organic">
+        <StatusBar style={isDark ? "light" : "dark"} />
+      </View>
+    );
   }
 
-  const hasChanges =
-    editableFields.username ||
-    selectedProfileImage !== null ||
-    selectedCoverImage !== null;
-
   const displayProfileImageUri = selectedProfileImage?.uri || user.imageUrl;
-  const displayCoverImageUri = selectedCoverImage?.uri || user.coverImageUrl;
 
   return (
-    <View className="flex-1 bg-app">
-      {/* Blur Navigation Header */}
-      <BlurNavigationHeader
-        title="Edit Profile"
-        leftComponent={<BackButton onPress={() => router.back()} />}
-        blurType={isDark ? "dark" : "light"}
-        statusBarStyle={isDark ? "light" : "dark"}
-      />
+    <View className="flex-1 bg-organic">
+      <StatusBar style={isDark ? "light" : "dark"} />
 
-      <ScrollView
-        className="flex-1 bg-app"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 100 }}
-      >
-        {/* Cover Image Section */}
-        <View className="relative h-48 bg-gray-200 dark:bg-gray-800">
-          {displayCoverImageUri ? (
-            <Image
-              source={{ uri: displayCoverImageUri }}
-              className="w-full h-48"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-full h-48 bg-gradient-to-b from-primary-400 to-primary-600 items-center justify-center">
-              <Ionicons name="image-outline" size={48} color="white" />
-              <Text className="text-white mt-2 font-medium">
-                Add Cover Photo
-              </Text>
-            </View>
-          )}
+      <View className="px-5 flex-row items-center gap-3" style={{ paddingTop: insets.top + 8, paddingBottom: 8 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-[38px] h-[38px] rounded-full items-center justify-center bg-organic-surface border border-organic-divider"
+        >
+          <Ionicons name="chevron-back" size={19} color={c.text} />
+        </TouchableOpacity>
+        <Text className="font-heading text-organic text-2xl leading-6">Edit profile</Text>
+      </View>
 
-          {/* Cover Image Edit Button */}
-          <View className="absolute bottom-4 right-4">
-            <ImagePicker
-              onImageSelected={handleCoverImageSelected}
-              onError={handleImageError}
-              quality={0.8}
-              allowsEditing={true}
-            >
-              {({ selectImage }) => (
-                <TouchableOpacity
-                  onPress={selectImage}
-                  className="bg-black/50 p-3 rounded-full"
-                >
-                  <Ionicons name="camera" size={20} color="white" />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View className="gap-5">
+          <ImagePicker onImageSelected={handleImageSelected} onError={handleImageError} quality={0.8} allowsEditing>
+            {({ selectImage }) => (
+              <View className="items-center gap-2.5">
+                <TouchableOpacity onPress={selectImage} className="relative">
+                  <View
+                    className="w-[104px] h-[104px] rounded-full overflow-hidden items-center justify-center"
+                    style={{ backgroundColor: "#8c491a" }}
+                  >
+                    {displayProfileImageUri ? (
+                      <Image source={{ uri: displayProfileImageUri }} className="w-full h-full" resizeMode="cover" />
+                    ) : (
+                      <Text className="font-heading text-4xl" style={{ color: "#ffe1d0" }}>
+                        {initialsOf(user.username)}
+                      </Text>
+                    )}
+                  </View>
+                  <View className="absolute -right-0.5 -bottom-0.5 w-[34px] h-[34px] rounded-full bg-organic items-center justify-center border-2 border-organic-surface">
+                    <Ionicons name="camera-outline" size={16} color={c.accent} />
+                  </View>
                 </TouchableOpacity>
-              )}
-            </ImagePicker>
-          </View>
-
-          {/* Cover Image Change Indicator */}
-          {selectedCoverImage && (
-            <View className="absolute top-4 right-4 w-6 h-6 bg-green-500 rounded-full items-center justify-center">
-              <Ionicons name="checkmark" size={14} color="white" />
-            </View>
-          )}
-        </View>
-
-        {/* Profile Photo Section */}
-        <View className="items-center -mt-16 pb-8">
-          <View className="relative">
-            <View className="w-32 h-32 rounded-full bg-primary-600/40 items-center justify-center overflow-hidden border-4 border-white dark:border-gray-900">
-              <Image
-                source={{ uri: displayProfileImageUri }}
-                className="w-32 h-32 rounded-full"
-                resizeMode="cover"
-              />
-            </View>
-            {/* Show indicator if image is changed */}
-            {selectedProfileImage && (
-              <View className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full items-center justify-center">
-                <Ionicons name="checkmark" size={14} color="white" />
+                <TouchableOpacity onPress={selectImage}>
+                  <Text className="font-heading text-organic-accent text-sm">
+                    {selectedProfileImage ? "Photo selected" : "Change photo"}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
-          </View>
-
-          <ImagePicker
-            onImageSelected={handleProfileImageSelected}
-            onError={handleImageError}
-            quality={0.8}
-            allowsEditing={true}
-          >
-            {({ selectImage }) => (
-              <TouchableOpacity
-                onPress={selectImage}
-                className="mt-4 px-6 py-3 bg-card border border-gray-200 dark:border-gray-700 rounded-xl"
-              >
-                <Text className="text-gray-700 dark:text-gray-300 font-semibold">
-                  Edit Photo
-                </Text>
-              </TouchableOpacity>
-            )}
           </ImagePicker>
-        </View>
 
-        {/* Form Fields */}
-        <View className="px-6 py-6">
-          {/* Username Field */}
-          <View className="mb-8">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 dark:text-gray-400 text-sm">
+          <View className="px-5 gap-3.5">
+            <View className="gap-1.5">
+              <Text className="font-figtree-bold text-organic-muted text-[11.5px] tracking-[0.8px] uppercase">
                 Username
               </Text>
-              <TouchableOpacity
-                onPress={() => toggleFieldEdit("username")}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name={editableFields.username ? "checkmark" : "pencil"}
-                  size={18}
-                  color={editableFields.username ? "#10B981" : "#9CA3AF"}
-                />
-              </TouchableOpacity>
+              <TextInput
+                value={username}
+                onChangeText={handleUsernameChange}
+                maxLength={USERNAME_MAX}
+                placeholder="Your name"
+                placeholderTextColor={c.textFaint}
+                className="border border-organic-divider bg-organic-surface rounded-full px-4 py-3.5 font-figtree text-organic text-[15px]"
+              />
+              <View className="flex-row justify-between">
+                <Text className="font-figtree text-organic-muted text-[11.5px]">Shown on your reviews.</Text>
+                <Text className="font-figtree text-organic-muted text-[11.5px]">
+                  {username.length}/{USERNAME_MAX}
+                </Text>
+              </View>
+              {errors.username && (
+                <Text className="font-figtree text-organic-status-closed text-xs">{errors.username}</Text>
+              )}
             </View>
-            <FormField
-              label=""
-              value={formData.username}
-              onChangeText={handleUsernameChange}
-              placeholder="Enter your username"
-              editable={editableFields.username}
-              containerClassName="mb-0"
-              labelClassName="hidden"
-              inputClassName={`py-4 font-medium ${
-                editableFields.username
-                  ? "text-main bg-card border px-3 border-soft rounded-2xl mt-2"
-                  : "text-gray-500 dark:text-gray-400 border-0 px-0 "
-              }`}
-              error={errors.username}
-            />
-          </View>
 
-          {/* Email Field (Read-only) */}
-          <View className="mb-8">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 dark:text-gray-400 text-sm">
+            <View className="gap-1.5">
+              <Text className="font-figtree-bold text-organic-muted text-[11.5px] tracking-[0.8px] uppercase">
                 Email
               </Text>
+              <View className="bg-organic-surface-alt rounded-full px-4 py-3.5 flex-row items-center gap-2.5">
+                <Text className="flex-1 font-figtree text-organic-muted text-[15px]" numberOfLines={1}>
+                  {user.email}
+                </Text>
+                <Ionicons name="lock-closed-outline" size={15} color={c.textFaint} />
+              </View>
+              <Text className="font-figtree text-organic-muted text-[11.5px]">
+                Your email can&apos;t be changed here. Contact support if you need it moved.
+              </Text>
             </View>
-            <FormField
-              label=""
-              value={formData.email}
-              onChangeText={() => {}}
-              placeholder="Email address"
-              editable={false}
-              containerClassName="mb-0"
-              labelClassName="hidden"
-              inputClassName="bg-app border-0 px-0 py-3 font-medium text-gray-400 dark:text-gray-600"
-            />
-            <Text className="text-gray-400 dark:text-gray-500 text-xs mt-1">
-              Email cannot be changed
-            </Text>
+          </View>
+
+          <View className="px-5 gap-2">
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={!hasChanges || isLoading}
+              className={`py-4 rounded-full items-center ${hasChanges && !isLoading ? "bg-organic-accent" : "bg-organic-faint"}`}
+            >
+              <Text
+                className={`font-heading text-[15.5px] ${hasChanges && !isLoading ? "text-organic-accent-soft" : "text-organic-muted"}`}
+              >
+                {isLoading ? "Saving…" : "Save changes"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDiscard} disabled={!hasChanges || isLoading} className="py-3 items-center">
+              <Text className="font-heading text-organic-muted text-[13.5px]">Discard</Text>
+            </TouchableOpacity>
+            {savedNote && (
+              <Text className="font-figtree-bold text-organic-status-open text-[12.5px] text-center">
+                Profile updated ✓
+              </Text>
+            )}
           </View>
         </View>
-
-        {/* Save Button - Only show when there are changes */}
-        {hasChanges && (
-          <View className="px-6 py-8">
-            <AppButton onPress={handleSave} disabled={isLoading}>
-              <Text className="text-white text-lg font-semibold text-center">
-                {isLoading ? "Saving..." : "Save Changes"}
-              </Text>
-            </AppButton>
-          </View>
-        )}
       </ScrollView>
     </View>
   );

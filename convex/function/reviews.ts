@@ -106,6 +106,21 @@ export const getUserReviewForMuseum = query({
   },
 });
 
+// ─── Get how many reviews the current user has written ──────────────────────
+export const getMyReviewCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthenticatedUser(ctx);
+
+    const reviews = await ctx.db
+      .query("reviews")
+      .withIndex("by_user_museum", (q) => q.eq("userId", user._id))
+      .collect();
+
+    return reviews.length;
+  },
+});
+
 // ─── Get average rating + count for a museum ────────────────────────────────
 export const getMuseumRatingSummary = query({
   args: { museumId: v.string() },
