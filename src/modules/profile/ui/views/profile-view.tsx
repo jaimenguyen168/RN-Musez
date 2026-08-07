@@ -21,13 +21,8 @@ const initialsOf = (name: string) =>
     .map((w) => w[0])
     .join("") || name.slice(0, 2).toUpperCase();
 
-const PRO_PERKS = [
-  "Unlimited AI analysis credits",
-  "Search museums worldwide",
-  "Priority support",
-  "Early access to new features",
-];
-const PRO_ACTIVE = ["Unlimited AI analysis credits", "Worldwide museum search", "Priority support"];
+const PRO_PERKS = ["Unlimited AI features", "Search museums anywhere"];
+const PRO_ACTIVE = ["Unlimited AI features", "Search museums anywhere"];
 
 const ProfileView = () => {
   const router = useRouter();
