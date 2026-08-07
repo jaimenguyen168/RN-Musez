@@ -21,7 +21,7 @@ import scream from "../../assets/images/scream.png";
 
 const { height: SH } = Dimensions.get("window");
 const HERO_HEIGHT = SH * 0.28;
-const PRO_OFFERING_ID = "musez";
+const PRO_OFFERING_ID = __DEV__ ? "musez-test" : "musez";
 
 const FEATURES: { label: string; free: boolean }[] = [
   { label: "Nearby museums discovery", free: true },
@@ -51,15 +51,24 @@ export const CustomPaywallModal = ({
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [offeringLoaded, setOfferingLoaded] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
+    setOfferingLoaded(false);
     Purchases.getOfferings()
       .then((offerings) => {
-        if (!cancelled) setOffering(offerings.all[PRO_OFFERING_ID] ?? null);
+        if (cancelled) return;
+        setOffering(offerings.all[PRO_OFFERING_ID] ?? null);
       })
-      .catch((error) => console.error("Failed to load offerings:", error));
+      .catch((error) => {
+        console.error("Failed to load offerings:", error);
+        if (!cancelled) setOffering(null);
+      })
+      .finally(() => {
+        if (!cancelled) setOfferingLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -67,15 +76,20 @@ export const CustomPaywallModal = ({
 
   const yearPkg = offering?.annual ?? null;
   const monthPkg = offering?.monthly ?? null;
-  const yearPrice = yearPkg?.product.priceString ?? "$39.99";
-  const monthPrice = monthPkg?.product.priceString ?? "$4.99";
-  const yearPerMonth = yearPkg?.product.pricePerMonthString ?? "$3.33/mo";
+  const yearPrice = yearPkg?.product.priceString ?? "…";
+  const monthPrice = monthPkg?.product.priceString ?? "…";
+  const yearPerMonth = yearPkg?.product.pricePerMonthString ?? "…";
 
+  const pkgAvailable = plan === "year" ? !!yearPkg : !!monthPkg;
   const ctaLabel = purchasing
     ? "Opening App Store…"
-    : plan === "year"
-      ? "Start 7 days free"
-      : "Continue with monthly";
+    : !offeringLoaded
+      ? "Loading…"
+      : !pkgAvailable
+        ? "Unavailable"
+        : plan === "year"
+          ? "Start 7 days free"
+          : "Continue with monthly";
 
   const fineText =
     plan === "year"
@@ -85,7 +99,10 @@ export const CustomPaywallModal = ({
   const handlePurchase = async () => {
     const pkg = plan === "year" ? yearPkg : monthPkg;
     if (!pkg) {
-      Alert.alert("Error", "Plans are still loading. Please try again in a moment.");
+      Alert.alert(
+        "Error",
+        "Plans are still loading. Please try again in a moment.",
+      );
       return;
     }
     setPurchasing(true);
@@ -112,10 +129,19 @@ export const CustomPaywallModal = ({
       if (info.entitlements.active["Musez Pro"]) {
         await setProStatus({ isPro: true });
         Alert.alert("Restored!", "Your Pro subscription has been restored.", [
-          { text: "OK", onPress: () => { onPurchased?.(); onClose(); } },
+          {
+            text: "OK",
+            onPress: () => {
+              onPurchased?.();
+              onClose();
+            },
+          },
         ]);
       } else {
-        Alert.alert("No Purchases Found", "We couldn't find any previous purchases to restore.");
+        Alert.alert(
+          "No Purchases Found",
+          "We couldn't find any previous purchases to restore.",
+        );
       }
     } catch {
       Alert.alert("Restore Failed", "Something went wrong. Please try again.");
@@ -139,7 +165,12 @@ export const CustomPaywallModal = ({
         >
           {/* ── Hero ─────────────────────────────────────────────────────── */}
           <View style={{ height: HERO_HEIGHT }}>
-            <Image source={scream} className="w-full h-full" resizeMode="cover" style={{ opacity: 0.92 }} />
+            <Image
+              source={scream}
+              className="w-full h-full"
+              resizeMode="cover"
+              style={{ opacity: 0.92 }}
+            />
             <LinearGradient
               colors={["transparent", c.bg]}
               start={{ x: 0, y: 0.4 }}
@@ -169,7 +200,10 @@ export const CustomPaywallModal = ({
             >
               Musez Pro
             </Text>
-            <Text className="font-heading text-[28px] leading-[32px]" style={{ color: c.text }}>
+            <Text
+              className="font-heading text-[28px] leading-[32px]"
+              style={{ color: c.text }}
+            >
               Every artwork, no daily ceiling
             </Text>
           </View>
@@ -178,7 +212,12 @@ export const CustomPaywallModal = ({
           <View className="mx-5 mt-5 relative">
             <View
               className="absolute top-0 bottom-0 right-0 rounded-2xl"
-              style={{ width: 74, backgroundColor: c.accentSoft, borderWidth: 1.5, borderColor: c.accent }}
+              style={{
+                width: 74,
+                backgroundColor: c.accentSoft,
+                borderWidth: 1.5,
+                borderColor: c.accent,
+              }}
             />
             <View>
               <View className="flex-row items-center pt-2.5 pb-3">
@@ -191,8 +230,14 @@ export const CustomPaywallModal = ({
                     Free
                   </Text>
                 </View>
-                <View style={{ width: 74 }} className="items-center justify-center">
-                  <View className="rounded-full px-3.5 py-1" style={{ backgroundColor: c.accentStrong }}>
+                <View
+                  style={{ width: 74 }}
+                  className="items-center justify-center"
+                >
+                  <View
+                    className="rounded-full px-3.5 py-1"
+                    style={{ backgroundColor: c.accentStrong }}
+                  >
                     <Text
                       className="text-[11px] font-figtree-bold uppercase"
                       style={{ color: c.bg, letterSpacing: 1 }}
@@ -208,16 +253,25 @@ export const CustomPaywallModal = ({
                   className="flex-row items-center py-3.5"
                   style={{ borderTopWidth: 1, borderTopColor: c.divider }}
                 >
-                  <Text className="flex-1 text-[13.5px] leading-[17px] pr-2" style={{ color: c.text }}>
+                  <Text
+                    className="flex-1 text-[13.5px] leading-[17px] pr-2"
+                    style={{ color: c.text }}
+                  >
                     {f.label}
                   </Text>
                   <View style={{ width: 64 }} className="items-center">
-                    <Text className="text-[15px] font-bold" style={{ color: c.textMuted }}>
+                    <Text
+                      className="text-[15px] font-bold"
+                      style={{ color: c.textMuted }}
+                    >
                       {f.free ? "✓" : "—"}
                     </Text>
                   </View>
                   <View style={{ width: 74 }} className="items-center">
-                    <Text className="text-[15px] font-figtree-bold" style={{ color: c.accentStrong }}>
+                    <Text
+                      className="text-[15px] font-figtree-bold"
+                      style={{ color: c.accentStrong }}
+                    >
                       ✓
                     </Text>
                   </View>
@@ -252,17 +306,24 @@ export const CustomPaywallModal = ({
                     height: 19,
                     borderWidth: 2,
                     borderColor: plan === "year" ? c.accentStrong : c.textFaint,
-                    backgroundColor: plan === "year" ? c.accentStrong : "transparent",
+                    backgroundColor:
+                      plan === "year" ? c.accentStrong : "transparent",
                   }}
                 >
                   {plan === "year" && (
-                    <Text className="text-[10px] font-extrabold" style={{ color: c.bg }}>
+                    <Text
+                      className="text-[10px] font-extrabold"
+                      style={{ color: c.bg }}
+                    >
                       ✓
                     </Text>
                   )}
                 </View>
               </View>
-              <Text className="font-heading text-[19px] leading-[22px]" style={{ color: c.text }}>
+              <Text
+                className="font-heading text-[19px] leading-[22px]"
+                style={{ color: c.text }}
+              >
                 {yearPrice}
               </Text>
               <Text className="text-[11.5px]" style={{ color: c.textMuted }}>
@@ -293,18 +354,26 @@ export const CustomPaywallModal = ({
                     width: 19,
                     height: 19,
                     borderWidth: 2,
-                    borderColor: plan === "month" ? c.accentStrong : c.textFaint,
-                    backgroundColor: plan === "month" ? c.accentStrong : "transparent",
+                    borderColor:
+                      plan === "month" ? c.accentStrong : c.textFaint,
+                    backgroundColor:
+                      plan === "month" ? c.accentStrong : "transparent",
                   }}
                 >
                   {plan === "month" && (
-                    <Text className="text-[10px] font-extrabold" style={{ color: c.bg }}>
+                    <Text
+                      className="text-[10px] font-extrabold"
+                      style={{ color: c.bg }}
+                    >
                       ✓
                     </Text>
                   )}
                 </View>
               </View>
-              <Text className="font-heading text-[19px] leading-[22px]" style={{ color: c.text }}>
+              <Text
+                className="font-heading text-[19px] leading-[22px]"
+                style={{ color: c.text }}
+              >
                 {monthPrice}
               </Text>
               <Text className="text-[11.5px]" style={{ color: c.textMuted }}>
@@ -326,23 +395,38 @@ export const CustomPaywallModal = ({
         >
           <TouchableOpacity
             onPress={handlePurchase}
-            disabled={purchasing}
+            disabled={purchasing || !offeringLoaded || !pkgAvailable}
             activeOpacity={0.85}
             className="rounded-full py-4 flex-row items-center justify-center gap-2.5"
-            style={{ backgroundColor: c.accentStrong, opacity: purchasing ? 0.7 : 1 }}
+            style={{
+              backgroundColor: c.accentStrong,
+              opacity: purchasing || !offeringLoaded || !pkgAvailable ? 0.6 : 1,
+            }}
           >
-            {purchasing && <ActivityIndicator color={c.bg} size="small" />}
+            {(purchasing || !offeringLoaded) && (
+              <ActivityIndicator color={c.bg} size="small" />
+            )}
             <Text className="font-heading text-[16px]" style={{ color: c.bg }}>
               {ctaLabel}
             </Text>
           </TouchableOpacity>
 
-          <Text className="text-center text-[11.5px]" style={{ color: c.textMuted }}>
+          <Text
+            className="text-center text-[11.5px]"
+            style={{ color: c.textMuted }}
+          >
             {fineText}
           </Text>
 
-          <TouchableOpacity onPress={handleRestore} disabled={restoring} className="items-center py-1">
-            <Text className="text-[13px] font-figtree-bold" style={{ color: c.textMuted }}>
+          <TouchableOpacity
+            onPress={handleRestore}
+            disabled={restoring}
+            className="items-center py-1"
+          >
+            <Text
+              className="text-[13px] font-figtree-bold"
+              style={{ color: c.textMuted }}
+            >
               {restoring ? "Restoring..." : "Restore purchases"}
             </Text>
           </TouchableOpacity>

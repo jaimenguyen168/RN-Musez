@@ -10,36 +10,28 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/provider/ThemeProvider";
-import BlurNavigationHeader from "@/components/BlurNavigationHeader";
-import BackButton from "@/components/BackButton";
+import { useOrganicTheme } from "@/constants/organicTheme";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useCredits } from "@/modules/snap/hooks/useCredits";
 import Purchases from "react-native-purchases";
-import { Colors } from "@/constants/colors";
 
 const MANAGE_URL =
   Platform.OS === "ios"
     ? "itms-apps://apps.apple.com/account/subscriptions"
     : "https://play.google.com/store/account/subscriptions";
 
-const FEATURES_FREE = [
-  "Museum Discovery",
-  "Location-Based Search",
-  "AI Artwork Analysis (5/day)",
-  "Personal Art Collection",
-];
-
-const FEATURES_PRO = [
-  "Everything in Free",
-  "Unlimited AI Artwork Analysis",
-  "Priority Support",
-];
+const FEATURES_FREE = ["Nearby museums discovery", "Personal art collection", "AI artwork analysis"];
+const FEATURES_PRO = ["Everything in Free", "Unlimited AI features", "Search museums anywhere"];
 
 const SubscriptionsView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
+  const c = useOrganicTheme();
+  const insets = useSafeAreaInsets();
   const { isProUser } = useCredits();
   const { presentPaywall } = usePaywall();
   const [restoring, setRestoring] = useState(false);
@@ -69,105 +61,121 @@ const SubscriptionsView = () => {
   const features = isProUser ? FEATURES_PRO : FEATURES_FREE;
 
   return (
-    <View className="flex-1 bg-app">
-      <BlurNavigationHeader
-        title="Subscription"
-        leftComponent={<BackButton onPress={() => router.back()} />}
-        blurType={isDark ? "dark" : "light"}
-        statusBarStyle={isDark ? "light" : "dark"}
-      />
+    <View className="flex-1 bg-organic">
+      <StatusBar style={isDark ? "light" : "dark"} />
 
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 100, paddingBottom: 40 }}
-      >
-        {/* Current plan banner */}
-        <View className="px-5 mb-6">
-          <View
-            className="rounded-2xl p-5 flex-row items-center justify-between bg-card"
-            style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}
-          >
-            <View className="gap-0.5">
-              <Text className="text-[13px] font-semibold text-secondary">Current Plan</Text>
-              <Text className="text-[22px] font-extrabold -tracking-[0.3px] text-main">
-                {isProUser ? "Musez Pro" : "Free"}
-              </Text>
-            </View>
-            <View className={`px-3.5 py-1.5 rounded-full ${isProUser ? "bg-[#FFF4E0]" : "bg-surface"}`}>
-              <Text className={`text-[13px] font-bold ${isProUser ? "text-primary" : "text-secondary"}`}>
-                {isProUser ? "PRO" : "FREE"}
-              </Text>
-            </View>
-          </View>
-        </View>
+      <View className="px-5 flex-row items-center gap-3" style={{ paddingTop: insets.top + 8, paddingBottom: 8 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-[38px] h-[38px] rounded-full items-center justify-center bg-organic-surface border border-organic-divider"
+        >
+          <Ionicons name="chevron-back" size={19} color={c.text} />
+        </TouchableOpacity>
+        <Text className="font-heading text-organic text-2xl leading-6">Subscription</Text>
+      </View>
 
-        {/* Feature list */}
-        <View className="px-5 mb-6">
-          <View
-            className="rounded-2xl overflow-hidden bg-card"
-            style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}
-          >
-            <View className="flex-row items-center gap-2.5 px-5 pt-5 pb-3.5 border-b border-soft">
-              <View className={`w-[30px] h-[30px] rounded-lg items-center justify-center ${isDark ? "bg-gray-700" : "bg-orange-50"}`}>
-                <Ionicons name="star-outline" size={15} color={Colors.Primary} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 12, paddingBottom: 40 }}>
+        <View className="gap-5">
+          {/* ── Plan card ────────────────────────────────────────────────── */}
+          {isProUser ? (
+            <View className="mx-5 bg-organic-accent2-soft rounded-2xl p-[17px] gap-2.5">
+              <View className="flex-row justify-between items-center gap-2.5">
+                <Text className="font-figtree-bold text-organic-accent2 text-[11px] tracking-[1.1px] uppercase">
+                  Current Plan
+                </Text>
+                <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accent2 }}>
+                  <Text className="font-figtree-bold text-[11px]" style={{ color: isDark ? "#2c3320" : "#f0fae1" }}>
+                    Pro · Unlimited
+                  </Text>
+                </View>
               </View>
-              <Text className="text-[15px] font-bold text-main">
-                {isProUser ? "Your Pro Benefits" : "What's Included"}
+              <Text className="font-heading text-organic text-[22px] leading-6">Musez Pro</Text>
+            </View>
+          ) : (
+            <View className="mx-5 rounded-2xl p-[17px] gap-2.5" style={{ backgroundColor: "#8c491a" }}>
+              <View className="flex-row justify-between items-center gap-2.5">
+                <Text className="font-figtree-bold text-[11px] tracking-[1.1px] uppercase" style={{ color: "#ffe1d0" }}>
+                  Current Plan
+                </Text>
+                <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: "#643312" }}>
+                  <Text className="font-figtree-bold text-[11px]" style={{ color: "#fff2eb" }}>
+                    Free
+                  </Text>
+                </View>
+              </View>
+              <Text className="font-heading text-[22px] leading-6" style={{ color: "#fff2eb" }}>
+                No active subscription
+              </Text>
+            </View>
+          )}
+
+          {/* ── Feature list ─────────────────────────────────────────────── */}
+          <View className="mx-5 bg-organic-surface rounded-2xl overflow-hidden">
+            <View className="flex-row items-center gap-2.5 px-4 pt-3.5 pb-3 border-b border-organic-divider">
+              <View className="w-[30px] h-[30px] rounded-lg items-center justify-center bg-organic-accent-soft">
+                <Ionicons name="star-outline" size={15} color={c.accentStrong} />
+              </View>
+              <Text className="font-heading text-organic text-[15px]">
+                {isProUser ? "Your Pro benefits" : "What's included"}
               </Text>
             </View>
             {features.map((f, i) => (
               <View
-                key={i}
-                className={`flex-row items-center gap-3 px-5 py-3.5 ${i < features.length - 1 ? "border-b border-soft" : ""}`}
+                key={f}
+                className={`flex-row items-center gap-3 px-4 py-3.5 ${i < features.length - 1 ? "border-b border-organic-divider" : ""}`}
               >
-                <Ionicons name="checkmark-circle" size={18} color={Colors.Primary} />
-                <Text className="text-sm text-main">{f}</Text>
+                <Ionicons name="checkmark-circle" size={18} color={c.accentStrong} />
+                <Text className="flex-1 font-figtree text-organic text-sm">{f}</Text>
               </View>
             ))}
           </View>
-        </View>
 
-        {/* Actions */}
-        <View className="px-5 gap-3">
-          {isProUser ? (
-            <TouchableOpacity
-              onPress={handleManage}
-              activeOpacity={0.85}
-              className="flex-row items-center gap-3 rounded-2xl p-4 border bg-card border-soft"
-            >
-              <View className={`w-9 h-9 rounded-xl items-center justify-center ${isDark ? "bg-gray-700" : "bg-red-50"}`}>
-                <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-[15px] font-semibold text-main">Manage Subscription</Text>
-                <Text className="text-xs mt-0.5 text-secondary">Cancel or change plan in the App Store</Text>
-              </View>
-              <Ionicons name="open-outline" size={16} color={isDark ? "#4B5563" : "#D1D5DB"} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => presentPaywall({})}
-              activeOpacity={0.85}
-              className="flex-row items-center justify-center gap-2 rounded-2xl py-4 bg-primary"
-            >
-              <Ionicons name="star" size={17} color="#fff" />
-              <Text className="text-white text-[16px] font-bold">Upgrade to Pro</Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            onPress={handleRestore}
-            disabled={restoring}
-            activeOpacity={0.7}
-            className="items-center py-3"
-          >
-            {restoring ? (
-              <ActivityIndicator size="small" color={Colors.Primary} />
+          {/* ── Actions ──────────────────────────────────────────────────── */}
+          <View className="px-5 gap-2.5">
+            {isProUser ? (
+              <TouchableOpacity
+                onPress={handleManage}
+                activeOpacity={0.85}
+                className="flex-row items-center gap-3 rounded-2xl p-4 bg-organic-surface border border-organic-divider"
+              >
+                <View
+                  className="w-9 h-9 rounded-xl items-center justify-center"
+                  style={{ backgroundColor: isDark ? "rgba(255,198,165,0.14)" : "#fff2eb" }}
+                >
+                  <Ionicons name="close-circle-outline" size={19} color={c.accentStrong} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-heading text-organic text-[15px]">Manage subscription</Text>
+                  <Text className="font-figtree text-organic-muted text-xs mt-0.5">
+                    Cancel or change plan in the App Store
+                  </Text>
+                </View>
+                <Ionicons name="open-outline" size={16} color={c.textFaint} />
+              </TouchableOpacity>
             ) : (
-              <Text className="text-sm text-secondary">Restore Purchases</Text>
+              <TouchableOpacity
+                onPress={() => presentPaywall({})}
+                activeOpacity={0.85}
+                className="flex-row items-center justify-center gap-2 rounded-full py-4 bg-organic-accent"
+              >
+                <Ionicons name="star" size={16} color={c.accentSoft} />
+                <Text className="font-heading text-organic-accent-soft text-[15.5px]">Upgrade to Pro</Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleRestore}
+              disabled={restoring}
+              activeOpacity={0.7}
+              className="items-center py-2.5"
+            >
+              {restoring ? (
+                <ActivityIndicator size="small" color={c.accent} />
+              ) : (
+                <Text className="font-figtree-bold text-organic-muted text-[13px]">Restore purchases</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>

@@ -6,13 +6,20 @@ import {
   useState,
 } from "react";
 import Purchases, { CustomerInfo, LOG_LEVEL } from "react-native-purchases";
-import { Platform } from "react-native";
+import { LogBox, Platform } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 const apiKey = {
   ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY!,
   android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY!,
 };
+
+LogBox.ignoreLogs([
+  "[RevenueCat] 🍎‼️ Purchase was cancelled.",
+  "Purchase failure simulated successfully in Test Store",
+]);
 
 interface RevenueCatProviderProps {
   isProUser: boolean;
@@ -25,6 +32,7 @@ export const RevenueCatProvider = ({ children }: { children: ReactNode }) => {
   const [isProUser, setIsProUser] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const { user } = useUser();
+  const setProStatus = useMutation(api.function.credits.setProStatus);
 
   useEffect(() => {
     if (user?.id) {
@@ -54,8 +62,19 @@ export const RevenueCatProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateCustomerInfo = async (customerInfo: CustomerInfo) => {
-    setIsProUser(!!customerInfo.entitlements.active["Musez Pro"]);
+    const hasPro = !!customerInfo.entitlements.active["Musez Pro"];
+    setIsProUser(hasPro);
     setIsReady(true);
+
+    // RevenueCat's SDK already correctly aggregates every active
+    // subscription/product into this one boolean, so this is always the
+    // authoritative answer — unlike the webhook, which only sees one event
+    // (one product) at a time and can't safely infer the overall state.
+    try {
+      await setProStatus({ isPro: hasPro });
+    } catch (error) {
+      console.error("Failed to sync pro status to Convex:", error);
+    }
   };
 
   const logOut = async () => {

@@ -1,4 +1,4 @@
-import { mutation, query } from "../_generated/server";
+import { internalMutation, mutation, query } from "../_generated/server";
 import { getAuthenticatedUser } from "../utils";
 import { v } from "convex/values";
 
@@ -81,6 +81,19 @@ export const setProStatus = mutation({
     if (!identity) return;
 
     const record = await getOrCreateCreditRecord(ctx, identity.subject);
+    await ctx.db.patch(record._id, { isProUser: isPro });
+  },
+});
+
+// Same as setProStatus, but callable from the RevenueCat webhook (convex/http.ts),
+// which has no Clerk session — the caller supplies the RevenueCat app_user_id
+// directly instead of it coming from ctx.auth. app_user_id is set to the Clerk
+// user ID when the client calls Purchases.configure (see RevenueCatProvider),
+// so it lines up with the `externalId` used everywhere else in this table.
+export const setProStatusByExternalId = internalMutation({
+  args: { externalId: v.string(), isPro: v.boolean() },
+  handler: async (ctx, { externalId, isPro }) => {
+    const record = await getOrCreateCreditRecord(ctx, externalId);
     await ctx.db.patch(record._id, { isProUser: isPro });
   },
 });

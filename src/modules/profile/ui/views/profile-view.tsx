@@ -125,7 +125,7 @@ const ProfileView = () => {
                 <Text className="font-figtree-bold text-organic-accent2 text-[11px] tracking-[1.1px] uppercase">
                   Member since {memberSince}
                 </Text>
-                <View className="bg-organic-accent2 rounded-full px-2.5 py-1">
+                <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: c.accent2 }}>
                   <Text className="font-figtree-bold text-[11px]" style={{ color: isDark ? "#2c3320" : "#f0fae1" }}>
                     Pro · Unlimited
                   </Text>
