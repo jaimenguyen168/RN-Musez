@@ -24,18 +24,11 @@ const OnboardingThree = () => {
   const middleRowAnim = useRef(new Animated.Value(0)).current;
   const bottomRowAnim = useRef(new Animated.Value(0)).current;
 
-  const lightFogColors = [
-    "rgba(255, 255, 255, 0.6)",
+  const fogColors = [
+    isDark ? "rgba(38,35,31,0.6)" : "rgba(245,234,216,0.6)",
     "transparent",
-    "rgba(255, 255, 255, 0.6)",
-    "rgba(255, 255, 255, 0.95)",
-  ] as const;
-
-  const darkFogColors = [
-    "rgba(17, 24, 39, 0.6)",
-    "transparent",
-    "rgba(17, 24, 39, 0.6)",
-    "rgba(17, 24, 39, 0.95)",
+    isDark ? "rgba(38,35,31,0.6)" : "rgba(245,234,216,0.6)",
+    isDark ? "rgba(38,35,31,0.95)" : "rgba(245,234,216,0.95)",
   ] as const;
 
   const imageUrlsFirst = [painting1, art1, painting2, painting5];
@@ -115,79 +108,83 @@ const OnboardingThree = () => {
   }, [topRowAnim, middleRowAnim, bottomRowAnim]);
 
   return (
-    <View className="w-full h-full flex-col items-center justify-between">
-      <View className="overflow-hidden w-11/12 h-3/4 justify-between items-center bg-card rounded-3xl relative">
-        <Animated.View
-          className="w-full px-2 flex-row justify-between items-center gap-3 -ml-64"
-          style={{
-            height: "20%",
-            transform: [{ translateX: topRowAnim }],
-          }}
-        >
-          {imageUrlsFirst.map((url, index) => (
-            <Image
-              key={index}
-              source={url}
-              className="rounded-xl w-40 h-full"
-              resizeMode="cover"
-            />
-          ))}
-        </Animated.View>
+    <View className="gap-[26px]">
+      <View className="px-5">
+        <View className="overflow-hidden w-full justify-between items-center bg-organic-surface rounded-3xl relative" style={{ height: 310 }}>
+          <Animated.View
+            className="w-full px-2 flex-row justify-between items-center gap-3 -ml-64"
+            style={{
+              height: "20%",
+              transform: [{ translateX: topRowAnim }],
+            }}
+          >
+            {imageUrlsFirst.map((url, index) => (
+              <Image
+                key={index}
+                source={url}
+                className="rounded-xl w-40 h-full"
+                resizeMode="cover"
+              />
+            ))}
+          </Animated.View>
 
-        <Animated.View
-          className="w-full px-1 flex-row justify-between items-center gap-3 -ml-80"
-          style={{
-            height: "45%",
-            transform: [{ translateX: middleRowAnim }],
-          }}
-        >
-          {imageUrlsSecond.map((url, index) => (
-            <Image
-              key={index}
-              source={url}
-              className="rounded-xl w-64 h-full"
-              resizeMode="cover"
-            />
-          ))}
-        </Animated.View>
+          <Animated.View
+            className="w-full px-1 flex-row justify-between items-center gap-3 -ml-80"
+            style={{
+              height: "45%",
+              transform: [{ translateX: middleRowAnim }],
+            }}
+          >
+            {imageUrlsSecond.map((url, index) => (
+              <Image
+                key={index}
+                source={url}
+                className="rounded-xl w-64 h-full"
+                resizeMode="cover"
+              />
+            ))}
+          </Animated.View>
 
-        <Animated.View
-          className="w-full px-2 flex-row justify-between items-center gap-3 -ml-44"
-          style={{
-            height: "25%",
-            transform: [{ translateX: bottomRowAnim }],
-          }}
-        >
-          {imageUrlsThird.map((url, index) => (
-            <Image
-              key={index}
-              source={url}
-              className="rounded-xl w-40 h-full"
-              resizeMode="cover"
-            />
-          ))}
-        </Animated.View>
+          <Animated.View
+            className="w-full px-2 flex-row justify-between items-center gap-3 -ml-44"
+            style={{
+              height: "25%",
+              transform: [{ translateX: bottomRowAnim }],
+            }}
+          >
+            {imageUrlsThird.map((url, index) => (
+              <Image
+                key={index}
+                source={url}
+                className="rounded-xl w-40 h-full"
+                resizeMode="cover"
+              />
+            ))}
+          </Animated.View>
 
-        <LinearGradient
-          colors={isDark ? darkFogColors : lightFogColors}
-          locations={[0, 0.3, 0.7, 1]}
-          style={{
-            position: "absolute",
-            bottom: 0,
-            top: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        />
+          <LinearGradient
+            colors={fogColors}
+            locations={[0, 0.3, 0.7, 1]}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              top: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </View>
       </View>
 
-      <View className="gap-3">
-        <Text className="text-3xl font-bold text-main text-center leading-tight">
-          Build Your Personal{"\n"}Art Collection
+      <View className="px-5 gap-2">
+        <Text className="font-figtree-bold text-organic-accent text-[11px] tracking-[1.5px] uppercase">
+          Your Collection
         </Text>
-        <Text className="text-lg text-secondary font-light text-center leading-relaxed">
-          Save your favorite artworks and museums{"\n"}to create your own
-          curated gallery
+        <Text className="font-heading text-organic text-[31px] leading-9">
+          Build Your Personal Art Collection
+        </Text>
+        <Text className="font-figtree text-organic-muted text-[14.5px] leading-[22px]" style={{ maxWidth: 330 }}>
+          Save your favorite artworks and museums to create your own curated gallery.
         </Text>
       </View>
     </View>

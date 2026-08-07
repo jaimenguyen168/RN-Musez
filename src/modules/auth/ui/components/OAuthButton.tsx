@@ -2,8 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useSSO } from "@clerk/clerk-expo";
-import { View, Platform, TouchableOpacity, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Text, Platform, TouchableOpacity } from "react-native";
 import { OAuthProvider } from "@/modules/auth/types/oauth";
 import { oauthConfigs } from "@/modules/auth/constants/oauth";
 
@@ -29,11 +28,10 @@ const OAuthButton = ({ provider, disabled = false }: OAuthButtonProps) => {
   const { startSSOFlow } = useSSO();
 
   const config = oauthConfigs[provider];
+  const label = provider.charAt(0).toUpperCase() + provider.slice(1);
 
   const onPress = useCallback(async () => {
     if (disabled) return;
-
-    console.log(`OAuth button pressed ${provider}`);
 
     try {
       const { createdSessionId, setActive } = await startSSOFlow({
@@ -41,41 +39,22 @@ const OAuthButton = ({ provider, disabled = false }: OAuthButtonProps) => {
         redirectUrl: AuthSession.makeRedirectUri(),
       });
 
-      console.log("SSO Flow result:", { createdSessionId });
-
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
-      } else {
-        console.log(`${provider} OAuth failed - no session created`);
       }
     } catch (err) {
       console.log(`${provider} OAuth error:`, JSON.stringify(err, null, 2));
     }
   }, [startSSOFlow, config.strategy, provider, disabled]);
 
-  const buttonClasses = [
-    config.backgroundColor,
-    config.borderColor ? `border-2 ${config.borderColor}` : "",
-    "rounded-2xl py-3 flex-1",
-    disabled ? "opacity-50" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={buttonClasses}
       activeOpacity={disabled ? 1 : 0.8}
       disabled={disabled}
+      className={`flex-1 py-3.5 rounded-full items-center border border-organic-divider bg-organic-surface-alt ${disabled ? "opacity-50" : ""}`}
     >
-      <View className="flex-row items-center justify-center">
-        {config.icon ? (
-          <Image source={config.icon} className="size-6" />
-        ) : config.ionIcon ? (
-          <Ionicons name={config.ionIcon} size={24} color={config.iconColor} />
-        ) : null}
-      </View>
+      <Text className="font-figtree-bold text-organic text-[13.5px]">{label}</Text>
     </TouchableOpacity>
   );
 };

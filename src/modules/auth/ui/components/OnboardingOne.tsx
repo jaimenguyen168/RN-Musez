@@ -3,65 +3,58 @@ import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import covers from "@/constants/covers";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 const OnboardingOne = () => {
   const { isDark } = useTheme();
+  const c = useOrganicTheme();
 
-  const lightFogColors = [
+  const fogColors = [
     "transparent",
-    "rgba(255, 255, 255, 0.3)",
-    "rgba(255, 255, 255, 0.6)",
-    "rgba(255, 255, 255, 0.98)",
-  ] as const;
-
-  const darkFogColors = [
-    "transparent",
-    "rgba(17, 24, 39, 0.3)",
-    "rgba(17, 24, 39, 0.6)",
-    "rgba(17, 24, 39, 0.98)",
+    isDark ? "rgba(38,35,31,0.3)" : "rgba(245,234,216,0.3)",
+    isDark ? "rgba(38,35,31,0.6)" : "rgba(245,234,216,0.6)",
+    isDark ? "rgba(38,35,31,0.96)" : "rgba(245,234,216,0.96)",
   ] as const;
 
   return (
-    <View className="w-full h-full flex-col items-center justify-between">
-      <View
-        className="overflow-hidden w-11/12 h-3/4 relative justify-center items-center"
-        style={{
-          borderTopLeftRadius: 200,
-          borderTopRightRadius: 200,
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
-        }}
-      >
-        <ImageBackground
-          source={covers.museum1}
-          resizeMode="cover"
+    <View className="gap-[26px]">
+      <View className="px-5 relative">
+        <View
+          className="absolute rounded-full"
+          style={{ left: 52, top: -14, width: 150, height: 150, backgroundColor: c.accent2Soft }}
+        />
+        <View
+          className="relative overflow-hidden"
           style={{
-            width: "100%",
-            height: "100%",
+            height: 310,
+            borderTopLeftRadius: 120,
+            borderTopRightRadius: 120,
+            borderBottomLeftRadius: 26,
+            borderBottomRightRadius: 120,
+            shadowColor: c.shadow,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.16,
+            shadowRadius: 16,
+            elevation: 6,
           }}
         >
-          {/* Theme-aware foggy gradient overlay */}
-          <LinearGradient
-            colors={isDark ? darkFogColors : lightFogColors}
-            locations={[0.1, 0.5, 0.7, 1]}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              width: "100%",
-              height: "100%",
-            }}
-          />
-        </ImageBackground>
+          <ImageBackground source={covers.museum1} resizeMode="cover" style={{ width: "100%", height: "100%" }}>
+            <LinearGradient
+              colors={fogColors}
+              locations={[0.1, 0.5, 0.7, 1]}
+              style={{ position: "absolute", bottom: 0, width: "100%", height: "100%" }}
+            />
+          </ImageBackground>
+        </View>
       </View>
 
-      {/* Content positioned at the bottom */}
-      <View className="gap-3">
-        <Text className="text-3xl font-bold text-main text-center leading-tight">
-          Discover Museums{"\n"}Around You
+      <View className="px-5 gap-2">
+        <Text className="font-figtree-bold text-organic-accent text-[11px] tracking-[1.5px] uppercase">Nearby</Text>
+        <Text className="font-heading text-organic text-[31px] leading-9">
+          Discover Museums Around You
         </Text>
-        <Text className="text-lg text-secondary font-light text-center leading-relaxed">
-          Explore art, history, and culture with{"\n"}personalized museum
-          recommendations.
+        <Text className="font-figtree text-organic-muted text-[14.5px] leading-[22px]" style={{ maxWidth: 330 }}>
+          Explore art, history, and culture with personalized museum recommendations.
         </Text>
       </View>
     </View>

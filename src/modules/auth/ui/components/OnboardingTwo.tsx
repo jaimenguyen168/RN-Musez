@@ -3,57 +3,60 @@ import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import covers from "@/constants/covers";
 import { useTheme } from "@/provider/ThemeProvider";
+import { useOrganicTheme } from "@/constants/organicTheme";
 
 const OnboardingTwo = () => {
   const { isDark } = useTheme();
+  const c = useOrganicTheme();
 
-  const lightFogColors = [
+  const fogColors = [
     "transparent",
-    "rgba(255, 255, 255, 0.3)",
-    "rgba(255, 255, 255, 0.6)",
-    "rgba(255, 255, 255, 0.9)",
-  ] as const;
-
-  const darkFogColors = [
-    "transparent",
-    "rgba(17, 24, 39, 0.3)",
-    "rgba(17, 24, 39, 0.6)",
-    "rgba(17, 24, 39, 0.9)",
+    isDark ? "rgba(38,35,31,0.3)" : "rgba(245,234,216,0.3)",
+    isDark ? "rgba(38,35,31,0.6)" : "rgba(245,234,216,0.6)",
+    isDark ? "rgba(38,35,31,0.9)" : "rgba(245,234,216,0.9)",
   ] as const;
 
   return (
-    <View className="w-full h-full flex-col items-center justify-between">
-      <View className="rounded-3xl overflow-hidden w-11/12 h-3/4 relative justify-center items-center">
-        <ImageBackground
-          source={covers.painting1}
-          resizeMode="cover"
+    <View className="gap-[26px]">
+      <View className="px-5 relative">
+        <View
+          className="absolute rounded-full"
+          style={{ right: 44, bottom: -16, width: 132, height: 132, backgroundColor: c.accentSoft }}
+        />
+        <View
+          className="relative overflow-hidden"
           style={{
-            width: "100%",
-            height: "100%",
+            height: 310,
+            borderTopLeftRadius: 26,
+            borderTopRightRadius: 120,
+            borderBottomLeftRadius: 120,
+            borderBottomRightRadius: 120,
+            shadowColor: c.shadow,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.16,
+            shadowRadius: 16,
+            elevation: 6,
           }}
         >
-          {/* Theme-aware foggy gradient overlay */}
-          <LinearGradient
-            colors={isDark ? darkFogColors : lightFogColors}
-            locations={[0.0, 0.3, 0.6, 1]}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              width: "100%",
-              height: "100%",
-            }}
-          />
-        </ImageBackground>
+          <ImageBackground source={covers.painting1} resizeMode="cover" style={{ width: "100%", height: "100%" }}>
+            <LinearGradient
+              colors={fogColors}
+              locations={[0.0, 0.3, 0.6, 1]}
+              style={{ position: "absolute", bottom: 0, width: "100%", height: "100%" }}
+            />
+          </ImageBackground>
+        </View>
       </View>
 
-      {/* Content positioned at the bottom */}
-      <View className="gap-3">
-        <Text className="text-3xl font-bold text-main text-center leading-tight">
-          Get Insights of{"\n"}Artwork Powered by AI
+      <View className="px-5 gap-2">
+        <Text className="font-figtree-bold text-organic-accent text-[11px] tracking-[1.5px] uppercase">
+          AI Insights
         </Text>
-        <Text className="text-lg text-secondary font-light text-center leading-relaxed">
-          Learn about artists, styles, and history{"\n"}with intelligent artwork
-          analysis.
+        <Text className="font-heading text-organic text-[31px] leading-9">
+          Get Insights of Artwork Powered by AI
+        </Text>
+        <Text className="font-figtree text-organic-muted text-[14.5px] leading-[22px]" style={{ maxWidth: 330 }}>
+          Learn about artists, styles, and history with intelligent artwork analysis.
         </Text>
       </View>
     </View>
