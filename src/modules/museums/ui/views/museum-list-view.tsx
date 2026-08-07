@@ -1,5 +1,5 @@
-import { View, Text, FlatList, Animated, Easing } from "react-native";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import { View, Text, FlatList } from "react-native";
+import React, { ReactNode } from "react";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Museum } from "../../../../../convex/convexTypes";
@@ -16,7 +16,6 @@ interface MuseumListViewProps {
 }
 
 const BIG_CARD_COUNT = 3;
-const NAV_DELAY_MS = 320;
 
 const titleList = ["Saved", "Nearby"];
 
@@ -32,32 +31,11 @@ const MuseumListView = ({
   const { title } = useMuseumListStore();
   const usedTitle = titleList.includes(title) ? title : "Museums";
 
-  const [navText, setNavText] = useState<string | null>(null);
-  const toastOpacity = useRef(new Animated.Value(0)).current;
-  const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (navTimer.current) clearTimeout(navTimer.current);
-    };
-  }, []);
-
-  const handleCardPress = (museum: Museum) => {
-    setNavText(`Opening ${museum.name}…`);
-    Animated.timing(toastOpacity, {
-      toValue: 1,
-      duration: 180,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-    navTimer.current = setTimeout(() => onCardPress?.(museum.osmId), NAV_DELAY_MS);
-  };
-
   const renderMuseumItem = ({ item, index }: { item: Museum; index: number }) => (
     <MuseumOverviewCard
       museum={item}
       variant={index < BIG_CARD_COUNT ? "detailed" : "compact"}
-      onCardPress={() => handleCardPress(item)}
+      onCardPress={() => onCardPress?.(item.osmId)}
     />
   );
 
@@ -105,24 +83,6 @@ const MuseumListView = ({
             This group is empty. Save a museum and add it from its detail page.
           </Text>
         </View>
-      )}
-
-      {navText && (
-        <Animated.View
-          className="absolute left-4 right-4 rounded-full py-3.5 px-5"
-          style={{
-            bottom: insets.bottom + 20,
-            backgroundColor: isDark ? "#f5ead8" : "#201e1d",
-            opacity: toastOpacity,
-          }}
-        >
-          <Text
-            className="font-figtree-bold text-center text-[13.5px]"
-            style={{ color: isDark ? "#201e1d" : "#f5ead8" }}
-          >
-            {navText}
-          </Text>
-        </Animated.View>
       )}
     </View>
   );
