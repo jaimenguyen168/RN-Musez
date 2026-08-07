@@ -1,13 +1,14 @@
-import { ActivityIndicator, View, Alert, Text } from "react-native";
+import { ActivityIndicator, View, Alert, Text, ScrollView } from "react-native";
 import React, { useEffect, useMemo } from "react";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DiscoveryHeader from "@/modules/discovery/ui/components/DiscoveryHeader";
 import DiscoverySearchBar from "@/modules/discovery/ui/components/DiscoverySearchBar";
 import MuseumSpotlightCard from "@/modules/discovery/ui/components/MuseumSpotlightCard";
 import MuseumWalkCarousel from "@/modules/discovery/ui/components/MuseumWalkCarousel";
 import MuseumTripList from "@/modules/discovery/ui/components/MuseumTripList";
 import { useLocationManager } from "@/hooks/useLocationManager";
-import AnimatedHeaderWrapper from "@/components/AnimatedHeaderWrapper";
 import { useMuseumsQuery } from "@/hooks/useMuseumsQuery";
 import { calculateRawDistance } from "@/utils/distance";
 import { useMuseumListStore } from "@/stores/museumListStore";
@@ -19,6 +20,7 @@ const DiscoveryView = () => {
   const router = useRouter();
   const { isDark } = useTheme();
   const c = useOrganicTheme();
+  const insets = useSafeAreaInsets();
 
   const {
     address,
@@ -124,29 +126,25 @@ const DiscoveryView = () => {
     );
   };
 
-  const headerComponent = (
-    <View className="bg-organic pb-4 gap-4">
-      <DiscoveryHeader
-        place={address || "Unknown Location"}
-        onLocationPress={handleLocationPress}
-        rightComponent={<ProfileMenuDropdown imageSize={38} />}
-      />
-      <DiscoverySearchBar onPress={handleSearchPress} />
-    </View>
-  );
-
   return (
-    <AnimatedHeaderWrapper
-      title="Musez"
-      headerComponent={headerComponent}
-      scrollThreshold={80}
-      blurIntensity={80}
-      blurType={isDark ? "dark" : "light"}
-      backgroundColor={c.bg}
-      titleStyle="font-heading text-organic text-[19px]"
-    >
-      <View className="flex-1 bg-organic">{renderMainContent()}</View>
-    </AnimatedHeaderWrapper>
+    <View className="flex-1 bg-organic">
+      <StatusBar style={isDark ? "light" : "dark"} />
+
+      <View className="bg-organic pb-2" style={{ paddingTop: insets.top + 8 }}>
+        <DiscoveryHeader
+          place={address || "Unknown Location"}
+          onLocationPress={handleLocationPress}
+          rightComponent={<ProfileMenuDropdown imageSize={38} />}
+        />
+      </View>
+
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="pb-4">
+          <DiscoverySearchBar onPress={handleSearchPress} />
+        </View>
+        {renderMainContent()}
+      </ScrollView>
+    </View>
   );
 };
 

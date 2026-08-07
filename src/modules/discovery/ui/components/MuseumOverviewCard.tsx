@@ -3,12 +3,12 @@ import React, { useMemo } from "react";
 import { Museum } from "../../../../../convex/convexTypes";
 import { Ionicons } from "@expo/vector-icons";
 
-import { LinearGradient } from "expo-linear-gradient";
-import { api } from "../../../../../convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 import { useLocationManager } from "@/hooks/useLocationManager";
 import { calculateAndFormatDistance, DistanceUnit } from "@/utils/distance";
-import { isOpenNow } from "@/utils/openingHours";
+import { getOpenStatus } from "@/utils/openingHours";
+import { useOrganicTheme } from "@/constants/organicTheme";
 import { useTheme } from "@/provider/ThemeProvider";
 
 interface MuseumOverviewCardProps {
@@ -17,11 +17,22 @@ interface MuseumOverviewCardProps {
   onCardPress?: () => void;
 }
 
-const MuseumOverviewCard = ({
-  museum,
-  variant = "compact",
-  onCardPress,
-}: MuseumOverviewCardProps) => {
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter((w) => /^[A-Z]/.test(w))
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+
+const STATUS_LABEL: Record<"open" | "closing-soon" | "closed", string> = {
+  open: "Open now",
+  "closing-soon": "Closing soon",
+  closed: "Closed",
+};
+
+const MuseumOverviewCard = ({ museum, variant = "compact", onCardPress }: MuseumOverviewCardProps) => {
+  const c = useOrganicTheme();
   const { isDark } = useTheme();
   const { coords } = useLocationManager(false);
 
@@ -45,147 +56,109 @@ const MuseumOverviewCard = ({
   };
 
   const photoUrl = museum.imageUrl;
-  const isOpen = museum.openingHours ? isOpenNow(museum.openingHours) : undefined;
+  const openStatus = getOpenStatus(museum.openingHours);
   const rating = ratingSummary?.avgRating ?? undefined;
   const totalReviews = ratingSummary?.totalReviews ?? 0;
+  const hasReviews = totalReviews > 0;
 
-  // ── Compact ───────────────────────────────────────────────────────────────────
-  if (variant === "compact") {
+  const pillColors =
+    openStatus === "open"
+      ? { bg: c.accent2Soft, fg: c.statusOpen }
+      : openStatus === "closing-soon"
+        ? { bg: isDark ? "#4a3712" : "#fdecc8", fg: isDark ? "#f6c667" : "#8a5a06" }
+        : { bg: c.accentSoft, fg: c.statusClosed };
+
+  // ── Big (photo card, first 3) ────────────────────────────────────────────
+  if (variant === "detailed") {
     return (
-      <TouchableOpacity
+      <Pressable
         onPress={onCardPress}
-        activeOpacity={0.92}
-        className="rounded-[20px] overflow-hidden"
-        style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 }}
+        className="rounded-2xl overflow-hidden bg-organic-surface"
+        style={{ shadowColor: c.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 5 }}
       >
-        <View className="h-60 bg-surface">
+        <View className="h-[158px] bg-organic-placeholder-a relative">
           {photoUrl ? (
-            <Image
-              source={{ uri: photoUrl }}
-              className="absolute inset-0 w-full h-full"
-              resizeMode="cover"
-            />
+            <Image source={{ uri: photoUrl }} className="w-full h-full" resizeMode="cover" />
           ) : (
-            <View className="absolute inset-0 items-center justify-center bg-surface">
-              <Ionicons name="image-outline" size={40} color="#6B7280" />
+            <View className="w-full h-full items-center justify-center bg-organic-accent-soft">
+              <Text className="font-heading text-organic-accent-strong text-[40px]">{initialsOf(museum.name)}</Text>
             </View>
           )}
-
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.18)", "rgba(0,0,0,0.72)"]}
-            start={{ x: 0, y: 0.35 }}
-            end={{ x: 0, y: 1 }}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          />
-
-          {/* Top row */}
-          <View className="absolute top-3 left-3 right-3 flex-row justify-between items-center">
-            <View className="flex-row items-center gap-0.5 bg-black/40 px-2 py-1 rounded-full">
-              <Ionicons name="star" size={11} color="#F59E0B" />
-              <Text className="text-white text-xs font-semibold">{rating?.toFixed(1) ?? "0.0"}</Text>
+          <TouchableOpacity
+            onPress={onFavoritePress}
+            className="absolute top-2.5 right-2.5 w-[34px] h-[34px] rounded-full items-center justify-center bg-organic-photo-btn"
+          >
+            <Ionicons name={isSaved ? "heart" : "heart-outline"} size={17} color={isSaved ? c.accent : c.text} />
+          </TouchableOpacity>
+          {openStatus !== "unknown" && (
+            <View className="absolute left-[11px] bottom-[11px] rounded-full px-3 py-1" style={{ backgroundColor: pillColors.bg }}>
+              <Text className="font-figtree-bold text-[11px]" style={{ color: pillColors.fg }}>
+                {STATUS_LABEL[openStatus]}
+              </Text>
             </View>
-            <TouchableOpacity onPress={onFavoritePress} className="bg-black/35 p-1.5 rounded-full">
-              <Ionicons name={isSaved ? "heart" : "heart-outline"} size={17} color={isSaved ? "#FB7185" : "white"} />
-            </TouchableOpacity>
-          </View>
+          )}
+        </View>
 
-          {/* Bottom */}
-          <View className="absolute bottom-0 left-0 right-0 p-3.5">
-            <Text className="text-white text-[15px] font-bold mb-1.5 tracking-wide" numberOfLines={1}>
-              {museum.name}
-            </Text>
-            <View className="flex-row items-center justify-between">
-              {formattedDistance && (
-                <View className="flex-row items-center gap-0.5">
-                  <Ionicons name="location-sharp" size={11} color="rgba(255,255,255,0.75)" />
-                  <Text className="text-white/75 text-xs">{formattedDistance}</Text>
-                </View>
-              )}
-              {isOpen !== undefined && (
-                <View
-                  className="flex-row items-center gap-1 px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: isOpen ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.8)" }}
-                >
-                  <View className="w-1.5 h-1.5 rounded-full bg-white" />
-                  <Text className="text-white text-[11px] font-semibold">{isOpen ? "Open" : "Closed"}</Text>
-                </View>
-              )}
-            </View>
+        <View className="px-[15px] pt-[13px] pb-[15px] gap-1">
+          <Text className="font-heading text-organic text-[19px] leading-[23px]">{museum.name}</Text>
+          <Text className="font-figtree text-organic-faint text-xs" numberOfLines={1}>
+            {museum.address}
+          </Text>
+          <View className="flex-row gap-1.5 items-center flex-wrap">
+            {hasReviews ? (
+              <>
+                <Text className="font-figtree-bold text-organic text-[12.5px]">★ {rating?.toFixed(1)}</Text>
+                <Text className="font-figtree text-organic-muted text-[12.5px]">({totalReviews})</Text>
+              </>
+            ) : (
+              <Text className="font-figtree italic text-organic-accent-strong text-[12.5px]">
+                be the first to review
+              </Text>
+            )}
+            {formattedDistance && (
+              <Text className="font-figtree text-organic-muted text-[12.5px]">· {formattedDistance}</Text>
+            )}
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   }
 
-  // ── Detailed ──────────────────────────────────────────────────────────────────
+  // ── Small (slim row, after the first 3) ──────────────────────────────────
   return (
     <Pressable
       onPress={onCardPress}
-      className="flex-row rounded-2xl overflow-hidden mx-4 mb-3 h-[100px] bg-card"
-      style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}
+      className="bg-organic-surface rounded-2xl px-3 py-2.5 flex-row gap-3 items-center"
     >
-      <View className="w-24 h-full bg-surface">
+      <View className="w-[46px] h-[46px] rounded-xl overflow-hidden bg-organic-placeholder-a">
         {photoUrl ? (
-          <Image
-            source={{ uri: photoUrl }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
+          <Image source={{ uri: photoUrl }} className="w-full h-full" resizeMode="cover" />
         ) : (
-          <View className="w-full h-full items-center justify-center bg-surface">
-            <Ionicons name="image-outline" size={28} color="#9CA3AF" />
+          <View className="w-full h-full items-center justify-center bg-organic-accent-soft">
+            <Text className="font-heading text-organic-accent-strong text-[15px]">{initialsOf(museum.name)}</Text>
           </View>
         )}
       </View>
 
-      <View className="flex-1 px-3 py-2.5 justify-center">
-        <Text className="text-[13px] font-bold mb-0.5 tracking-wide text-main" numberOfLines={2}>
+      <View className="flex-1 gap-0.5">
+        <Text className="font-figtree-bold text-organic text-[13.5px] leading-[17px]" numberOfLines={1}>
           {museum.name}
         </Text>
-        <Text className="text-[11px] mb-1.5 text-secondary" numberOfLines={1}>
-          {museum.address}
-        </Text>
-
-        <View className="flex-row items-center gap-0.5">
-          <Ionicons name="star" size={12} color="#F59E0B" />
-          <Text className="text-xs font-semibold ml-0.5 text-main">
-            {rating?.toFixed(1) ?? "0.0"}
-          </Text>
-          <Text className="text-[11px] text-secondary">
-            ({totalReviews})
-          </Text>
+        <View className="flex-row gap-1.5 items-center flex-wrap">
           {formattedDistance && (
-            <>
-              <Text className={`text-xs mx-0.5 ${isDark ? "text-gray-600" : "text-gray-300"}`}>·</Text>
-              <Ionicons name="location-outline" size={12} color={isDark ? "#9CA3AF" : "#6B7280"} />
-              <Text className="text-[11px] text-secondary">{formattedDistance}</Text>
-            </>
+            <Text className="font-figtree text-organic-muted text-xs">{formattedDistance}</Text>
+          )}
+          {hasReviews ? (
+            <Text className="font-figtree-bold text-organic text-xs">★ {rating?.toFixed(1)}</Text>
+          ) : (
+            <Text className="font-figtree italic text-organic-accent-strong text-xs">no reviews yet</Text>
           )}
         </View>
-
-        {isOpen !== undefined && (
-          <View className="flex-row items-center mt-1 gap-1">
-            <View className={`w-1.5 h-1.5 rounded-full ${isOpen ? "bg-emerald-500" : "bg-red-500"}`} />
-            <Text
-              className={`text-[11px] font-semibold ${
-                isOpen
-                  ? isDark ? "text-emerald-400" : "text-emerald-600"
-                  : isDark ? "text-red-400" : "text-red-600"
-              }`}
-            >
-              {isOpen ? "Open now" : "Closed"}
-            </Text>
-          </View>
-        )}
       </View>
 
-      <Pressable onPress={onFavoritePress} className="absolute top-2.5 right-2.5" hitSlop={8}>
-        <Ionicons
-          name={isSaved ? "heart" : "heart-outline"}
-          size={18}
-          color={isSaved ? "#FB7185" : isDark ? "#6B7280" : "#D1D5DB"}
-        />
-      </Pressable>
+      <TouchableOpacity onPress={onFavoritePress} className="w-8 h-8 items-center justify-center">
+        <Ionicons name={isSaved ? "heart" : "heart-outline"} size={17} color={isSaved ? c.accent : c.textFaint} />
+      </TouchableOpacity>
     </Pressable>
   );
 };

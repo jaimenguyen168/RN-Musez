@@ -9,6 +9,7 @@ import { calculateRawDistance } from "@/utils/distance";
 import { useOrganicTheme } from "@/constants/organicTheme";
 import { useRecentSearchesStore } from "@/stores/recentSearchesStore";
 import MuseumSearchRow from "@/modules/discovery/ui/components/MuseumSearchRow";
+import MuseumSearchFeatured from "@/modules/discovery/ui/components/MuseumSearchFeatured";
 
 const SUGGESTIONS = ["Art", "History", "Science", "Free entry", "Kids"];
 const DEBOUNCE_MS = 500;
@@ -149,7 +150,15 @@ const DiscoverySearchView = ({ query, onRunSearch }: DiscoverySearchViewProps) =
               <Text className="font-figtree text-organic-muted text-[12.5px]">
                 {results.length} museum{results.length === 1 ? "" : "s"} found
               </Text>
-              {results.map((m) => (
+              {results.length > 0 && (
+                <View className="gap-1.5">
+                  <Text className="font-figtree-bold text-organic-accent text-[11px] tracking-[1.1px] uppercase">
+                    Best match
+                  </Text>
+                  <MuseumSearchFeatured museum={results[0]} onPress={() => handleGoToMuseum(results[0].osmId)} />
+                </View>
+              )}
+              {results.slice(1).map((m) => (
                 <MuseumSearchRow key={m.osmId} museum={m} onPress={() => handleGoToMuseum(m.osmId)} />
               ))}
               {results.length === 0 && (
